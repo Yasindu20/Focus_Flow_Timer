@@ -41,7 +41,12 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   
-  fonts:
-    - family: CustomIcons
-      fonts:
-        - asset: assets/fonts/CustomIcons.ttf
+  # assets:
+  #   - assets/sounds/
+  #   - assets/icons/
+  
+  # Note: Custom fonts removed until font file is available
+  # fonts:
+  #   - family: CustomIcons
+  #     fonts:
+  #       - asset: assets/fonts/CustomIcons.ttf
