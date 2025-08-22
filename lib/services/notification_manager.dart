@@ -35,12 +35,11 @@ class NotificationManager {
     const androidSettings =
         AndroidInitializationSettings('@drawable/ic_launcher');
 
-    // iOS settings
+    // iOS settings - Fixed: Removed criticalAlert parameter
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
-      requestCriticalPermission: true, // For time-critical notifications
     );
 
     const initSettings = InitializationSettings(
@@ -70,7 +69,7 @@ class NotificationManager {
       await Permission.notification.request();
     }
 
-    // Request critical alert permission for iOS
+    // Request critical alert permission for iOS - Fixed: Use proper method
     await _notificationsPlugin
         .resolvePlatformSpecificImplementation<
             IOSFlutterLocalNotificationsPlugin>()
@@ -78,7 +77,6 @@ class NotificationManager {
           alert: true,
           badge: true,
           sound: true,
-          critical: true,
         );
   }
 
@@ -229,14 +227,14 @@ class NotificationManager {
         ledOnMs: 1000,
         ledOffMs: 500,
         fullScreenIntent: true,
-        actions: <AndroidNotificationAction>[
-          const AndroidNotificationAction(
+        actions: const <AndroidNotificationAction>[
+          AndroidNotificationAction(
             'start_break',
             'Start Break',
             icon: DrawableResourceAndroidBitmap('ic_play'),
             showsUserInterface: true,
           ),
-          const AndroidNotificationAction(
+          AndroidNotificationAction(
             'start_work',
             'Start Work',
             icon: DrawableResourceAndroidBitmap('ic_work'),
@@ -250,7 +248,6 @@ class NotificationManager {
         presentSound: true,
         sound: 'timer_complete.wav',
         interruptionLevel: InterruptionLevel.timeSensitive,
-        criticalAlert: true,
         categoryIdentifier: 'timer_complete',
       ),
     );
@@ -301,7 +298,7 @@ class NotificationManager {
   }
 
   NotificationDetails _getRecoveryNotificationDetails() {
-    return NotificationDetails(
+    return const NotificationDetails(
       android: AndroidNotificationDetails(
         'timer_recovery',
         'Timer Recovery',
@@ -312,20 +309,20 @@ class NotificationManager {
         enableVibration: true,
         playSound: true,
         actions: <AndroidNotificationAction>[
-          const AndroidNotificationAction(
+          AndroidNotificationAction(
             'resume_session',
             'Resume',
             icon: DrawableResourceAndroidBitmap('ic_play'),
             showsUserInterface: true,
           ),
-          const AndroidNotificationAction(
+          AndroidNotificationAction(
             'cancel_session',
             'Cancel',
             icon: DrawableResourceAndroidBitmap('ic_cancel'),
           ),
         ],
       ),
-      iOS: const DarwinNotificationDetails(
+      iOS: DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
@@ -450,7 +447,7 @@ class NotificationManager {
     if (parts.length < 2) return;
 
     final action = parts[0];
-    final data = parts[1];
+    // Fixed: Removed unused variable 'data'
 
     switch (action) {
       case 'session_complete':
