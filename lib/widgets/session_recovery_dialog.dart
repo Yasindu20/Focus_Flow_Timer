@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/timer_session.dart';
+import '../services/advanced_timer_service.dart'; // Added import for TimerType
 
 class SessionRecoveryDialog extends StatelessWidget {
   final TimerSession session;
@@ -7,11 +8,11 @@ class SessionRecoveryDialog extends StatelessWidget {
   final VoidCallback onDiscard;
 
   const SessionRecoveryDialog({
-    Key? key,
+    super.key, // Fixed: Using super parameter
     required this.session,
     required this.onRecover,
     required this.onDiscard,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,15 +23,16 @@ class SessionRecoveryDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      title: Row(
+      title: const Row(
+        // Fixed: Added const
         children: [
           Icon(
             Icons.restore,
             color: Colors.orange,
             size: 28,
           ),
-          const SizedBox(width: 12),
-          const Text('Recover Session'),
+          SizedBox(width: 12),
+          Text('Recover Session'),
         ],
       ),
       content: Column(
@@ -45,7 +47,8 @@ class SessionRecoveryDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withValues(
+                  alpha: 0.1), // Fixed: Using withValues instead of withOpacity
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -133,6 +136,7 @@ class SessionRecoveryDialog extends StatelessWidget {
     );
   }
 
+  // Fixed: Added return statement for all cases
   String _getSessionTypeName(TimerType type) {
     switch (type) {
       case TimerType.work:

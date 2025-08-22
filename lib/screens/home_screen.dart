@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/enhanced_timer_provider.dart'; // Updated import
+import '../providers/enhanced_timer_provider.dart';
 import '../providers/task_provider.dart';
-import '../widgets/enhanced_timer_widget.dart'; // Updated import
+import '../widgets/enhanced_timer_widget.dart';
 import '../widgets/sound_selector.dart';
-import '../models/task.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key}); // Fixed: Using super parameter
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +72,6 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ] else ...[
                             Consumer<EnhancedTimerProvider>(
-                              // Updated provider
                               builder: (context, timerProvider, child) {
                                 final currentTaskId =
                                     timerProvider.currentTaskId;
@@ -122,7 +120,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 32),
 
               // Timer widget
-              const EnhancedTimerWidget(), // Updated widget
+              const EnhancedTimerWidget(),
 
               const SizedBox(height: 32),
 

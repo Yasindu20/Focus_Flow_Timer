@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/analytics_provider.dart';
 
 class AnalyticsScreen extends StatelessWidget {
-  const AnalyticsScreen({Key? key}) : super(key: key);
+  const AnalyticsScreen({super.key}); // Fixed: Using super parameter
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +22,6 @@ class AnalyticsScreen extends StatelessWidget {
           ),
         ],
       ),
-
       body: Consumer<AnalyticsProvider>(
         builder: (context, analyticsProvider, child) {
           return SingleChildScrollView(
@@ -47,9 +46,7 @@ class AnalyticsScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 16),
-
                         Row(
                           children: [
                             Expanded(
@@ -73,9 +70,7 @@ class AnalyticsScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 12),
-
                         Row(
                           children: [
                             Expanded(
@@ -119,9 +114,7 @@ class AnalyticsScreen extends StatelessWidget {
                           'Focus Quality',
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
-
                         const SizedBox(height: 16),
-
                         Row(
                           children: [
                             CircularProgressIndicator(
@@ -131,9 +124,7 @@ class AnalyticsScreen extends StatelessWidget {
                                 analyticsProvider.focusScoreColor,
                               ),
                             ),
-
                             const SizedBox(width: 16),
-
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,9 +168,7 @@ class AnalyticsScreen extends StatelessWidget {
                           'This Week',
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
-
                         const SizedBox(height: 16),
-
                         ...analyticsProvider.weeklySummary.entries.map((entry) {
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4),
@@ -192,7 +181,9 @@ class AnalyticsScreen extends StatelessWidget {
                                 ),
                                 Text(
                                   entry.value.toString(),
-                                  style: Theme.of(context).textTheme.bodyLarge
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
                                       ?.copyWith(fontWeight: FontWeight.bold),
                                 ),
                               ],
@@ -217,9 +208,7 @@ class AnalyticsScreen extends StatelessWidget {
                           'Weekly Trend',
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
-
                         const SizedBox(height: 16),
-
                         Container(
                           height: 200,
                           width: double.infinity,
@@ -259,7 +248,8 @@ class AnalyticsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(
+            alpha: 0.1), // Fixed: Using withValues instead of withOpacity
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -269,9 +259,9 @@ class AnalyticsScreen extends StatelessWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           Text(
             title,

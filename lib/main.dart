@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import 'package:timezone/data/latest.dart' as tz;
-import 'package:workmanager/workmanager.dart';
 
 import 'core/theme/app_theme.dart';
 import 'services/storage_service.dart';
-import 'services/advanced_timer_service.dart';
 import 'providers/enhanced_timer_provider.dart';
 import 'providers/task_provider.dart';
 import 'providers/theme_provider.dart';
@@ -35,7 +33,7 @@ void main() async {
 }
 
 class FocusFlowApp extends StatelessWidget {
-  const FocusFlowApp({Key? key}) : super(key: key);
+  const FocusFlowApp({super.key}); // Fixed: Using super parameter
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +66,7 @@ class FocusFlowApp extends StatelessWidget {
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({Key? key}) : super(key: key);
+  const MainScreen({super.key}); // Fixed: Using super parameter
 
   @override
   State<MainScreen> createState() => _MainScreenState();
