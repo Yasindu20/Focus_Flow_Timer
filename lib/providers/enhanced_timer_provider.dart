@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/timer_service.dart';
+import '../services/advanced_timer_service.dart';
 import '../services/audio_service.dart';
 import '../services/analytics_service.dart';
 import '../models/pomodoro_session.dart';
@@ -41,8 +41,8 @@ class TimerProvider extends ChangeNotifier {
       duration: _timerService.currentType == TimerType.work
           ? 25
           : _timerService.currentType == TimerType.shortBreak
-          ? 5
-          : 15,
+              ? 5
+              : 15,
       type: _mapTimerTypeToSessionType(_timerService.currentType),
       completed: false,
       taskId: taskId,

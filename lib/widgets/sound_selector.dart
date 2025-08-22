@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/timer_provider.dart';
+import '../providers/enhanced_timer_provider.dart';
 import '../services/storage_service.dart';
 
 class SoundSelector extends StatefulWidget {

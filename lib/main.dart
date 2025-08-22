@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:workmanager/workmanager.dart';
 
 import 'core/theme/app_theme.dart';
 import 'services/storage_service.dart';
-import 'providers/timer_provider.dart';
+import 'services/advanced_timer_service.dart';
+import 'providers/enhanced_timer_provider.dart';
 import 'providers/task_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/analytics_provider.dart';
@@ -15,6 +18,9 @@ import 'screens/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize timezone data
+  tz.initializeTimeZones();
 
   // Initialize storage
   await StorageService.init();
@@ -36,7 +42,7 @@ class FocusFlowApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => TimerProvider()),
+        ChangeNotifierProvider(create: (_) => EnhancedTimerProvider()),
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
       ],
@@ -91,6 +97,7 @@ class _MainScreenState extends State<MainScreen> {
             _currentIndex = index;
           });
         },
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.timer),

@@ -1,5 +1,5 @@
 name: focus_flow_timer
-description: A professional Pomodoro timer app with task tracking and analytics
+description: A professional Pomodoro timer app with enterprise-level features
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -22,6 +22,19 @@ dependencies:
   # Audio
   audioplayers: ^5.2.1
   
+  # Notifications (Enhanced)
+  flutter_local_notifications: ^17.0.0
+  timezone: ^0.9.2
+  
+  # Background Tasks
+  workmanager: ^0.5.2
+  
+  # Permissions
+  permission_handler: ^11.3.1
+  
+  # Wake Lock
+  wakelock_plus: ^1.2.4
+  
   # UI Components
   cupertino_icons: ^1.0.6
   google_fonts: ^6.1.0
@@ -30,6 +43,9 @@ dependencies:
   # Utilities
   intl: ^0.19.0
   uuid: ^4.2.1
+  
+  # Performance & Diagnostics
+  flutter_isolate: ^2.0.4
 
 dev_dependencies:
   flutter_test:
@@ -44,9 +60,9 @@ flutter:
   # assets:
   #   - assets/sounds/
   #   - assets/icons/
+  #   - assets/images/
   
-  # Note: Custom fonts removed until font file is available
   # fonts:
-  #   - family: CustomIcons
+  #   - family: TimerIcons
   #     fonts:
-  #       - asset: assets/fonts/CustomIcons.ttf
+  #       - asset: assets/fonts/timer_icons.ttf
