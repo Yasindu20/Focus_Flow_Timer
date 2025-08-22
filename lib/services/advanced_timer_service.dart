@@ -27,7 +27,7 @@ class AdvancedTimerService extends ChangeNotifier {
   // Core timer properties
   Timer? _primaryTimer;
   Timer? _precisionTimer;
-  Stopwatch _stopwatch = Stopwatch();
+  final Stopwatch _stopwatch = Stopwatch(); // Made final
 
   // State management
   TimerState _state = TimerState.idle;
@@ -38,12 +38,12 @@ class AdvancedTimerService extends ChangeNotifier {
   TimerPrecision _precision = TimerPrecision.centisecond;
   int _targetDurationMs = 0;
   int _elapsedMs = 0;
-  int _pausedMs = 0;
+  // Removed unused _pausedMs field
 
   // Session management
   int _sessionCount = 0;
   int _workSessionsCompleted = 0;
-  DateTime? _sessionStartTime;
+  // Removed unused _sessionStartTime field
   DateTime? _lastPauseTime;
 
   // Configuration
@@ -130,7 +130,6 @@ class AdvancedTimerService extends ChangeNotifier {
       await _notificationManager.showTimerStartedNotification(_currentSession!);
 
       _state = TimerState.running;
-      _sessionStartTime = DateTime.now();
       _stopwatch.start();
 
       onSessionStart?.call();
@@ -165,11 +164,6 @@ class AdvancedTimerService extends ChangeNotifier {
     if (!canResume) return;
 
     try {
-      if (_lastPauseTime != null) {
-        final pauseDuration = DateTime.now().difference(_lastPauseTime!);
-        _pausedMs += pauseDuration.inMilliseconds;
-      }
-
       _stopwatch.start();
       _state = TimerState.running;
 
@@ -250,10 +244,10 @@ class AdvancedTimerService extends ChangeNotifier {
     }
   }
 
-  /// Configure custom timer duration
+  /// Configure custom timer duration - Fixed to create new settings object
   void setCustomDuration(int minutes) {
     if (minutes >= 1 && minutes <= 180) {
-      _settings.customWorkDuration = minutes;
+      _settings = _settings.copyWith(customWorkDuration: minutes);
       _saveSettings();
       notifyListeners();
     }
@@ -288,7 +282,6 @@ class AdvancedTimerService extends ChangeNotifier {
         customDurationMinutes ?? _getSessionDuration(_currentType);
     _targetDurationMs = durationMinutes * 60 * 1000;
     _elapsedMs = 0;
-    _pausedMs = 0;
 
     _currentSession = TimerSession(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -349,13 +342,13 @@ class AdvancedTimerService extends ChangeNotifier {
   Duration _getPrecisionInterval() {
     switch (_precision) {
       case TimerPrecision.second:
-        return Duration(seconds: 1);
+        return const Duration(seconds: 1);
       case TimerPrecision.decisecond:
-        return Duration(milliseconds: 100);
+        return const Duration(milliseconds: 100);
       case TimerPrecision.centisecond:
-        return Duration(milliseconds: 10);
+        return const Duration(milliseconds: 10);
       case TimerPrecision.millisecond:
-        return Duration(milliseconds: 1);
+        return const Duration(milliseconds: 1);
     }
   }
 
@@ -446,7 +439,7 @@ class AdvancedTimerService extends ChangeNotifier {
         switch (message['action']) {
           case 'start':
             stopwatch.start();
-            timer = Timer.periodic(Duration(milliseconds: 1), (t) {
+            timer = Timer.periodic(const Duration(milliseconds: 1), (t) {
               mainSendPort.send({
                 'type': 'tick',
                 'elapsed': stopwatch.elapsedMilliseconds,
@@ -459,7 +452,7 @@ class AdvancedTimerService extends ChangeNotifier {
             break;
           case 'resume':
             stopwatch.start();
-            timer = Timer.periodic(Duration(milliseconds: 1), (t) {
+            timer = Timer.periodic(const Duration(milliseconds: 1), (t) {
               mainSendPort.send({
                 'type': 'tick',
                 'elapsed': stopwatch.elapsedMilliseconds,
@@ -519,10 +512,8 @@ class AdvancedTimerService extends ChangeNotifier {
   void _resetTimerState() {
     _state = TimerState.idle;
     _elapsedMs = 0;
-    _pausedMs = 0;
     _targetDurationMs = 0;
     _currentSession = null;
-    _sessionStartTime = null;
     _lastPauseTime = null;
     _stopwatch.reset();
   }
@@ -583,7 +574,7 @@ class AdvancedTimerService extends ChangeNotifier {
   Future<void> _initializePrecisionTiming() async {
     // Pre-warm timing systems for better accuracy
     final testStopwatch = Stopwatch()..start();
-    await Future.delayed(Duration(milliseconds: 1));
+    await Future.delayed(const Duration(milliseconds: 1));
     testStopwatch.stop();
   }
 
@@ -603,13 +594,14 @@ class AdvancedTimerService extends ChangeNotifier {
 
       case TimerPrecision.decisecond:
         final deciseconds = ms ~/ 100;
-        return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}.${deciseconds}';
+        return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}.$deciseconds';
 
       case TimerPrecision.centisecond:
         final centiseconds = ms ~/ 10;
         return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}.${centiseconds.toString().padLeft(2, '0')}';
 
       case TimerPrecision.millisecond:
+        // Fixed: Removed unnecessary braces in string interpolation
         return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}.${ms.toString().padLeft(3, '0')}';
     }
   }
