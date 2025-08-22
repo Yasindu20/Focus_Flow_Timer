@@ -50,7 +50,7 @@ class BackgroundTaskHandler {
         'completionTime': completionTime.toIso8601String(),
         'plannedDuration': session.plannedDuration,
       },
-      constraints: const Constraints(
+      constraints: Constraints(
         networkType: NetworkType.not_required,
         requiresBatteryNotLow: false,
         requiresCharging: false,
@@ -68,7 +68,7 @@ class BackgroundTaskHandler {
       _heartbeatTaskName,
       _heartbeatTaskName,
       frequency: const Duration(minutes: 15), // Minimum allowed by Android
-      constraints: const Constraints(
+      constraints: Constraints(
         networkType: NetworkType.not_required,
         requiresBatteryNotLow: false,
         requiresCharging: false,
@@ -86,7 +86,7 @@ class BackgroundTaskHandler {
       _recoveryTaskName,
       _recoveryTaskName,
       initialDelay: const Duration(minutes: 1),
-      constraints: const Constraints(
+      constraints: Constraints(
         networkType: NetworkType.not_required,
         requiresBatteryNotLow: false,
         requiresCharging: false,
