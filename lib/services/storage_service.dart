@@ -3,7 +3,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/task.dart';
 import '../models/pomodoro_session.dart';
 import '../models/daily_stats.dart';
-import 'dart:convert';
 
 class StorageService {
   static late SharedPreferences _prefs;
@@ -79,11 +78,9 @@ class StorageService {
 
   static List<DailyStats> getStatsForRange(DateTime start, DateTime end) {
     final stats = <DailyStats>[];
-    for (
-      var date = start;
-      date.isBefore(end) || date.isAtSameMomentAs(end);
-      date = date.add(const Duration(days: 1))
-    ) {
+    for (var date = start;
+        date.isBefore(end) || date.isAtSameMomentAs(end);
+        date = date.add(const Duration(days: 1))) {
       final dayStats = getStatsForDate(date);
       if (dayStats != null) {
         stats.add(dayStats);

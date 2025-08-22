@@ -11,14 +11,14 @@ class PrecisionCircularProgress extends StatefulWidget {
   final bool showMilliseconds;
 
   const PrecisionCircularProgress({
-    Key? key,
+    super.key,
     required this.progress,
     required this.color,
     this.backgroundColor = Colors.grey,
     this.strokeWidth = 8.0,
     this.precision = TimerPrecision.centisecond,
     this.showMilliseconds = false,
-  }) : super(key: key);
+  });
 
   @override
   State<PrecisionCircularProgress> createState() =>
@@ -132,7 +132,7 @@ class PrecisionCircularProgressPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    final startAngle = -pi / 2;
+    const startAngle = -pi / 2;
     final sweepAngle = 2 * pi * progress;
 
     // Draw precision segments for high-precision modes

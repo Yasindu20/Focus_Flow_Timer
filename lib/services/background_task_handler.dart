@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:isolate';
-import 'package:flutter/services.dart';
 import 'package:workmanager/workmanager.dart';
 import '../models/timer_session.dart';
 import 'notification_manager.dart';

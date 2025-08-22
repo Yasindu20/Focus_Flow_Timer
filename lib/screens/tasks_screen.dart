@@ -5,7 +5,7 @@ import '../widgets/task_item.dart';
 import '../models/task.dart';
 
 class TasksScreen extends StatefulWidget {
-  const TasksScreen({Key? key}) : super(key: key);
+  const TasksScreen({super.key});
 
   @override
   State<TasksScreen> createState() => _TasksScreenState();
@@ -40,7 +40,6 @@ class _TasksScreenState extends State<TasksScreen>
           ],
         ),
       ),
-
       body: Consumer<TaskProvider>(
         builder: (context, taskProvider, child) {
           return TabBarView(
@@ -61,7 +60,6 @@ class _TasksScreenState extends State<TasksScreen>
           );
         },
       ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddTaskDialog(context),
         child: const Icon(Icons.add),
@@ -164,7 +162,7 @@ class _TasksScreenState extends State<TasksScreen>
 }
 
 class AddTaskDialog extends StatefulWidget {
-  const AddTaskDialog({Key? key}) : super(key: key);
+  const AddTaskDialog({super.key});
 
   @override
   State<AddTaskDialog> createState() => _AddTaskDialogState();
@@ -199,9 +197,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
               ),
               autofocus: true,
             ),
-
             const SizedBox(height: 16),
-
             TextField(
               controller: _descriptionController,
               decoration: const InputDecoration(
@@ -210,9 +206,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
               ),
               maxLines: 3,
             ),
-
             const SizedBox(height: 16),
-
             Row(
               children: [
                 const Text('Estimated Pomodoros:'),
@@ -237,9 +231,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                 ),
               ],
             ),
-
             const SizedBox(height: 16),
-
             Row(
               children: [
                 const Text('Priority:'),
@@ -297,7 +289,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
 class TaskDetailsDialog extends StatelessWidget {
   final Task task;
 
-  const TaskDetailsDialog({Key? key, required this.task}) : super(key: key);
+  const TaskDetailsDialog({super.key, required this.task});
 
   @override
   Widget build(BuildContext context) {
@@ -315,7 +307,6 @@ class TaskDetailsDialog extends StatelessWidget {
             Text(task.description),
             const SizedBox(height: 12),
           ],
-
           const Text(
             'Progress:',
             style: TextStyle(fontWeight: FontWeight.bold),
@@ -330,17 +321,14 @@ class TaskDetailsDialog extends StatelessWidget {
                 : 0.0,
           ),
           const SizedBox(height: 12),
-
           const Text(
             'Priority:',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           Text(task.priority.name.toUpperCase()),
           const SizedBox(height: 12),
-
           const Text('Created:', style: TextStyle(fontWeight: FontWeight.bold)),
           Text(task.createdAt.toString().substring(0, 16)),
-
           if (task.completedAt != null) ...[
             const SizedBox(height: 8),
             const Text(

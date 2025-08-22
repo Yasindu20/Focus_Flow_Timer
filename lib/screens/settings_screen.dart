@@ -3,13 +3,12 @@ import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
-
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -24,9 +23,7 @@ class SettingsScreen extends StatelessWidget {
                     'Appearance',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
-
                   const SizedBox(height: 16),
-
                   Consumer<ThemeProvider>(
                     builder: (context, themeProvider, child) {
                       return SwitchListTile(
@@ -59,15 +56,12 @@ class SettingsScreen extends StatelessWidget {
                     'About',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
-
                   const SizedBox(height: 16),
-
-                  ListTile(
-                    leading: const Icon(Icons.info),
-                    title: const Text('App Version'),
-                    subtitle: const Text('1.0.0'),
+                  const ListTile(
+                    leading: Icon(Icons.info),
+                    title: Text('App Version'),
+                    subtitle: Text('1.0.0'),
                   ),
-
                   ListTile(
                     leading: const Icon(Icons.description),
                     title: const Text('Privacy Policy'),
@@ -75,7 +69,6 @@ class SettingsScreen extends StatelessWidget {
                       // Implement privacy policy navigation
                     },
                   ),
-
                   ListTile(
                     leading: const Icon(Icons.gavel),
                     title: const Text('Terms of Service'),
@@ -101,9 +94,7 @@ class SettingsScreen extends StatelessWidget {
                     'Support',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
-
                   const SizedBox(height: 16),
-
                   ListTile(
                     leading: const Icon(Icons.help),
                     title: const Text('Help & FAQ'),
@@ -111,7 +102,6 @@ class SettingsScreen extends StatelessWidget {
                       // Implement help navigation
                     },
                   ),
-
                   ListTile(
                     leading: const Icon(Icons.email),
                     title: const Text('Contact Support'),
@@ -119,7 +109,6 @@ class SettingsScreen extends StatelessWidget {
                       // Implement contact support
                     },
                   ),
-
                   ListTile(
                     leading: const Icon(Icons.star),
                     title: const Text('Rate App'),

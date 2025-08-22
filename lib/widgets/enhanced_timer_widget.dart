@@ -8,7 +8,7 @@ import 'timer_controls.dart';
 import 'session_recovery_dialog.dart';
 
 class EnhancedTimerWidget extends StatefulWidget {
-  const EnhancedTimerWidget({Key? key}) : super(key: key);
+  const EnhancedTimerWidget({super.key});
 
   @override
   State<EnhancedTimerWidget> createState() => _EnhancedTimerWidgetState();
@@ -365,7 +365,7 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
       ),
       child: Row(
         children: [
-          Icon(Icons.error, color: Colors.red, size: 20),
+          const Icon(Icons.error, color: Colors.red, size: 20),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

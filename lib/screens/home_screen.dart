@@ -95,7 +95,7 @@ class HomeScreen extends StatelessWidget {
                                         value: task.id,
                                         child: Text(task.title),
                                       );
-                                    }).toList(),
+                                    }),
                                   ],
                                   onChanged: (taskId) {
                                     timerProvider.setCurrentTask(taskId);

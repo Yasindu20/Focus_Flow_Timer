@@ -4,7 +4,7 @@ import '../providers/enhanced_timer_provider.dart'; // Updated import
 import '../services/storage_service.dart';
 
 class SoundSelector extends StatefulWidget {
-  const SoundSelector({Key? key}) : super(key: key);
+  const SoundSelector({super.key});
 
   @override
   State<SoundSelector> createState() => _SoundSelectorState();
@@ -66,7 +66,7 @@ class _SoundSelectorState extends State<SoundSelector> {
                       }
                     },
                   );
-                }).toList(),
+                }),
 
                 const SizedBox(height: 16),
 

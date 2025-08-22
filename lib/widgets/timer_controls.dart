@@ -11,14 +11,14 @@ class TimerControls extends StatefulWidget {
   final TimerState state;
 
   const TimerControls({
-    Key? key,
+    super.key,
     required this.onStart,
     required this.onPause,
     required this.onResume,
     required this.onStop,
     required this.onSkip,
     required this.state,
-  }) : super(key: key);
+  });
 
   @override
   State<TimerControls> createState() => _TimerControlsState();

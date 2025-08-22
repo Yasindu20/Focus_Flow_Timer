@@ -9,12 +9,12 @@ class TaskItem extends StatelessWidget {
   final VoidCallback? onDelete;
 
   const TaskItem({
-    Key? key,
+    super.key,
     required this.task,
     this.onTap,
     this.onComplete,
     this.onDelete,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +31,6 @@ class TaskItem extends StatelessWidget {
             ),
           ),
         ),
-
         title: Text(
           task.title,
           style: TextStyle(
@@ -39,7 +38,6 @@ class TaskItem extends StatelessWidget {
             color: task.isCompleted ? Colors.grey : null,
           ),
         ),
-
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -81,7 +79,6 @@ class TaskItem extends StatelessWidget {
             ),
           ],
         ),
-
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -99,7 +96,6 @@ class TaskItem extends StatelessWidget {
             ),
           ],
         ),
-
         onTap: onTap,
       ),
     );
