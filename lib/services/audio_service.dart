@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import '../core/constants/app_constants.dart';
+import 'advanced_timer_service.dart';
 
 class AudioService {
   static final AudioService _instance = AudioService._internal();
@@ -7,6 +8,7 @@ class AudioService {
   AudioService._internal();
 
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _effectPlayer = AudioPlayer(); // For completion sounds
   bool _isPlaying = false;
   String? _currentTrack;
   double _volume = 0.5;
@@ -79,7 +81,33 @@ class AudioService {
     }
   }
 
+  // Add this method for completion sounds
+  Future<void> playCompletionSound(TimerType timerType) async {
+    try {
+      String soundPath;
+      switch (timerType) {
+        case TimerType.work:
+          soundPath = 'sounds/work_complete.mp3';
+          break;
+        case TimerType.shortBreak:
+          soundPath = 'sounds/break_complete.mp3';
+          break;
+        case TimerType.longBreak:
+          soundPath = 'sounds/long_break_complete.mp3';
+          break;
+        case TimerType.custom:
+          soundPath = 'sounds/custom_complete.mp3';
+          break;
+      }
+
+      await _effectPlayer.play(AssetSource(soundPath));
+    } catch (e) {
+      print('Error playing completion sound: $e');
+    }
+  }
+
   void dispose() {
     _audioPlayer.dispose();
+    _effectPlayer.dispose();
   }
 }

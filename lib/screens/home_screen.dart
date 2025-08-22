@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/timer_provider.dart';
+import '../providers/enhanced_timer_provider.dart'; // Updated import
 import '../providers/task_provider.dart';
-import '../widgets/timer_widget.dart';
+import '../widgets/enhanced_timer_widget.dart'; // Updated import
 import '../widgets/sound_selector.dart';
 import '../models/task.dart';
 
@@ -60,7 +60,6 @@ class HomeScreen extends StatelessWidget {
                             style: Theme.of(context).textTheme.headlineSmall,
                           ),
                           const SizedBox(height: 12),
-
                           if (incompleteTasks.isEmpty) ...[
                             Text(
                               'No tasks available. Add a task to get started!',
@@ -73,7 +72,8 @@ class HomeScreen extends StatelessWidget {
                               child: const Text('Add Task'),
                             ),
                           ] else ...[
-                            Consumer<TimerProvider>(
+                            Consumer<EnhancedTimerProvider>(
+                              // Updated provider
                               builder: (context, timerProvider, child) {
                                 final currentTaskId =
                                     timerProvider.currentTaskId;
@@ -105,7 +105,6 @@ class HomeScreen extends StatelessWidget {
                                 );
                               },
                             ),
-
                             const SizedBox(height: 8),
                             TextButton(
                               onPressed: () =>
@@ -123,7 +122,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 32),
 
               // Timer widget
-              const TimerWidget(),
+              const EnhancedTimerWidget(), // Updated widget
 
               const SizedBox(height: 32),
 

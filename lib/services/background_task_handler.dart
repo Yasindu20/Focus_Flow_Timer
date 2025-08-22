@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:workmanager/workmanager.dart';
 import '../models/timer_session.dart';
 import 'notification_manager.dart';
+import '../services/advanced_timer_service.dart';
+import 'session_recovery_service.dart';
 
 class BackgroundTaskHandler {
   static const String _timerTaskName = 'timer_background_task';

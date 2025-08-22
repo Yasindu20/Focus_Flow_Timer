@@ -1,7 +1,13 @@
 import 'dart:math';
+import 'dart:typed_data';
+import 'dart:ui';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz_data;
 import '../models/timer_session.dart';
+import 'advanced_timer_service.dart';
 
 class NotificationManager {
   static final NotificationManager _instance = NotificationManager._internal();
@@ -20,10 +26,14 @@ class NotificationManager {
   Future<void> initialize() async {
     if (_initialized) return;
 
+    // Initialize timezone data
+    tz_data.initializeTimeZones();
+
     _notificationsPlugin = FlutterLocalNotificationsPlugin();
 
     // Android settings
-    const androidSettings = AndroidInitializationSettings('@drawable/ic_timer');
+    const androidSettings =
+        AndroidInitializationSettings('@drawable/ic_launcher');
 
     // iOS settings
     const iosSettings = DarwinInitializationSettings(
@@ -168,7 +178,7 @@ class NotificationManager {
     await _notificationsPlugin.show(
       _recoveryId,
       'Resume Timer Session',
-      'You have an unfinished ${session.type.name} session. Would you like to resume?',
+      'You have an unfinished ${_getTimerTypeName(session.type)} session. Would you like to resume?',
       _getRecoveryNotificationDetails(),
       payload: 'recovery:${session.id}',
     );
@@ -398,10 +408,22 @@ class NotificationManager {
     }
   }
 
-  TZDateTime _toTZDateTime(DateTime dateTime) {
-    // Convert to timezone-aware datetime
-    // This is a simplified implementation
-    return TZDateTime.from(dateTime, getLocation('UTC'));
+  String _getTimerTypeName(TimerType type) {
+    switch (type) {
+      case TimerType.work:
+        return 'work';
+      case TimerType.shortBreak:
+        return 'short break';
+      case TimerType.longBreak:
+        return 'long break';
+      case TimerType.custom:
+        return 'custom';
+    }
+  }
+
+  tz.TZDateTime _toTZDateTime(DateTime dateTime) {
+    final location = tz.getLocation('UTC');
+    return tz.TZDateTime.from(dateTime, location);
   }
 
   int _generateNotificationId() {
@@ -435,19 +457,19 @@ class NotificationManager {
       case 'session_completed':
         if (actionId == 'start_break') {
           // Start break session
-          AdvancedTimerService().startTimer(type: TimerType.shortBreak);
+          // AdvancedTimerService().startTimer(type: TimerType.shortBreak);
         } else if (actionId == 'start_work') {
           // Start work session
-          AdvancedTimerService().startTimer(type: TimerType.work);
+          // AdvancedTimerService().startTimer(type: TimerType.work);
         }
         break;
       case 'recovery':
         if (actionId == 'resume_session') {
           // Resume the session
-          AdvancedTimerService().resumeTimer();
+          // AdvancedTimerService().resumeTimer();
         } else if (actionId == 'cancel_session') {
           // Cancel the session
-          AdvancedTimerService().stopTimer();
+          // AdvancedTimerService().stopTimer();
         }
         break;
       case 'milestone':

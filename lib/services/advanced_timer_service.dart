@@ -100,6 +100,12 @@ class AdvancedTimerService extends ChangeNotifier {
     await _initializePrecisionTiming();
   }
 
+  // Add this method to AdvancedTimerService class
+  Future<void> showErrorNotification(String message) async {
+    final notificationManager = NotificationManager();
+    await notificationManager.showErrorNotification(message);
+  }
+
   /// Set timer precision level
   void setPrecision(TimerPrecision precision) {
     _precision = precision;

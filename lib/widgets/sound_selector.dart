@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/enhanced_timer_provider.dart';
+import '../providers/enhanced_timer_provider.dart'; // Updated import
 import '../services/storage_service.dart';
 
 class SoundSelector extends StatefulWidget {
@@ -23,7 +23,8 @@ class _SoundSelectorState extends State<SoundSelector> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<TimerProvider>(
+    return Consumer<EnhancedTimerProvider>(
+      // Updated provider
       builder: (context, timerProvider, child) {
         final audioService = timerProvider.audioService;
 
