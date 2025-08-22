@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../models/task.dart';
+import '../models/enhanced_task.dart';
 import '../models/pomodoro_session.dart';
 import '../models/daily_stats.dart';
 

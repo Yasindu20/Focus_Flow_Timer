@@ -39,6 +39,13 @@ dependencies:
   cupertino_icons: ^1.0.6
   google_fonts: ^6.1.0
   flutter_svg: ^2.0.9
+
+  # Charts and Visualization
+  fl_chart: ^0.66.0
+
+  # HTTP and API
+  http: ^1.1.0
+  dio: ^5.4.0
   
   # Utilities
   intl: ^0.19.0
@@ -46,6 +53,13 @@ dependencies:
   
   # Performance & Diagnostics
   flutter_isolate: ^2.0.4
+
+  # Machine Learning
+  tflite: ^1.1.2
+  ml_linalg: ^13.16.1
+
+  # JSON Processing
+  json_annotation: ^4.8.1
 
 dev_dependencies:
   flutter_test:

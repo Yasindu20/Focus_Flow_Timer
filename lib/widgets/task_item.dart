@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/task.dart';
+import '../models/enhanced_task.dart';
 import '../core/constants/colors.dart';
 
 class TaskItem extends StatelessWidget {

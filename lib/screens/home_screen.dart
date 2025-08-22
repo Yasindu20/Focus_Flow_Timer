@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/enhanced_timer_provider.dart';
-import '../providers/task_provider.dart';
+import '../providers/smart_task_provider.dart';
 import '../widgets/enhanced_timer_widget.dart';
 import '../widgets/sound_selector.dart';
 
