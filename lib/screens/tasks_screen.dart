@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/smart_task_provider.dart';
 import '../widgets/task_item.dart';
+import '../models/task.dart';
 import '../models/enhanced_task.dart';
 
 class TasksScreen extends StatefulWidget {
@@ -40,20 +41,20 @@ class _TasksScreenState extends State<TasksScreen>
           ],
         ),
       ),
-      body: Consumer<TaskProvider>(
-        builder: (context, taskProvider, child) {
+      body: Consumer<SmartTaskProvider>(
+        builder: (context, smartTaskProvider, child) {
           return TabBarView(
             controller: _tabController,
             children: [
               // Active tasks
-              _buildTaskList(
-                tasks: taskProvider.incompleteTasks,
+              _buildEnhancedTaskList(
+                tasks: smartTaskProvider.activeTasks,
                 emptyMessage: 'No active tasks. Add your first task!',
               ),
 
               // Completed tasks
-              _buildTaskList(
-                tasks: taskProvider.completedTasks,
+              _buildEnhancedTaskList(
+                tasks: smartTaskProvider.completedTasks,
                 emptyMessage: 'No completed tasks yet.',
               ),
             ],
@@ -67,8 +68,8 @@ class _TasksScreenState extends State<TasksScreen>
     );
   }
 
-  Widget _buildTaskList({
-    required List<Task> tasks,
+  Widget _buildEnhancedTaskList({
+    required List<EnhancedTask> tasks,
     required String emptyMessage,
   }) {
     if (tasks.isEmpty) {
@@ -94,16 +95,18 @@ class _TasksScreenState extends State<TasksScreen>
       itemCount: tasks.length,
       itemBuilder: (context, index) {
         final task = tasks[index];
+        final legacyTask = Task.fromEnhancedTask(task);
 
         return TaskItem(
           task: task,
-          onTap: () => _showTaskDetailsDialog(context, task),
-          onComplete: () => _completeTask(context, task),
-          onDelete: () => _deleteTask(context, task),
+          onTap: () => _showTaskDetailsDialog(context, legacyTask),
+          onComplete: () => _completeTask(context, legacyTask),
+          onDelete: () => _deleteTask(context, legacyTask),
         );
       },
     );
   }
+
 
   void _showAddTaskDialog(BuildContext context) {
     showDialog(context: context, builder: (context) => const AddTaskDialog());
@@ -117,8 +120,8 @@ class _TasksScreenState extends State<TasksScreen>
   }
 
   void _completeTask(BuildContext context, Task task) {
-    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
-    taskProvider.completeTask(task.id);
+    final smartTaskProvider = Provider.of<SmartTaskProvider>(context, listen: false);
+    smartTaskProvider.completeTask(task.id);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -146,11 +149,11 @@ class _TasksScreenState extends State<TasksScreen>
           ),
           TextButton(
             onPressed: () {
-              final taskProvider = Provider.of<TaskProvider>(
+              final smartTaskProvider = Provider.of<SmartTaskProvider>(
                 context,
                 listen: false,
               );
-              taskProvider.deleteTask(task.id);
+              smartTaskProvider.deleteTask(task.id);
               Navigator.pop(context);
             },
             child: const Text('Delete'),
@@ -269,20 +272,29 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
     );
   }
 
-  void _addTask() {
+  void _addTask() async {
     if (_titleController.text.trim().isEmpty) {
       return;
     }
 
-    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
-    taskProvider.addTask(
-      title: _titleController.text.trim(),
-      description: _descriptionController.text.trim(),
-      estimatedPomodoros: _estimatedPomodoros,
-      priority: _priority,
-    );
-
-    Navigator.pop(context);
+    final smartTaskProvider = Provider.of<SmartTaskProvider>(context, listen: false);
+    
+    try {
+      await smartTaskProvider.createTaskWithAI(
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        priority: _priority,
+      );
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      // Fallback to basic task creation if AI fails
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('AI enhancement failed, created basic task: $e')),
+        );
+        Navigator.pop(context);
+      }
+    }
   }
 }
 

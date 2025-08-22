@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 import '../models/enhanced_task.dart';
+import '../models/enhanced_task.dart' as enhanced;
+import '../models/task.dart';
+import '../models/ai_insights.dart';
 import '../services/task_analytics_engine.dart';
 import '../core/ai/task_intelligence_engine.dart';
 import '../services/api_integration_service.dart';
@@ -127,7 +130,7 @@ class SmartTaskProvider extends ChangeNotifier {
         estimatedMinutes: estimation.estimatedMinutes,
         tags: tags ?? categorization.smartTags,
         subtasks: estimation.suggestedBreakdown
-            .map((breakdown) => TaskSubtask(
+            .map((breakdown) => enhanced.TaskSubtask(
                   id: DateTime.now().millisecondsSinceEpoch.toString(),
                   title: breakdown.title,
                   description: breakdown.description,
@@ -139,7 +142,7 @@ class SmartTaskProvider extends ChangeNotifier {
           complexityScore: estimation.complexityScore,
           confidenceLevel: estimation.confidenceLevel,
           suggestedTags: categorization.smartTags,
-          relatedTaskIds: categorization.relatedTasks.map((t) => t.id).toList(),
+          relatedTaskIds: categorization.relatedTaskIds,
           categoryProbabilities: {
             categorization.suggestedCategory.name:
                 categorization.categoryConfidence
@@ -152,7 +155,7 @@ class SmartTaskProvider extends ChangeNotifier {
       _tasks.add(task);
 
       // Save to storage
-      await StorageService.addTask(task);
+      await StorageService.addTask(Task.fromEnhancedTask(task));
 
       notifyListeners();
       return task;
@@ -202,7 +205,7 @@ class SmartTaskProvider extends ChangeNotifier {
       final index = _tasks.indexWhere((t) => t.id == task.id);
       if (index != -1) {
         _tasks[index] = updatedTask;
-        await StorageService.updateTask(updatedTask);
+        await StorageService.updateTask(Task.fromEnhancedTask(updatedTask));
       }
       notifyListeners();
     } catch (e) {
@@ -263,7 +266,7 @@ class SmartTaskProvider extends ChangeNotifier {
       await _analyticsEngine.recordTaskCompletion(completionData);
       // Update task in list and storage
       _tasks[taskIndex] = completedTask;
-      await StorageService.updateTask(completedTask);
+      await StorageService.updateTask(Task.fromEnhancedTask(completedTask));
       // Refresh analytics
       await _refreshAnalytics();
       notifyListeners();
@@ -398,7 +401,7 @@ class SmartTaskProvider extends ChangeNotifier {
       );
     } catch (e) {
       debugPrint('Error getting AI insights: $e');
-      return AIInsights.empty(_currentUserId!);
+      return AIInsights.empty(_currentUserId ?? 'default');
     }
   }
 
@@ -459,7 +462,7 @@ class SmartTaskProvider extends ChangeNotifier {
   // CRUD Operations
   Future<void> addTask(EnhancedTask task) async {
     _tasks.add(task);
-    await StorageService.addTask(task);
+    await StorageService.addTask(Task.fromEnhancedTask(task));
     notifyListeners();
   }
 
@@ -467,7 +470,7 @@ class SmartTaskProvider extends ChangeNotifier {
     final index = _tasks.indexWhere((t) => t.id == task.id);
     if (index != -1) {
       _tasks[index] = task;
-      await StorageService.updateTask(task);
+      await StorageService.updateTask(Task.fromEnhancedTask(task));
       notifyListeners();
     }
   }
@@ -489,7 +492,8 @@ class SmartTaskProvider extends ChangeNotifier {
   // Private Methods
   Future<void> _loadTasks() async {
     try {
-      _tasks = StorageService.tasks;
+      final storedTasks = StorageService.tasks;
+      _tasks = storedTasks.map((task) => task.toEnhancedTask()).toList();
     } catch (e) {
       debugPrint('Error loading tasks: $e');
       _tasks = [];
@@ -499,7 +503,7 @@ class SmartTaskProvider extends ChangeNotifier {
   Future<void> _saveTasks() async {
     try {
       for (final task in _tasks) {
-        await StorageService.updateTask(task);
+        await StorageService.updateTask(Task.fromEnhancedTask(task));
       }
     } catch (e) {
       debugPrint('Error saving tasks: $e');

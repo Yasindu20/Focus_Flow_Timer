@@ -118,6 +118,9 @@ class EnhancedTask extends HiveObject {
     return null;
   }
 
+  int get completedPomodoros => metrics.pomodoroSessionsCompleted;
+  int get estimatedPomodoros => (estimatedMinutes / 25).ceil();
+
   bool get isOverdue {
     if (dueDate == null || isCompleted) return false;
     return DateTime.now().isAfter(dueDate!);
@@ -708,6 +711,26 @@ class TaskAIData extends HiveObject {
       lastAnalyzed: json['lastAnalyzed'] != null
           ? DateTime.parse(json['lastAnalyzed'])
           : null,
+    );
+  }
+
+  TaskAIData copyWith({
+    double? complexityScore,
+    double? confidenceLevel,
+    List<String>? suggestedTags,
+    List<String>? relatedTaskIds,
+    Map<String, double>? categoryProbabilities,
+    List<String>? optimizationTips,
+    DateTime? lastAnalyzed,
+  }) {
+    return TaskAIData(
+      complexityScore: complexityScore ?? this.complexityScore,
+      confidenceLevel: confidenceLevel ?? this.confidenceLevel,
+      suggestedTags: suggestedTags ?? this.suggestedTags,
+      relatedTaskIds: relatedTaskIds ?? this.relatedTaskIds,
+      categoryProbabilities: categoryProbabilities ?? this.categoryProbabilities,
+      optimizationTips: optimizationTips ?? this.optimizationTips,
+      lastAnalyzed: lastAnalyzed ?? this.lastAnalyzed,
     );
   }
 }

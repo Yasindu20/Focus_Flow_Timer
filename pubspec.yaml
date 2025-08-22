@@ -54,9 +54,8 @@ dependencies:
   # Performance & Diagnostics
   flutter_isolate: ^2.0.4
 
-  # Machine Learning
-  tflite: ^1.1.2
-  ml_linalg: ^13.12.6
+  # Machine Learning - Using simplified approach with built-in packages
+  vector_math: ^2.1.4
 
   # JSON Processing
   json_annotation: ^4.8.1

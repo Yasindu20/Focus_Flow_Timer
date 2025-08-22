@@ -195,7 +195,7 @@ class _SmartTaskCreationWidgetState extends State<SmartTaskCreationWidget>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
+              color: AppColors.success.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Row(
@@ -443,9 +443,9 @@ class _SmartTaskCreationWidgetState extends State<SmartTaskCreationWidget>
             }
           : null,
       backgroundColor:
-          isAiSuggested ? AppColors.primaryBlue.withOpacity(0.1) : null,
+          isAiSuggested ? AppColors.primaryBlue.withValues(alpha: 0.1) : null,
       side: isAiSuggested
-          ? BorderSide(color: AppColors.primaryBlue.withOpacity(0.3))
+          ? BorderSide(color: AppColors.primaryBlue.withValues(alpha: 0.3))
           : null,
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
@@ -470,13 +470,13 @@ class _SmartTaskCreationWidgetState extends State<SmartTaskCreationWidget>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primaryBlue.withOpacity(0.05),
-            AppColors.primaryLight.withOpacity(0.1),
+            AppColors.primaryBlue.withValues(alpha: 0.05),
+            AppColors.primaryLight.withValues(alpha: 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.primaryBlue.withOpacity(0.2),
+          color: AppColors.primaryBlue.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -503,7 +503,7 @@ class _SmartTaskCreationWidgetState extends State<SmartTaskCreationWidget>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryBlue.withOpacity(0.1),
+                    color: AppColors.primaryBlue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(

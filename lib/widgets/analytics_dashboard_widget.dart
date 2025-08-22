@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
- import 'package:provider/provider.dart';
- import '../providers/smart_task_provider.dart';
- import '../models/task_analytics.dart';
- import '../core/constants/colors.dart';
- import 'package:fl_chart/fl_chart.dart';
+import 'package:provider/provider.dart';
+import '../providers/smart_task_provider.dart';
+import '../models/task_analytics.dart';
+import '../models/enhanced_task.dart';
+import '../core/constants/colors.dart';
+import 'package:fl_chart/fl_chart.dart';
  class AnalyticsDashboardWidget extends StatefulWidget {
   const AnalyticsDashboardWidget({super.key});
   @override
@@ -128,7 +129,7 @@ import 'package:flutter/material.dart';
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
  ),
       child: Row(
         children: [
@@ -136,7 +137,7 @@ import 'package:flutter/material.dart';
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '${_selectedStartDate.day}/${_selectedStartDate.month}/${_selectedStartDate.year} - ${_selectedEndDate.day}/${
+              '${_selectedStartDate.day}/${_selectedStartDate.month}/${_selectedStartDate.year} - ${_selectedEndDate.day}/${_selectedEndDate.month}/${_selectedEndDate.year}',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
@@ -229,7 +230,7 @@ import 'package:flutter/material.dart';
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -243,7 +244,7 @@ import 'package:flutter/material.dart';
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 20),
@@ -288,7 +289,7 @@ import 'package:flutter/material.dart';
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -344,7 +345,7 @@ import 'package:flutter/material.dart';
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: AppColors.primaryBlue.withOpacity(0.1),
+                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
                     ),
                   ),
                 ],
@@ -364,7 +365,7 @@ import 'package:flutter/material.dart';
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -453,7 +454,7 @@ decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -500,7 +501,7 @@ decoration: BoxDecoration(
         const SizedBox(height: 4),
         LinearProgressIndicator(
           value: value,
-          backgroundColor: Colors.grey.withOpacity(0.2),
+          backgroundColor: Colors.grey.withValues(alpha: 0.2),
           valueColor: AlwaysStoppedAnimation<Color>(color),
         ),
       ],
@@ -514,7 +515,7 @@ decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -547,7 +548,7 @@ Widget _buildFocusAnalysis() {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -581,7 +582,7 @@ Widget _buildFocusAnalysis() {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -612,7 +613,7 @@ Widget _buildFocusAnalysis() {
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: AppColors.primaryBlue.withOpacity(0.1),
+                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
                     ),
                   ),
                 ],
@@ -631,7 +632,7 @@ Widget _buildFocusAnalysis() {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
- color: Colors.black.withOpacity(0.05),
+ color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -676,7 +677,7 @@ Widget _buildFocusAnalysis() {
           flex: 3,
           child: LinearProgressIndicator(
             value: efficiency,
-            backgroundColor: Colors.grey.withOpacity(0.2),
+            backgroundColor: Colors.grey.withValues(alpha: 0.2),
  valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),
@@ -695,7 +696,7 @@ Widget _buildFocusAnalysis() {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -727,10 +728,10 @@ Widget _buildRecommendationCard(ProductivityRecommendation recommendation) {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _getRecommendationColor(recommendation.impact).withOpacity(0.1),
+        color: _getRecommendationColor(recommendation.impact).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: _getRecommendationColor(recommendation.impact).withOpacity(0.3),
+          color: _getRecommendationColor(recommendation.impact).withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -786,7 +787,7 @@ const SizedBox(height: 8),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -837,9 +838,9 @@ const SizedBox(height: 12),
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -881,7 +882,7 @@ const SizedBox(height: 12),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -928,9 +929,9 @@ const SizedBox(height: 12),
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

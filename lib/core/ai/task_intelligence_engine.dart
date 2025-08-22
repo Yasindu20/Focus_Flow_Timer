@@ -4,9 +4,12 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../../models/enhanced_task.dart';
 import '../../models/task_analytics.dart';
-import '../../models/ai_insights.dart';
-import '../../services/machine_learning_service.dart';
+import '../../models/ai_insights.dart' as ai;
+import '../../services/machine_learning_service.dart' hide ScheduledTask;
 import '../../services/api_integration_service.dart';
+
+// Import with specific aliases to avoid conflicts
+import '../../models/enhanced_task.dart' as enhanced show TaskCategory, TaskPriority, TaskSubtask;
 
 class TaskIntelligenceEngine {
   static final TaskIntelligenceEngine _instance = TaskIntelligenceEngine._internal();
@@ -46,7 +49,7 @@ class TaskIntelligenceEngine {
   }
 
   /// AI-Powered Task Duration Estimation
-  Future<TaskEstimation> estimateTaskDuration({
+  Future<ai.TaskEstimation> estimateTaskDuration({
     required String title,
     required String description,
     required TaskCategory category,
@@ -83,7 +86,7 @@ class TaskIntelligenceEngine {
       final confidence = _calculateConfidenceLevel(baseEstimate, historicalPattern);
       
       // Create estimation with breakdown
-      return TaskEstimation(
+      return ai.TaskEstimation(
         estimatedMinutes: baseEstimate.round(),
         confidenceLevel: confidence,
         complexityScore: complexityScore,
@@ -93,7 +96,7 @@ class TaskIntelligenceEngine {
           'context_factor': contextFactor,
           'historical_factor': historicalPattern['average'] ?? 25.0,
         },
-        suggestedBreakdown: _generateTaskBreakdown(title, description, baseEstimate),
+        suggestedBreakdown: _generateAITaskBreakdown(title, description, baseEstimate),
         alternativeEstimates: _generateAlternativeEstimates(baseEstimate, confidence),
         tips: _generateProductivityTips(category, complexityScore, userFactor),
       );
@@ -107,7 +110,7 @@ class TaskIntelligenceEngine {
   }
 
   /// Smart Task Categorization
-  Future<TaskCategorizationResult> categorizeTask({
+  Future<ai.TaskCategorizationResult> categorizeTask({
     required String title,
     required String description,
     Map<String, dynamic>? metadata,
@@ -121,7 +124,8 @@ class TaskIntelligenceEngine {
       final intent = nlpAnalysis['intent'] as String? ?? 'general';
       
       // Apply ML classification model
-      final categoryProbabilities = await _mlService.classifyTaskCategory(
+      // final categoryProbabilities = await _mlService.classifyTaskCategory( // Disabled
+      final categoryProbabilities = _simpleCategoryClassification(
         title: title,
         description: description,
         keywords: keywords,
@@ -135,7 +139,7 @@ class TaskIntelligenceEngine {
       // Generate tags automatically
       final smartTags = _generateSmartTags(keywords, intent, nlpAnalysis);
       
-      return TaskCategorizationResult(
+      return ai.TaskCategorizationResult(
         suggestedCategory: _getBestCategory(categoryProbabilities),
         categoryConfidence: categoryProbabilities.values.isNotEmpty ? 
             categoryProbabilities.values.reduce(max) : 0.0,
@@ -181,7 +185,7 @@ class TaskIntelligenceEngine {
   }
 
   /// Generate AI Insights and Recommendations
-  Future<AIInsights> generateInsights({
+  Future<ai.AIInsights> generateInsights({
     required String userId,
     required DateTime startDate,
     required DateTime endDate,
@@ -207,7 +211,7 @@ class TaskIntelligenceEngine {
         userId, productivityAnalysis
       );
       
-      return AIInsights(
+      return ai.AIInsights(
         userId: userId,
         analysisDate: DateTime.now(),
         productivityScore: productivityAnalysis['overallScore'] ?? 0.0,
@@ -227,7 +231,7 @@ class TaskIntelligenceEngine {
   }
 
   /// Smart Task Scheduling
-  Future<TaskScheduleRecommendation> recommendSchedule({
+  Future<ai.TaskScheduleRecommendation> recommendSchedule({
     required List<EnhancedTask> tasks,
     required DateTime startDate,
     required DateTime endDate,
@@ -241,7 +245,8 @@ class TaskIntelligenceEngine {
       final performanceTimes = await _getUserOptimalTimes(constraints['userId']);
       
       // Apply scheduling algorithm
-      final schedule = await _mlService.optimizeSchedule(
+      // final schedule = await _mlService.optimizeSchedule( // Disabled
+      final schedule = _simpleScheduleOptimization(
         tasks: tasks,
         dependencies: dependencies,
         performanceTimes: performanceTimes,
@@ -250,7 +255,7 @@ class TaskIntelligenceEngine {
         endDate: endDate,
       );
       
-      return TaskScheduleRecommendation(
+      return ai.TaskScheduleRecommendation(
         recommendedSchedule: schedule,
         confidenceScore: _calculateScheduleConfidence(schedule, tasks),
         alternativeOptions: _generateAlternativeSchedules(tasks, constraints),
@@ -347,19 +352,20 @@ class TaskIntelligenceEngine {
     return (baseConfidence + dataConfidence) / 2;
   }
 
-  List<TaskSubtask> _generateTaskBreakdown(String title, String description, double totalMinutes) {
-    // AI-powered task breakdown logic
-    final subtasks = <TaskSubtask>[];
+  List<enhanced.TaskSubtask> _generateTaskBreakdown(String title, String description, double totalMinutes) {
+    // AI-powered task breakdown logic (using enhanced_task TaskSubtask)
+    final subtasks = <enhanced.TaskSubtask>[];
     
     // Simple rule-based breakdown for now
     if (totalMinutes > 45) {
       final numSubtasks = (totalMinutes / 25).ceil();
       for (int i = 0; i < numSubtasks; i++) {
-        subtasks.add(TaskSubtask(
+        subtasks.add(enhanced.TaskSubtask(
           id: 'subtask_$i',
           title: 'Phase ${i + 1}',
-          estimatedMinutes: (totalMinutes / numSubtasks).round(),
           description: 'Generated subtask ${i + 1}',
+          estimatedMinutes: (totalMinutes / numSubtasks).round(),
+          createdAt: DateTime.now(),
         ));
       }
     }
@@ -367,19 +373,39 @@ class TaskIntelligenceEngine {
     return subtasks;
   }
 
-  List<EstimateAlternative> _generateAlternativeEstimates(double base, double confidence) {
+  List<ai.TaskSubtask> _generateAITaskBreakdown(String title, String description, double totalMinutes) {
+    // AI-powered task breakdown logic (using ai_insights TaskSubtask)
+    final subtasks = <ai.TaskSubtask>[];
+    
+    // Simple rule-based breakdown for now
+    if (totalMinutes > 45) {
+      final numSubtasks = (totalMinutes / 25).ceil();
+      for (int i = 0; i < numSubtasks; i++) {
+        subtasks.add(ai.TaskSubtask(
+          id: 'subtask_$i',
+          title: 'Phase ${i + 1}',
+          description: 'Generated subtask ${i + 1}',
+          estimatedMinutes: (totalMinutes / numSubtasks).round(),
+        ));
+      }
+    }
+    
+    return subtasks;
+  }
+
+  List<ai.EstimateAlternative> _generateAlternativeEstimates(double base, double confidence) {
     return [
-      EstimateAlternative(
+      ai.EstimateAlternative(
         scenario: 'Optimistic',
         minutes: (base * 0.8).round(),
         probability: confidence > 0.8 ? 0.3 : 0.2,
       ),
-      EstimateAlternative(
+      ai.EstimateAlternative(
         scenario: 'Realistic',
         minutes: base.round(),
         probability: confidence,
       ),
-      EstimateAlternative(
+      ai.EstimateAlternative(
         scenario: 'Pessimistic',
         minutes: (base * 1.5).round(),
         probability: confidence > 0.7 ? 0.2 : 0.3,
@@ -420,7 +446,102 @@ class TaskIntelligenceEngine {
     return tips;
   }
 
-  TaskEstimation _fallbackEstimation(String title, String description, TaskCategory category, TaskPriority priority) {
+  Map<String, dynamic> _simpleNLPAnalysis(String title, String description) {
+    return {
+      'sentiment': 0.5,
+      'complexity': title.length / 100.0 + description.length / 1000.0,
+      'keywords': title.toLowerCase().split(' '),
+    };
+  }
+
+  Map<String, double> _simpleCategoryClassification({
+    required String title,
+    required String description,
+    required List<String> keywords,
+    required String intent,
+    Map<String, dynamic>? metadata,
+  }) {
+    final Map<String, double> probabilities = {};
+    final text = '$title $description'.toLowerCase();
+    
+    // Simple keyword-based classification
+    if (text.contains(RegExp(r'code|develop|program|bug|fix'))) {
+      probabilities['coding'] = 0.8;
+    } else if (text.contains(RegExp(r'write|document|email|report'))) {
+      probabilities['writing'] = 0.8;
+    } else if (text.contains(RegExp(r'meet|call|discuss|presentation'))) {
+      probabilities['meeting'] = 0.8;
+    } else {
+      probabilities['general'] = 0.6;
+    }
+    
+    return probabilities;
+  }
+
+  List<ai.ScheduledTask> _simpleScheduleOptimization({
+    required List<EnhancedTask> tasks,
+    required Map<String, List<String>> dependencies,
+    required Map<String, double> performanceTimes,
+    required Map<String, dynamic> constraints,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) {
+    // Simple schedule optimization - just return tasks sorted by priority and due date
+    final sortedTasks = List<EnhancedTask>.from(tasks);
+    sortedTasks.sort((a, b) {
+      if (a.priority.index != b.priority.index) {
+        return b.priority.index.compareTo(a.priority.index); // Higher priority first
+      }
+      if (a.dueDate != null && b.dueDate != null) {
+        return a.dueDate!.compareTo(b.dueDate!); // Earlier due date first
+      }
+      return 0;
+    });
+    
+    return sortedTasks.map((task) => ai.ScheduledTask(
+      taskId: task.id,
+      startTime: DateTime.now(),
+      endTime: DateTime.now().add(Duration(minutes: task.estimatedMinutes)),
+      confidence: 0.7,
+    )).toList();
+  }
+
+  double _simpleDurationEstimate({
+    required String title,
+    required String description,
+    required enhanced.TaskCategory category,
+    required enhanced.TaskPriority priority,
+    required double complexityScore,
+    required Map<String, dynamic> historicalPattern,
+    required double userFactor,
+    required double contextFactor,
+  }) {
+    // Simple rule-based estimation
+    int baseMinutes = 25;
+    
+    switch (category) {
+      case enhanced.TaskCategory.coding:
+        baseMinutes = 45;
+        break;
+      case enhanced.TaskCategory.meeting:
+        baseMinutes = 30;
+        break;
+      case enhanced.TaskCategory.writing:
+        baseMinutes = 35;
+        break;
+      case enhanced.TaskCategory.research:
+        baseMinutes = 40;
+        break;
+      default:
+        baseMinutes = 25;
+    }
+    
+    // Apply factors
+    final estimate = baseMinutes * complexityScore * userFactor * contextFactor;
+    return estimate.clamp(5.0, 180.0); // Between 5 minutes and 3 hours
+  }
+
+  ai.TaskEstimation _fallbackEstimation(String title, String description, TaskCategory category, TaskPriority priority) {
     // Rule-based fallback estimation
     int baseMinutes = 25;
     
@@ -449,14 +570,14 @@ class TaskIntelligenceEngine {
       case TaskPriority.low:
         baseMinutes = (baseMinutes * 0.8).round();
         break;
-      default:
-        break;
       case TaskPriority.critical:
         baseMinutes = (baseMinutes * 1.5).round();
         break;
+      default:
+        break;
     }
     
-    return TaskEstimation(
+    return ai.TaskEstimation(
       estimatedMinutes: baseMinutes,
       confidenceLevel: 0.6,
       complexityScore: 0.5,
@@ -468,7 +589,7 @@ class TaskIntelligenceEngine {
   }
 
   // Implementation of missing methods
-  Future<PriorityAnalysis> _analyzePriority(String title, String description, List<String> keywords) async {
+  Future<ai.PriorityAnalysis> _analyzePriority(String title, String description, List<String> keywords) async {
     // Analyze urgency keywords
     final urgencyKeywords = ['urgent', 'asap', 'critical', 'deadline', 'emergency'];
     final lowPriorityKeywords = ['later', 'someday', 'optional', 'nice-to-have'];
@@ -499,7 +620,7 @@ class TaskIntelligenceEngine {
       reasoning = 'No clear priority indicators found';
     }
     
-    return PriorityAnalysis(priority: priority, reasoning: reasoning);
+    return ai.PriorityAnalysis(priority: priority, reasoning: reasoning);
   }
 
   List<String> _generateSmartTags(List<String> keywords, String intent, Map<String, dynamic> nlpAnalysis) {
@@ -569,8 +690,8 @@ class TaskIntelligenceEngine {
     return [];
   }
 
-  TaskCategorizationResult _fallbackCategorization(String title, String description) {
-    return TaskCategorizationResult(
+  ai.TaskCategorizationResult _fallbackCategorization(String title, String description) {
+    return ai.TaskCategorizationResult(
       suggestedCategory: TaskCategory.general,
       categoryConfidence: 0.5,
       suggestedPriority: TaskPriority.medium,
@@ -630,8 +751,8 @@ class TaskIntelligenceEngine {
     ];
   }
 
-  AIInsights _fallbackInsights(String userId) {
-    return AIInsights.empty(userId);
+  ai.AIInsights _fallbackInsights(String userId) {
+    return ai.AIInsights.empty(userId);
   }
 
   Map<String, List<String>> _analyzeDependencies(List<EnhancedTask> tasks) {
@@ -656,19 +777,19 @@ class TaskIntelligenceEngine {
     };
   }
 
-  double _calculateScheduleConfidence(List<ScheduledTask> schedule, List<EnhancedTask> tasks) {
+  double _calculateScheduleConfidence(List<ai.ScheduledTask> schedule, List<EnhancedTask> tasks) {
     if (schedule.isEmpty) return 0.0;
     
     final avgConfidence = schedule.map((s) => s.confidence).reduce((a, b) => a + b) / schedule.length;
     return avgConfidence;
   }
 
-  List<ScheduledTask> _generateAlternativeSchedules(List<EnhancedTask> tasks, Map<String, dynamic> constraints) {
+  List<ai.ScheduledTask> _generateAlternativeSchedules(List<EnhancedTask> tasks, Map<String, dynamic> constraints) {
     // Mock alternative schedules
     return [];
   }
 
-  List<String> _generateSchedulingTips(List<ScheduledTask> schedule, Map<String, double> performanceTimes) {
+  List<String> _generateSchedulingTips(List<ai.ScheduledTask> schedule, Map<String, double> performanceTimes) {
     return [
       'Consider scheduling complex tasks during high-performance hours',
       'Leave buffer time between tasks for transitions',
@@ -676,15 +797,15 @@ class TaskIntelligenceEngine {
     ];
   }
 
-  List<String> _identifyScheduleRisks(List<ScheduledTask> schedule, List<EnhancedTask> tasks) {
+  List<String> _identifyScheduleRisks(List<ai.ScheduledTask> schedule, List<EnhancedTask> tasks) {
     return [
       'Tight schedule with little buffer time',
       'Back-to-back meetings may cause fatigue',
     ];
   }
 
-  TaskScheduleRecommendation _fallbackScheduleRecommendation(List<EnhancedTask> tasks) {
-    return TaskScheduleRecommendation(
+  ai.TaskScheduleRecommendation _fallbackScheduleRecommendation(List<EnhancedTask> tasks) {
+    return ai.TaskScheduleRecommendation(
       recommendedSchedule: [],
       confidenceScore: 0.5,
       alternativeOptions: [],
@@ -740,6 +861,29 @@ class TaskIntelligenceEngine {
   Future<void> _storeCompletionEvent(TaskCompletionData event) async {
     // Store event for batch processing
   }
+
+  /// Record task completion for AI learning
+  Future<void> recordTaskCompletion(EnhancedTask task) async {
+    try {
+      // Record completion data for machine learning
+      final completionData = {
+        'task_id': task.id,
+        'title': task.title,
+        'estimated_minutes': task.estimatedMinutes,
+        'actual_minutes': task.actualMinutes ?? task.estimatedMinutes,
+        'category': task.category.name,
+        'priority': task.priority.name,
+        'completion_time': DateTime.now().toIso8601String(),
+        'difficulty_rating': task.difficultyRating ?? 0.5,
+      };
+      
+      // Store for future model training
+      await _mlService.recordTaskCompletion(completionData);
+    } catch (e) {
+      debugPrint('Error recording task completion: $e');
+    }
+  }
+
 }
 
 class AIEngineException implements Exception {

@@ -1,4 +1,5 @@
 import 'task_analytics.dart';
+import 'enhanced_task.dart' show TaskCategory, TaskPriority;
 
 class AIInsights {
   final String userId;
@@ -175,29 +176,7 @@ class TaskCompletionEvent {
   });
 }
 
-// Import required enums from enhanced_task.dart
-enum TaskCategory {
-  general,
-  coding,
-  writing,
-  meeting,
-  research,
-  design,
-  planning,
-  review,
-  testing,
-  documentation,
-  communication,
-  maintenance,
-  learning,
-}
-
-enum TaskPriority {
-  low,
-  medium,
-  high,
-  critical,
-}
+// Remove duplicate import - already imported at top
 
 class PriorityAnalysis {
   final TaskPriority priority;

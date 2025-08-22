@@ -252,7 +252,7 @@ class TaskAnalyticsEngine {
             break;
           case 'task_completion_rate':
             exportData['metrics']['task_completion_rate'] =
-                _calculateCompletionRate(userTasks);
+                _calculateTaskCompletionRate(userTasks);
             break;
           case 'average_session_length':
             exportData['metrics']['average_session_length'] =
@@ -322,7 +322,7 @@ class TaskAnalyticsEngine {
       averageSessionLength: _calculateAverageSessionLength(userTasks),
       productivityScore: _calculateOverallProductivityScore(userTasks),
       focusScore: _calculateOverallFocusScore(userTasks),
-      estimationAccuracy: _calculateEstimationAccuracy(userTasks),
+      estimationAccuracy: _calculateEstimationAccuracy(userTasks).accuracy,
       preferredWorkingHours: _identifyPreferredWorkingHours(userTasks),
       mostProductiveDay: _identifyMostProductiveDay(userTasks),
       categoryPerformance: _analyzeCategoryPerformance(userTasks),
@@ -471,7 +471,7 @@ class TaskAnalyticsEngine {
 
     return EfficiencyScores(
       overall: _calculateOverallProductivityScore(tasks),
-      estimation: _calculateEstimationAccuracy(tasks),
+      estimation: _calculateEstimationAccuracy(tasks).accuracy,
       focus: _calculateOverallFocusScore(tasks),
       consistency: _calculateConsistencyScore(tasks),
       timeManagement: _calculateTimeManagementScore(tasks),
@@ -500,7 +500,7 @@ class TaskAnalyticsEngine {
 
     // Estimation accuracy (30% weight)
     final estimationAccuracy = _calculateEstimationAccuracy(tasks);
-    score += estimationAccuracy * 0.3;
+    score += estimationAccuracy.accuracy * 0.3;
 
     // Focus score (30% weight)
     final focusScore = _calculateOverallFocusScore(tasks);
@@ -894,9 +894,13 @@ class TaskAnalyticsEngine {
     return FocusTrend.stable;
   }
 
-  @override
+  double _calculateTaskCompletionRate(List<TaskCompletionData> tasks) {
+    if (tasks.isEmpty) return 0.0;
+    final completedTasks = tasks.where((task) => task.completed).length;
+    return completedTasks / tasks.length;
+  }
+
   void dispose() {
     _analyticsUpdateTimer?.cancel();
-    super.dispose();
   }
 }

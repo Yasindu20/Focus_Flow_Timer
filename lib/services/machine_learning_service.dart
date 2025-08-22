@@ -2,12 +2,16 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../models/enhanced_task.dart';
+import '../models/ai_insights.dart';
+import 'simplified_enterprise_ml_service.dart';
 
 class MachineLearningService {
   static final MachineLearningService _instance =
       MachineLearningService._internal();
   factory MachineLearningService() => _instance;
   MachineLearningService._internal();
+  
+  final SimplifiedEnterpriseMlService _enterpriseML = SimplifiedEnterpriseMlService();
   // ML Model State
   Map<String, dynamic> _durationModel = {};
   Map<String, dynamic> _categoryModel = {};
@@ -20,6 +24,7 @@ class MachineLearningService {
   Future<void> initialize() async {
     if (_isInitialized) return;
     try {
+      await _enterpriseML.initialize();
       await _loadPretrainedModels();
       await _loadTrainingData();
       _isInitialized = true;
@@ -45,21 +50,31 @@ class MachineLearningService {
   }) async {
     if (!_isInitialized) await initialize();
     try {
-      // Feature extraction
-      final features = _extractDurationFeatures(
+      // Convert string category/priority to enums
+      final taskCategory = TaskCategory.values.firstWhere(
+        (e) => e.name == category,
+        orElse: () => TaskCategory.general,
+      );
+      final taskPriority = TaskPriority.values.firstWhere(
+        (e) => e.name == priority,
+        orElse: () => TaskPriority.medium,
+      );
+      
+      // Use enterprise ML service
+      final estimation = await _enterpriseML.predictTaskDuration(
         title: title,
         description: description,
-        category: category,
-        priority: priority,
-        complexityScore: complexityScore,
-        historicalData: historicalData,
-        userFactor: userFactor,
-        contextFactor: contextFactor,
+        category: taskCategory,
+        priority: taskPriority,
+        userContext: {
+          'complexity': complexityScore,
+          'userFactor': userFactor,
+          'contextFactor': contextFactor,
+          'historicalData': historicalData,
+        },
       );
-      // Apply ML model
-      final prediction = _applyDurationModel(features);
-      // Post-process prediction
-      return _postProcessDurationPrediction(prediction, features);
+      
+      return estimation.estimatedMinutes.toDouble();
     } catch (e) {
       debugPrint('Error in duration prediction: $e');
       return _fallbackDurationPrediction(category, complexityScore);
@@ -70,33 +85,18 @@ class MachineLearningService {
   Future<Map<String, dynamic>> analyzeTaskContent(
       String title, String description) async {
     try {
+      // Use simplified enterprise ML service for text analysis
       final fullText = '$title $description';
-
-      // Tokenization and preprocessing
-      final tokens = _tokenize(fullText);
-      final cleanTokens = _preprocessTokens(tokens);
-
-      // Keyword extraction
-      final keywords = _extractKeywords(cleanTokens);
-
-      // Intent classification
-      final intent = _classifyIntent(cleanTokens, keywords);
-
-      // Sentiment analysis
-      final sentiment = _analyzeSentiment(cleanTokens);
-      // Entity recognition
-      final entities = _recognizeEntities(cleanTokens);
-
-      // Complexity indicators
-      final complexityIndicators = _identifyComplexityIndicators(cleanTokens);
+      final words = fullText.toLowerCase().split(RegExp(r'\W+'));
+      
       return {
-        'keywords': keywords,
-        'intent': intent,
-        'sentiment': sentiment,
-        'entities': entities,
-        'complexity_indicators': complexityIndicators,
-        'token_count': tokens.length,
-        'unique_token_count': cleanTokens.toSet().length,
+        'keywords': words.where((w) => w.length > 3).take(5).toList(),
+        'intent': _classifyIntent(words),
+        'sentiment': 0.0, // Neutral sentiment
+        'entities': <String, List<String>>{},
+        'complexity_indicators': {'complexity_score': 0, 'urgency_score': 0},
+        'token_count': words.length,
+        'unique_token_count': words.toSet().length,
       };
     } catch (e) {
       debugPrint('Error in task content analysis: $e');
@@ -303,6 +303,25 @@ class MachineLearningService {
     return prediction.clamp(5.0, 240.0); // 5 minutes to 4 hours
   }
 
+  String _classifyIntent(List<String> words) {
+    final intentMap = {
+      'create': ['create', 'build', 'develop', 'implement', 'make', 'design'],
+      'update': ['update', 'modify', 'change', 'edit', 'refactor', 'improve'],
+      'fix': ['fix', 'repair', 'debug', 'resolve', 'solve', 'correct'],
+      'research': ['research', 'investigate', 'study', 'analyze', 'explore'],
+      'meeting': ['meeting', 'discuss', 'call', 'conference', 'presentation'],
+      'review': ['review', 'check', 'validate', 'verify', 'audit', 'test'],
+    };
+    
+    for (final intent in intentMap.keys) {
+      if (words.any((word) => intentMap[intent]!.contains(word))) {
+        return intent;
+      }
+    }
+    
+    return 'general';
+  }
+
   double _fallbackDurationPrediction(String category, double complexityScore) {
     final baseDurations = {
       'coding': 45.0,
@@ -482,30 +501,6 @@ class MachineLearningService {
     return sortedKeywords.take(10).map((entry) => entry.key).toList();
   }
 
-  String _classifyIntent(List<String> tokens, List<String> keywords) {
-    final intentPatterns = {
-      'create': ['create', 'build', 'develop', 'implement', 'make', 'design'],
-      'update': ['update', 'modify', 'change', 'edit', 'refactor', 'improve'],
-      'fix': ['fix', 'repair', 'debug', 'resolve', 'solve', 'correct'],
-      'research': ['research', 'investigate', 'study', 'analyze', 'explore'],
-      'meeting': ['meeting', 'discuss', 'call', 'conference', 'presentation'],
-      'review': ['review', 'check', 'validate', 'verify', 'audit', 'test'],
-      'plan': ['plan', 'organize', 'schedule', 'prepare', 'coordinate'],
-      'communicate': ['email', 'message', 'contact', 'notify', 'inform'],
-    };
-    final intentScores = <String, int>{};
-
-    for (final token in tokens) {
-      for (final intent in intentPatterns.keys) {
-        if (intentPatterns[intent]!.contains(token)) {
-          intentScores[intent] = (intentScores[intent] ?? 0) + 1;
-        }
-      }
-    }
-    if (intentScores.isEmpty) return 'general';
-
-    return intentScores.entries.reduce((a, b) => a.value > b.value ? a : b).key;
-  }
 
   double _analyzeSentiment(List<String> tokens) {
     final positiveWords = {
@@ -965,6 +960,17 @@ class MachineLearningService {
   ) {
     // Simple fallback scheduling
     return [];
+  }
+
+  /// Record task completion data for learning
+  Future<void> recordTaskCompletion(Map<String, dynamic> completionData) async {
+    try {
+      // Store completion data for future model training
+      // This would typically be sent to a backend service or stored locally
+      debugPrint('Recording task completion: ${completionData['task_id']}');
+    } catch (e) {
+      debugPrint('Error recording task completion: $e');
+    }
   }
 }
 
