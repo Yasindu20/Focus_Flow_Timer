@@ -64,11 +64,11 @@ import 'package:flutter/material.dart';
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [AppColors.primaryBlue, AppColors.primaryDark],
         ),
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),
         ),
@@ -207,7 +207,7 @@ import 'package:flutter/material.dart';
         ),
         _buildMetricCard(
           'Tasks per Day',
-          '${metrics.tasksPerDay.toStringAsFixed(1)}',
+          metrics.tasksPerDay.toStringAsFixed(1),
           Icons.calendar_today,
           AppColors.info,
           subtitle: 'Average completion',
@@ -307,7 +307,7 @@ import 'package:flutter/material.dart';
           Expanded(
             child: LineChart(
               LineChartData(
-                gridData: FlGridData(show: false),
+                gridData: const FlGridData(show: false),
                 titlesData: FlTitlesData(
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
@@ -331,8 +331,8 @@ import 'package:flutter/material.dart';
                       },
                     ),
                   ),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
@@ -341,7 +341,7 @@ import 'package:flutter/material.dart';
                     isCurved: true,
                     color: AppColors.primaryBlue,
                     barWidth: 3,
-                    dotData: FlDotData(show: false),
+                    dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
                       color: AppColors.primaryBlue.withOpacity(0.1),
@@ -600,8 +600,8 @@ Widget _buildFocusAnalysis() {
           Expanded(
             child: LineChart(
               LineChartData(
-                gridData: FlGridData(show: false),
-                titlesData: FlTitlesData(show: false),
+                gridData: const FlGridData(show: false),
+                titlesData: const FlTitlesData(show: false),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
                   LineChartBarData(
@@ -609,7 +609,7 @@ Widget _buildFocusAnalysis() {
                     isCurved: true,
                     color: AppColors.primaryBlue,
                     barWidth: 2,
-                    dotData: FlDotData(show: false),
+                    dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
                       color: AppColors.primaryBlue.withOpacity(0.1),
@@ -706,7 +706,7 @@ Widget _buildFocusAnalysis() {
         children: [
           Row(
             children: [
-              Icon(Icons.psychology, color: AppColors.primaryBlue),
+              const Icon(Icons.psychology, color: AppColors.primaryBlue),
               const SizedBox(width: 8),
               Text(
                 'AI Recommendations',
@@ -797,7 +797,7 @@ const SizedBox(height: 8),
         children: [
           Row(
             children: [
-              Icon(Icons.trending_up, color: AppColors.primaryBlue),
+              const Icon(Icons.trending_up, color: AppColors.primaryBlue),
               const SizedBox(width: 8),
               Text(
                 'Predictive Analytics',
@@ -892,7 +892,7 @@ const SizedBox(height: 12),
         children: [
           Row(
             children: [
-              Icon(Icons.lightbulb, color: AppColors.warning),
+              const Icon(Icons.lightbulb, color: AppColors.warning),
               const SizedBox(width: 8),
               Text(
                 'Optimization Opportunities',
@@ -1157,7 +1157,7 @@ savings,
       // Show export success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Analytics exported successfully'),
             backgroundColor: AppColors.success,
           ),

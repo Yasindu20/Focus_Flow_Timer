@@ -832,7 +832,7 @@ class TaskAnalyticsEngine {
           category: entry.key,
           impact: OpportunityImpact.medium,
           description: 'Improve time estimation for ${entry.key.name} tasks',
-          potentialTimeSaving: Duration(minutes: 30),
+          potentialTimeSaving: const Duration(minutes: 30),
         ));
       }
     }

@@ -1,5 +1,4 @@
 import 'package:hive/hive.dart';
-import 'task_analytics.dart';
 part 'enhanced_task.g.dart';
 
 @HiveType(typeId: 10)

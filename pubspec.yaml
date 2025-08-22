@@ -56,7 +56,7 @@ dependencies:
 
   # Machine Learning
   tflite: ^1.1.2
-  ml_linalg: ^13.16.1
+  ml_linalg: ^13.12.6
 
   # JSON Processing
   json_annotation: ^4.8.1

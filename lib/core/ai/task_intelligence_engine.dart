@@ -1,16 +1,18 @@
 import 'dart:async';
- import 'dart:convert';
- import 'dart:math';
- import 'package:flutter/foundation.dart';
- import '../models/enhanced_task.dart';
- import '../models/task_analytics.dart';
- import '../models/ai_insights.dart';
- import '../services/machine_learning_service.dart';
- import '../services/api_integration_service.dart';
- class TaskIntelligenceEngine {
+import 'dart:convert';
+import 'dart:math';
+import 'package:flutter/foundation.dart';
+import '../../models/enhanced_task.dart';
+import '../../models/task_analytics.dart';
+import '../../models/ai_insights.dart';
+import '../../services/machine_learning_service.dart';
+import '../../services/api_integration_service.dart';
+
+class TaskIntelligenceEngine {
   static final TaskIntelligenceEngine _instance = TaskIntelligenceEngine._internal();
   factory TaskIntelligenceEngine() => _instance;
   TaskIntelligenceEngine._internal();
+
   final MachineLearningService _mlService = MachineLearningService();
   final ApiIntegrationService _apiService = ApiIntegrationService();
   
@@ -22,9 +24,10 @@ import 'dart:async';
   
   // Real-time Learning
   Timer? _modelUpdateTimer;
-  final List<TaskCompletionEvent> _recentEvents = [];
+  final List<TaskCompletionData> _recentEvents = [];
   
   bool _isInitialized = false;
+
   /// Initialize the AI engine with historical data
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -41,7 +44,8 @@ import 'dart:async';
       throw AIEngineException('Initialization failed: $e');
     }
   }
- /// AI-Powered Task Duration Estimation
+
+  /// AI-Powered Task Duration Estimation
   Future<TaskEstimation> estimateTaskDuration({
     required String title,
     required String description,
@@ -86,8 +90,8 @@ import 'dart:async';
         factorBreakdown: {
           'base': baseEstimate,
           'user_factor': userFactor,
-          'context_factor': contextFactor
-            'historical_factor': historicalPattern['average'] ?? 25.0,
+          'context_factor': contextFactor,
+          'historical_factor': historicalPattern['average'] ?? 25.0,
         },
         suggestedBreakdown: _generateTaskBreakdown(title, description, baseEstimate),
         alternativeEstimates: _generateAlternativeEstimates(baseEstimate, confidence),
@@ -101,6 +105,7 @@ import 'dart:async';
       return _fallbackEstimation(title, description, category, priority);
     }
   }
+
   /// Smart Task Categorization
   Future<TaskCategorizationResult> categorizeTask({
     required String title,
@@ -132,12 +137,13 @@ import 'dart:async';
       
       return TaskCategorizationResult(
         suggestedCategory: _getBestCategory(categoryProbabilities),
-        categoryConfidence: categoryProbabilities.values.reduce(max),
-suggestedPriority: priorityAnalysis.priority,
+        categoryConfidence: categoryProbabilities.values.isNotEmpty ? 
+            categoryProbabilities.values.reduce(max) : 0.0,
+        suggestedPriority: priorityAnalysis.priority,
         priorityReasoning: priorityAnalysis.reasoning,
         smartTags: smartTags,
         suggestedSubtasks: _generateSubtaskSuggestions(title, description, intent),
-        relatedTasks: await _findRelatedTasks(keywords, intent),
+        relatedTaskIds: await _findRelatedTasks(keywords, intent),
       );
       
     } catch (e) {
@@ -145,8 +151,9 @@ suggestedPriority: priorityAnalysis.priority,
       return _fallbackCategorization(title, description);
     }
   }
+
   /// Adaptive Learning from Task Completion
-  Future<void> learnFromCompletion(TaskCompletionEvent event) async {
+  Future<void> learnFromCompletion(TaskCompletionData event) async {
     try {
       _recentEvents.add(event);
       
@@ -172,13 +179,14 @@ suggestedPriority: priorityAnalysis.priority,
       debugPrint('Error learning from task completion: $e');
     }
   }
+
   /// Generate AI Insights and Recommendations
   Future<AIInsights> generateInsights({
     required String userId,
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-  try {
+    try {
       // Analyze productivity patterns
       final productivityAnalysis = await _analyzeProductivityPatterns(
         userId, startDate, endDate
@@ -202,10 +210,10 @@ suggestedPriority: priorityAnalysis.priority,
       return AIInsights(
         userId: userId,
         analysisDate: DateTime.now(),
-        productivityScore: productivityAnalysis.overallScore,
-        productivityTrend: productivityAnalysis.trend,
-        strengths: productivityAnalysis.strengths,
-        improvementAreas: productivityAnalysis.weaknesses,
+        productivityScore: productivityAnalysis['overallScore'] ?? 0.0,
+        productivityTrend: productivityAnalysis['trend'] ?? ProductivityTrendDirection.stable,
+        strengths: List<String>.from(productivityAnalysis['strengths'] ?? []),
+        improvementAreas: List<String>.from(productivityAnalysis['weaknesses'] ?? []),
         recommendations: recommendations,
         optimizationOpportunities: optimizationOpps,
         futurePredictions: futurePredictions,
@@ -217,6 +225,7 @@ suggestedPriority: priorityAnalysis.priority,
       return _fallbackInsights(userId);
     }
   }
+
   /// Smart Task Scheduling
   Future<TaskScheduleRecommendation> recommendSchedule({
     required List<EnhancedTask> tasks,
@@ -224,7 +233,7 @@ suggestedPriority: priorityAnalysis.priority,
     required DateTime endDate,
     required Map<String, dynamic> constraints,
   }) async {
-try {
+    try {
       // Analyze task dependencies
       final dependencies = _analyzeDependencies(tasks);
       
@@ -254,20 +263,24 @@ try {
       return _fallbackScheduleRecommendation(tasks);
     }
   }
+
   // Private Methods
   Future<void> _loadHistoricalData() async {
     // Load user behavior patterns, task completion history, etc.
     // Implementation details for data loading
   }
+
   Future<void> _initializeMLModels() async {
     await _mlService.initialize();
     // Load pre-trained models or initialize new ones
   }
+
   void _startRealTimeLearning() {
     _modelUpdateTimer = Timer.periodic(const Duration(hours: 1), (timer) {
       _performScheduledModelUpdate();
     });
- }
+  }
+
   Future<double> _analyzeTaskComplexity(String title, String description) async {
     // NLP analysis for task complexity
     final textLength = (title + description).length;
@@ -278,6 +291,7 @@ try {
     final complexity = (textLength * 0.1 + keywordCount * 0.3 + technicalWords * 0.6) / 100;
     return complexity.clamp(0.0, 1.0);
   }
+
   Map<String, dynamic> _getHistoricalPattern(TaskCategory category, double complexity) {
     final categoryKey = category.name;
     final complexityBucket = (complexity * 10).round();
@@ -291,10 +305,12 @@ try {
           }
         : {'average': 25.0, 'confidence': 0.5, 'count': 0};
   }
+
   double _getUserPerformanceFactor(String userId) {
     final userKey = 'user_$userId';
     return _userBehaviorModel[userKey]?['performance_factor'] ?? 1.0;
   }
+
   double _analyzeContextualFactors(Map<String, dynamic>? context) {
     if (context == null) return 1.0;
     
@@ -305,18 +321,22 @@ try {
       final hour = context['hour'] as int;
       if (hour >= 9 && hour <= 11) {
         factor *= 1.2; // Peak morning
-      } else if (hour >= 14 && hour <= 16) factor *= 1.1; // Afternoon peak
-      else if (hour >= 20 || hour <= 6) factor *= 0.8; // Low energy times
+      } else if (hour >= 14 && hour <= 16) {
+        factor *= 1.1; // Afternoon peak
+      } else if (hour >= 20 || hour <= 6) {
+        factor *= 0.8; // Low energy times
+      }
     }
     
     // Workload factor
     if (context.containsKey('current_tasks')) {
- final currentTasks = context['current_tasks'] as int;
+      final currentTasks = context['current_tasks'] as int;
       factor *= (1.0 - (currentTasks * 0.05)).clamp(0.7, 1.0);
     }
     
     return factor;
   }
+
   double _calculateConfidenceLevel(double estimate, Map<String, dynamic> historical) {
     final count = historical['count'] as int? ?? 0;
     final baseConfidence = historical['confidence'] as double? ?? 0.5;
@@ -326,6 +346,7 @@ try {
     
     return (baseConfidence + dataConfidence) / 2;
   }
+
   List<TaskSubtask> _generateTaskBreakdown(String title, String description, double totalMinutes) {
     // AI-powered task breakdown logic
     final subtasks = <TaskSubtask>[];
@@ -345,6 +366,7 @@ try {
     
     return subtasks;
   }
+
   List<EstimateAlternative> _generateAlternativeEstimates(double base, double confidence) {
     return [
       EstimateAlternative(
@@ -355,7 +377,7 @@ try {
       EstimateAlternative(
         scenario: 'Realistic',
         minutes: base.round(),
- probability: confidence,
+        probability: confidence,
       ),
       EstimateAlternative(
         scenario: 'Pessimistic',
@@ -364,6 +386,7 @@ try {
       ),
     ];
   }
+
   List<String> _generateProductivityTips(TaskCategory category, double complexity, double userFactor) {
     final tips = <String>[];
     
@@ -396,10 +419,12 @@ try {
     
     return tips;
   }
+
   TaskEstimation _fallbackEstimation(String title, String description, TaskCategory category, TaskPriority priority) {
     // Rule-based fallback estimation
     int baseMinutes = 25;
-     switch (category) {
+    
+    switch (category) {
       case TaskCategory.coding:
         baseMinutes = 45;
         break;
@@ -426,6 +451,9 @@ try {
         break;
       default:
         break;
+      case TaskPriority.critical:
+        baseMinutes = (baseMinutes * 1.5).round();
+        break;
     }
     
     return TaskEstimation(
@@ -438,15 +466,242 @@ try {
       tips: ['This is a fallback estimation'],
     );
   }
-  // Additional helper methods would be implemented here...
-  
+
+  // Implementation of missing methods
+  Future<PriorityAnalysis> _analyzePriority(String title, String description, List<String> keywords) async {
+    // Analyze urgency keywords
+    final urgencyKeywords = ['urgent', 'asap', 'critical', 'deadline', 'emergency'];
+    final lowPriorityKeywords = ['later', 'someday', 'optional', 'nice-to-have'];
+    
+    int urgencyScore = 0;
+    int lowPriorityScore = 0;
+    
+    for (final keyword in keywords) {
+      if (urgencyKeywords.contains(keyword.toLowerCase())) {
+        urgencyScore++;
+      }
+      if (lowPriorityKeywords.contains(keyword.toLowerCase())) {
+        lowPriorityScore++;
+      }
+    }
+    
+    TaskPriority priority;
+    String reasoning;
+    
+    if (urgencyScore > 0) {
+      priority = TaskPriority.high;
+      reasoning = 'Contains urgency indicators';
+    } else if (lowPriorityScore > 0) {
+      priority = TaskPriority.low;
+      reasoning = 'Contains low priority indicators';
+    } else {
+      priority = TaskPriority.medium;
+      reasoning = 'No clear priority indicators found';
+    }
+    
+    return PriorityAnalysis(priority: priority, reasoning: reasoning);
+  }
+
+  List<String> _generateSmartTags(List<String> keywords, String intent, Map<String, dynamic> nlpAnalysis) {
+    final tags = <String>[];
+    
+    // Add intent as tag
+    if (intent != 'general') {
+      tags.add(intent);
+    }
+    
+    // Add relevant keywords as tags
+    tags.addAll(keywords.take(3));
+    
+    // Add complexity-based tags
+    final complexity = nlpAnalysis['complexity_indicators'];
+    if (complexity != null) {
+      final complexityScore = complexity['complexity_score'] as int? ?? 0;
+      if (complexityScore > 2) {
+        tags.add('complex');
+      }
+      
+      final urgencyScore = complexity['urgency_score'] as int? ?? 0;
+      if (urgencyScore > 0) {
+        tags.add('urgent');
+      }
+    }
+    
+    return tags.toSet().toList(); // Remove duplicates
+  }
+
+  TaskCategory _getBestCategory(Map<String, double> categoryProbabilities) {
+    if (categoryProbabilities.isEmpty) return TaskCategory.general;
+    
+    final bestEntry = categoryProbabilities.entries.reduce(
+      (a, b) => a.value > b.value ? a : b
+    );
+    
+    return TaskCategory.values.firstWhere(
+      (cat) => cat.name == bestEntry.key,
+      orElse: () => TaskCategory.general,
+    );
+  }
+
+  List<String> _generateSubtaskSuggestions(String title, String description, String intent) {
+    final suggestions = <String>[];
+    
+    switch (intent) {
+      case 'create':
+        suggestions.addAll(['Plan and design', 'Implement core functionality', 'Test and refine']);
+        break;
+      case 'fix':
+        suggestions.addAll(['Identify root cause', 'Implement fix', 'Verify solution']);
+        break;
+      case 'research':
+        suggestions.addAll(['Gather initial information', 'Deep dive analysis', 'Compile findings']);
+        break;
+      default:
+        suggestions.addAll(['Preparation phase', 'Main execution', 'Review and finalize']);
+    }
+    
+    return suggestions;
+  }
+
+  Future<List<String>> _findRelatedTasks(List<String> keywords, String intent) async {
+    // In a real implementation, this would search existing tasks
+    // For now, return empty list
+    return [];
+  }
+
+  TaskCategorizationResult _fallbackCategorization(String title, String description) {
+    return TaskCategorizationResult(
+      suggestedCategory: TaskCategory.general,
+      categoryConfidence: 0.5,
+      suggestedPriority: TaskPriority.medium,
+      priorityReasoning: 'Default fallback categorization',
+      smartTags: ['general'],
+      suggestedSubtasks: [],
+      relatedTaskIds: [],
+    );
+  }
+
+  Future<Map<String, dynamic>> _analyzeProductivityPatterns(String userId, DateTime startDate, DateTime endDate) async {
+    // Mock implementation
+    return {
+      'overallScore': 75.0,
+      'trend': ProductivityTrendDirection.increasing,
+      'strengths': ['Consistent work schedule', 'Good estimation accuracy'],
+      'weaknesses': ['Too many interruptions', 'Low focus during afternoons'],
+    };
+  }
+
+  Future<List<OptimizationOpportunity>> _identifyOptimizationOpportunities(String userId, Map<String, dynamic> analysis) async {
+    return [
+      OptimizationOpportunity(
+        type: OptimizationType.focus,
+        impact: OpportunityImpact.high,
+        description: 'Schedule complex tasks during morning hours',
+        potentialTimeSaving: const Duration(minutes: 30),
+      ),
+    ];
+  }
+
+  Future<List<ProductivityRecommendation>> _generatePersonalizedRecommendations(
+    String userId, 
+    Map<String, dynamic> analysis, 
+    List<OptimizationOpportunity> opportunities
+  ) async {
+    return [
+      ProductivityRecommendation(
+        type: RecommendationType.focusTime,
+        title: 'Optimize Focus Sessions',
+        description: 'Try longer focus sessions in the morning',
+        impact: RecommendationImpact.high,
+        effort: RecommendationEffort.low,
+      ),
+    ];
+  }
+
+  Future<PredictiveAnalytics> _predictFuturePerformance(String userId, Map<String, dynamic> analysis) async {
+    return PredictiveAnalytics.empty();
+  }
+
+  List<String> _generatePersonalizedTips(String userId, Map<String, dynamic> analysis) {
+    return [
+      'Schedule important tasks during your peak hours (9-11 AM)',
+      'Take breaks every 25 minutes to maintain focus',
+      'Batch similar tasks together for better efficiency',
+    ];
+  }
+
+  AIInsights _fallbackInsights(String userId) {
+    return AIInsights.empty(userId);
+  }
+
+  Map<String, List<String>> _analyzeDependencies(List<EnhancedTask> tasks) {
+    final dependencies = <String, List<String>>{};
+    
+    for (final task in tasks) {
+      dependencies[task.id] = task.dependencies;
+    }
+    
+    return dependencies;
+  }
+
+  Future<Map<String, double>> _getUserOptimalTimes(String? userId) async {
+    // Mock optimal times - in real implementation, analyze user's historical performance
+    return {
+      '9': 0.9,
+      '10': 0.95,
+      '11': 0.85,
+      '14': 0.7,
+      '15': 0.75,
+      '16': 0.6,
+    };
+  }
+
+  double _calculateScheduleConfidence(List<ScheduledTask> schedule, List<EnhancedTask> tasks) {
+    if (schedule.isEmpty) return 0.0;
+    
+    final avgConfidence = schedule.map((s) => s.confidence).reduce((a, b) => a + b) / schedule.length;
+    return avgConfidence;
+  }
+
+  List<ScheduledTask> _generateAlternativeSchedules(List<EnhancedTask> tasks, Map<String, dynamic> constraints) {
+    // Mock alternative schedules
+    return [];
+  }
+
+  List<String> _generateSchedulingTips(List<ScheduledTask> schedule, Map<String, double> performanceTimes) {
+    return [
+      'Consider scheduling complex tasks during high-performance hours',
+      'Leave buffer time between tasks for transitions',
+      'Group similar tasks together when possible',
+    ];
+  }
+
+  List<String> _identifyScheduleRisks(List<ScheduledTask> schedule, List<EnhancedTask> tasks) {
+    return [
+      'Tight schedule with little buffer time',
+      'Back-to-back meetings may cause fatigue',
+    ];
+  }
+
+  TaskScheduleRecommendation _fallbackScheduleRecommendation(List<EnhancedTask> tasks) {
+    return TaskScheduleRecommendation(
+      recommendedSchedule: [],
+      confidenceScore: 0.5,
+      alternativeOptions: [],
+      optimizationTips: ['Use standard time blocking techniques'],
+      riskFactors: ['Limited AI data for personalized scheduling'],
+    );
+  }
+
+  // Helper methods
   List<String> _extractKeywords(String text) {
     // Simple keyword extraction
     return text.toLowerCase()
         .split(RegExp(r'\W+'))
         .where((word) => word.length > 3)
- .toList();
+        .toList();
   }
+
   int _countTechnicalWords(String text) {
     final technicalWords = [
       'algorithm', 'api', 'database', 'code', 'function', 'variable',
@@ -456,133 +711,41 @@ try {
     final words = text.toLowerCase().split(RegExp(r'\W+'));
     return words.where((word) => technicalWords.contains(word)).length;
   }
+
   int _getPatternCount(String key) {
     // Implementation to get pattern count from storage
     return 5; // Placeholder
   }
+
   void _performScheduledModelUpdate() {
     // Scheduled model updates
   }
+
   Future<void> _performRealTimeModelUpdate() async {
     // Real-time model updates based on recent events
   }
-  void _updateUserBehaviorModel(TaskCompletionEvent event) {
+
+  void _updateUserBehaviorModel(TaskCompletionData event) {
     // Update user behavior patterns
   }
-  void _updateComplexityWeights(TaskCompletionEvent event) {
+
+  void _updateComplexityWeights(TaskCompletionData event) {
     // Update complexity scoring weights
   }
-  void _updateAccuracyScores(TaskCompletionEvent event) {
+
+  void _updateAccuracyScores(TaskCompletionData event) {
     // Update estimation accuracy tracking
   }
-  Future<void> _storeCompletionEvent(TaskCompletionEvent event) async {
+
+  Future<void> _storeCompletionEvent(TaskCompletionData event) async {
     // Store event for batch processing
   }
-  // More private methods would be implemented here...
- }
- // Supporting Classes
-class TaskEstimation {
-  final int estimatedMinutes;
-  final double confidenceLevel;
-  final double complexityScore;
-  final Map<String, double> factorBreakdown;
-  final List<TaskSubtask> suggestedBreakdown;
-  final List<EstimateAlternative> alternativeEstimates;
-  final List<String> tips;
-  TaskEstimation({
-    required this.estimatedMinutes,
-    required this.confidenceLevel,
-    required this.complexityScore,
-    required this.factorBreakdown,
-    required this.suggestedBreakdown,
-    required this.alternativeEstimates,
-    required this.tips,
-  });
- }
- class TaskSubtask {
-  final String id;
-  final String title;
-  final int estimatedMinutes;
-  final String description;
-  TaskSubtask({
-    required this.id,
-    required this.title,
-    required this.estimatedMinutes,
-    required this.description,
-  });
- }
- class EstimateAlternative {
-  final String scenario;
-  final int minutes;
-  final double probability;
-  EstimateAlternative({
-    required this.scenario,
-    required this.minutes,
-    required this.probability,
-  });
- }
- class TaskCategorizationResult {
- final TaskCategory suggestedCategory;
-  final double categoryConfidence;
-  final TaskPriority suggestedPriority;
-  final String priorityReasoning;
-  final List<String> smartTags;
-  final List<String> suggestedSubtasks;
-  final List<EnhancedTask> relatedTasks;
-  TaskCategorizationResult({
-    required this.suggestedCategory,
-    required this.categoryConfidence,
-    required this.suggestedPriority,
-    required this.priorityReasoning,
-    required this.smartTags,
-    required this.suggestedSubtasks,
-    required this.relatedTasks,
-  });
- }
- class TaskCompletionEvent {
-  final String taskId;
-  final String userId;
-  final DateTime startTime;
-  final DateTime endTime;
-  final int estimatedMinutes;
-  final int actualMinutes;
-  final TaskCategory category;
-  final TaskPriority priority;
-  final bool completed;
-  final double difficultyRating;
-  final Map<String, dynamic> context;
-  TaskCompletionEvent({
-    required this.taskId,
-    required this.userId,
-    required this.startTime,
-    required this.endTime,
-    required this.estimatedMinutes,
-    required this.actualMinutes,
-    required this.category,
-    required this.priority,
-    required this.completed,
-    required this.difficultyRating,
-    required this.context,
-  });
- }
- class AIEngineException implements Exception {
+}
+
+class AIEngineException implements Exception {
   final String message;
   AIEngineException(this.message);
   
   @override
   String toString() => 'AIEngineException: $message';
- }
- // Enum definitions
- enum TaskCategory {
-  coding,
-  writing,
-  meeting,
-  research,
-  design,
-  planning,
-  review,
-  testing,
-  documentation,
-  communication,
- }
- enum TaskPriority { low, medium, high, critical }
+}

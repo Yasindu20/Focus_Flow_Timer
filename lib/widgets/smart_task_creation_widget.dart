@@ -169,7 +169,7 @@ class _SmartTaskCreationWidgetState extends State<SmartTaskCreationWidget>
               if (_isAnalyzing)
                 Row(
                   children: [
-                    SizedBox(
+                    const SizedBox(
                       width: 12,
                       height: 12,
                       child: CircularProgressIndicator(
@@ -198,7 +198,7 @@ class _SmartTaskCreationWidgetState extends State<SmartTaskCreationWidget>
               color: AppColors.success.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Row(
+            child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
@@ -206,7 +206,7 @@ class _SmartTaskCreationWidgetState extends State<SmartTaskCreationWidget>
                   size: 16,
                   color: AppColors.success,
                 ),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 Text(
                   'AI Confident',
                   style: TextStyle(
@@ -299,7 +299,7 @@ class _SmartTaskCreationWidgetState extends State<SmartTaskCreationWidget>
               Text(_getCategoryDisplayName(category)),
               if (_aiSuggestedCategory == category) ...[
                 const SizedBox(width: 8),
-                Icon(
+                const Icon(
                   Icons.auto_awesome,
                   size: 16,
                   color: AppColors.primaryBlue,
@@ -339,7 +339,7 @@ class _SmartTaskCreationWidgetState extends State<SmartTaskCreationWidget>
               Text(_getPriorityDisplayName(priority)),
               if (_aiSuggestedPriority == priority) ...[
                 const SizedBox(width: 8),
-                Icon(
+                const Icon(
                   Icons.auto_awesome,
                   size: 16,
                   color: AppColors.primaryBlue,
@@ -428,7 +428,7 @@ class _SmartTaskCreationWidgetState extends State<SmartTaskCreationWidget>
         ),
       ),
       avatar: isAiSuggested
-          ? Icon(
+          ? const Icon(
               Icons.auto_awesome,
               size: 16,
               color: AppColors.primaryBlue,
@@ -484,7 +484,7 @@ class _SmartTaskCreationWidgetState extends State<SmartTaskCreationWidget>
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.psychology,
                 color: AppColors.primaryBlue,
                 size: 20,
@@ -508,7 +508,7 @@ class _SmartTaskCreationWidgetState extends State<SmartTaskCreationWidget>
                   ),
                   child: Text(
                     '${(_aiConfidence! * 100).round()}% confident',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 10,
                       color: AppColors.primaryBlue,
                       fontWeight: FontWeight.w600,
@@ -521,7 +521,7 @@ class _SmartTaskCreationWidgetState extends State<SmartTaskCreationWidget>
           if (_aiEstimatedMinutes != null)
             _buildSuggestionItem(
               'Estimated Duration',
-              '${_aiEstimatedMinutes} minutes',
+              '$_aiEstimatedMinutes minutes',
               Icons.timer,
             ),
           if (_aiSuggestedCategory != null &&
@@ -563,7 +563,7 @@ class _SmartTaskCreationWidgetState extends State<SmartTaskCreationWidget>
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.lightbulb_outline,
                         size: 12,
                         color: AppColors.primaryBlue,
@@ -619,7 +619,7 @@ class _SmartTaskCreationWidgetState extends State<SmartTaskCreationWidget>
               ),
             ),
             if (onTap != null)
-              Icon(
+              const Icon(
                 Icons.keyboard_arrow_right,
                 size: 16,
                 color: AppColors.primaryBlue,
@@ -719,13 +719,15 @@ class _SmartTaskCreationWidgetState extends State<SmartTaskCreationWidget>
   Icon _getPriorityIcon(TaskPriority priority) {
     switch (priority) {
       case TaskPriority.critical:
-        return Icon(Icons.emergency, size: 18, color: AppColors.error);
+        return const Icon(Icons.emergency, size: 18, color: AppColors.error);
       case TaskPriority.high:
-        return Icon(Icons.priority_high, size: 18, color: AppColors.warning);
+        return const Icon(Icons.priority_high,
+            size: 18, color: AppColors.warning);
       case TaskPriority.medium:
-        return Icon(Icons.remove, size: 18, color: AppColors.info);
+        return const Icon(Icons.remove, size: 18, color: AppColors.info);
       case TaskPriority.low:
-        return Icon(Icons.arrow_downward, size: 18, color: AppColors.success);
+        return const Icon(Icons.arrow_downward,
+            size: 18, color: AppColors.success);
     }
   }
 

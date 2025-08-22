@@ -523,11 +523,6 @@ class SmartTaskProvider extends ChangeNotifier {
       debugPrint('Error refreshing analytics: $e');
     }
   }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
 }
 
 // Supporting Classes

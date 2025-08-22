@@ -246,6 +246,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.11"
+  dio:
+    dependency: "direct main"
+    description:
+      name: dio
+      sha256: d90ee57923d1828ac14e492ca49440f65477f4bb1263575900be731a3dac66a9
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.9.0"
+  dio_web_adapter:
+    dependency: transitive
+    description:
+      name: dio_web_adapter
+      sha256: "7586e476d70caecaf1686d21eee7247ea43ef5c345eab9e0cc3583ff13378d78"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.1"
   equatable:
     dependency: transitive
     description:
@@ -414,7 +430,7 @@ packages:
     source: hosted
     version: "2.0.1"
   http:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: http
       sha256: bb2ce4590bc2667c96f318d68cac1b5a7987ec819351d32b1c987239a815e007
@@ -462,7 +478,7 @@ packages:
     source: hosted
     version: "0.6.7"
   json_annotation:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: json_annotation
       sha256: "1ce844379ca14835a50d2f019a3099f419082cfdd231cd86a142af94dd5c6bb1"
@@ -549,6 +565,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  ml_linalg:
+    dependency: "direct main"
+    description:
+      name: ml_linalg
+      sha256: abbbd506dc894f8b0394cf5c5d45aab45b7e2a89b86bba9c9b5b8a412b4bec5d
+      url: "https://pub.dev"
+    source: hosted
+    version: "13.12.6"
   nested:
     dependency: transitive
     description:
@@ -749,6 +773,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.0"
+  quiver:
+    dependency: transitive
+    description:
+      name: quiver
+      sha256: ea0b925899e64ecdfbf9c7becb60d5b50e706ade44a85b2363be2a22d88117d2
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.2.2"
   shared_preferences:
     dependency: "direct main"
     description:
@@ -914,6 +946,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.4"
+  tflite:
+    dependency: "direct main"
+    description:
+      name: tflite
+      sha256: "661f8942a0e8ca05fedf554cc6f9cc95f526d0e4588d1665e0eb4d29e25e69b1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.2"
   timezone:
     dependency: "direct main"
     description:
