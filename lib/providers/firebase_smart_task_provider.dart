@@ -117,7 +117,7 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
 
           // Add AI-suggested tags
           final aiTags = List<String>.from(aiEnhancements['tags'] ?? []);
-          task.tags = <dynamic>{...task.tags, ...aiTags}.toList();
+          task.tags = <String>{...task.tags, ...aiTags}.toList();
         }
       }
 
