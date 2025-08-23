@@ -113,7 +113,7 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: _getSessionColor(provider.currentType).withOpacity(0.3),
+            color: _getSessionColor(provider.currentType).withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -217,7 +217,7 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
                     color: Theme.of(context).cardColor,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -231,7 +231,7 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
                   child: PrecisionCircularProgress(
                     progress: 1.0 - provider.progress,
                     color: _getSessionColor(provider.currentType),
-                    backgroundColor: Colors.grey.withOpacity(0.2),
+                    backgroundColor: Colors.grey.withValues(alpha: 0.2),
                     strokeWidth: 12,
                     precision: provider.timerService.precision,
                   ),
@@ -273,7 +273,7 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
                             horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: _getSessionColor(provider.currentType)
-                              .withOpacity(0.1),
+                              .withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -306,7 +306,7 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -359,9 +359,9 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.red.withOpacity(0.1),
+        color: Colors.red.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red.withOpacity(0.3)),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

@@ -118,7 +118,7 @@ class PrecisionCircularProgressPainter extends CustomPainter {
 
     // Background circle
     final backgroundPaint = Paint()
-      ..color = backgroundColor.withOpacity(0.3)
+      ..color = backgroundColor.withValues(alpha: 0.3)
       ..strokeWidth = strokeWidth
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -164,7 +164,7 @@ class PrecisionCircularProgressPainter extends CustomPainter {
       final alpha = (1.0 - (i / segments)) * animationValue;
 
       final segmentPaint = Paint()
-        ..color = color.withOpacity(alpha)
+        ..color = color.withValues(alpha: alpha)
         ..strokeWidth = strokeWidth
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round;
@@ -183,7 +183,7 @@ class PrecisionCircularProgressPainter extends CustomPainter {
     if (precision == TimerPrecision.second) return;
 
     final markerPaint = Paint()
-      ..color = color.withOpacity(0.5)
+      ..color = color.withValues(alpha: 0.5)
       ..strokeWidth = 1.0;
 
     final markers = _getPrecisionMarkers();
@@ -205,9 +205,9 @@ class PrecisionCircularProgressPainter extends CustomPainter {
   Shader _createProgressShader(Offset center, double radius) {
     return LinearGradient(
       colors: [
-        color.withOpacity(0.8),
+        color.withValues(alpha: 0.8),
         color,
-        color.withOpacity(0.9),
+        color.withValues(alpha: 0.9),
       ],
       stops: const [0.0, 0.5, 1.0],
     ).createShader(Rect.fromCircle(center: center, radius: radius));
