@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/task.dart';
+import '../models/enhanced_task.dart';
 import '../models/pomodoro_session.dart';
 import '../models/daily_stats.dart';
 
@@ -9,6 +10,14 @@ class StorageService {
   static late Box<Task> _tasksBox;
   static late Box<PomodoroSession> _sessionsBox;
   static late Box<DailyStats> _statsBox;
+  static bool _isInitialized = false;
+
+  /// Initialize the storage service
+  static Future<void> initialize() async {
+    if (_isInitialized) return;
+    await init();
+    _isInitialized = true;
+  }
 
   static Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();

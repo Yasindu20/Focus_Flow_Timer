@@ -1,8 +1,38 @@
+import 'package:flutter/foundation.dart';
 import '../models/daily_stats.dart';
+import '../models/enhanced_task.dart';
 import '../models/pomodoro_session.dart';
 import 'storage_service.dart';
 
 class AnalyticsService {
+  static final AnalyticsService _instance = AnalyticsService._internal();
+  factory AnalyticsService() => _instance;
+  AnalyticsService._internal();
+  
+  /// Track task creation event
+  Future<void> trackTaskCreated(EnhancedTask task) async {
+    debugPrint('Task created: ${task.title}');
+    // TODO: Implement analytics tracking
+  }
+  
+  /// Track task update event
+  Future<void> trackTaskUpdated(EnhancedTask task) async {
+    debugPrint('Task updated: ${task.title}');
+    // TODO: Implement analytics tracking
+  }
+  
+  /// Track task completion event
+  Future<void> trackTaskCompleted(EnhancedTask task) async {
+    debugPrint('Task completed: ${task.title}');
+    // TODO: Implement analytics tracking
+  }
+  
+  /// Track task deletion event
+  Future<void> trackTaskDeleted(EnhancedTask task) async {
+    debugPrint('Task deleted: ${task.title}');
+    // TODO: Implement analytics tracking
+  }
+
   static DailyStats getTodayStats() {
     final today = DateTime.now();
     final todayKey = DateTime(today.year, today.month, today.day);
@@ -79,5 +109,37 @@ class AnalyticsService {
                 .round()
           : 0,
     };
+  }
+
+  /// Generate productivity report for task provider
+  Future<Map<String, dynamic>> generateProductivityReport({
+    required DateTime startDate,
+    required DateTime endDate,
+    required String userId,
+  }) async {
+    try {
+      final stats = StorageService.getStatsForRange(startDate, endDate);
+      
+      return {
+        'total_sessions': stats.fold(0, (sum, stat) => sum + stat.completedSessions),
+        'total_minutes': stats.fold(0, (sum, stat) => sum + stat.totalMinutes),
+        'total_tasks': stats.fold(0, (sum, stat) => sum + stat.tasksCompleted),
+        'average_focus_score': stats.isNotEmpty 
+            ? stats.fold(0.0, (sum, stat) => sum + stat.focusScore) / stats.length
+            : 0.0,
+        'productivity_trend': 'stable',
+        'recommendations': ['Keep up the good work!'],
+      };
+    } catch (e) {
+      debugPrint('Error generating productivity report: $e');
+      return {
+        'total_sessions': 0,
+        'total_minutes': 0,
+        'total_tasks': 0,
+        'average_focus_score': 0.0,
+        'productivity_trend': 'stable',
+        'recommendations': ['Start tracking your productivity!'],
+      };
+    }
   }
 }

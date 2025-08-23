@@ -135,7 +135,7 @@ class _TimerControlsState extends State<TimerControls>
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -215,13 +215,13 @@ class _TimerControlsState extends State<TimerControls>
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isEnabled
-              ? color.withOpacity(0.1)
-              : Colors.grey.withOpacity(0.05),
+              ? color.withValues(alpha: 0.1)
+              : Colors.grey.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(25),
           border: Border.all(
             color: isEnabled
-                ? color.withOpacity(0.3)
-                : Colors.grey.withOpacity(0.2),
+                ? color.withValues(alpha: 0.3)
+                : Colors.grey.withValues(alpha: 0.2),
           ),
         ),
         child: Column(
@@ -229,14 +229,14 @@ class _TimerControlsState extends State<TimerControls>
           children: [
             Icon(
               icon,
-              color: isEnabled ? color : Colors.grey.withOpacity(0.5),
+              color: isEnabled ? color : Colors.grey.withValues(alpha: 0.5),
               size: 24,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isEnabled ? color : Colors.grey.withOpacity(0.5),
+                color: isEnabled ? color : Colors.grey.withValues(alpha: 0.5),
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),

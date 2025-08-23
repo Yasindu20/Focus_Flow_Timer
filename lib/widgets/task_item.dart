@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../models/task.dart';
+import '../models/enhanced_task.dart';
 import '../core/constants/colors.dart';
 
 class TaskItem extends StatelessWidget {
-  final Task task;
+  final EnhancedTask task;
   final VoidCallback? onTap;
   final VoidCallback? onComplete;
   final VoidCallback? onDelete;
@@ -63,7 +63,7 @@ class TaskItem extends StatelessWidget {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: _getPriorityColor(task.priority).withOpacity(0.2),
+                    color: _getPriorityColor(task.priority).withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -109,6 +109,8 @@ class TaskItem extends StatelessWidget {
         return Colors.orange;
       case TaskPriority.high:
         return Colors.red;
+      case TaskPriority.critical:
+        return Colors.deepPurple;
     }
   }
 }
