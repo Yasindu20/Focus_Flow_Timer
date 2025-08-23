@@ -11,43 +11,44 @@ import 'genetic_schedule_optimizer.dart';
 /// Simplified Enterprise-level Machine Learning Service
 /// Uses advanced algorithms without heavy external ML dependencies
 class SimplifiedEnterpriseMlService {
-  static final SimplifiedEnterpriseMlService _instance = SimplifiedEnterpriseMlService._internal();
+  static final SimplifiedEnterpriseMlService _instance =
+      SimplifiedEnterpriseMlService._internal();
   factory SimplifiedEnterpriseMlService() => _instance;
   SimplifiedEnterpriseMlService._internal();
 
   // Simple Model State
-  Map<String, List<double>> _durationWeights = {};
-  Map<String, double> _categoryWeights = {};
-  Map<String, double> _priorityWeights = {};
-  
+  final Map<String, List<double>> _durationWeights = {};
+  final Map<String, double> _categoryWeights = {};
+  final Map<String, double> _priorityWeights = {};
+
   // Training Data
-  List<TaskCompletionEvent> _trainingEvents = [];
+  final List<TaskCompletionEvent> _trainingEvents = [];
   Map<String, double> _userPatterns = {};
-  
+
   // Model State
   bool _isInitialized = false;
-  bool _isTraining = false;
-  Map<String, double> _modelAccuracies = {};
-  
+  final bool _isTraining = false;
+  final Map<String, double> _modelAccuracies = {};
+
   // Performance Tracking
   final Map<String, List<double>> _predictionHistory = {};
 
   /// Initialize the ML service
   Future<void> initialize() async {
     if (_isInitialized) return;
-    
+
     try {
       debugPrint('Initializing Simplified Enterprise ML Service...');
-      
+
       // Initialize model weights
       _initializeModelWeights();
-      
+
       // Load existing patterns
       await _loadUserPatterns();
-      
+
       // Start background optimization
       _startModelOptimization();
-      
+
       _isInitialized = true;
       debugPrint('Simplified Enterprise ML Service initialized successfully');
     } catch (e) {
@@ -66,7 +67,7 @@ class SimplifiedEnterpriseMlService {
     Map<String, dynamic>? userContext,
   }) async {
     if (!_isInitialized) await initialize();
-    
+
     try {
       // Extract features
       final features = _extractFeatures(
@@ -76,31 +77,32 @@ class SimplifiedEnterpriseMlService {
         priority: priority,
         userContext: userContext ?? {},
       );
-      
+
       // Multiple prediction models
       final predictions = <double>[];
       predictions.add(_linearRegressionPredict(features));
       predictions.add(_ruleBasedPredict(features));
       predictions.add(_similarityBasedPredict(features));
       predictions.add(_neuralNetworkPredict(features));
-      
+
       // Ensemble prediction
       final finalPrediction = _ensemblePrediction(predictions);
       final confidence = _calculateConfidence(predictions);
-      
+
       // Generate alternatives
       final alternatives = _generateAlternatives(finalPrediction, confidence);
-      
+
       // Create subtasks
       final subtasks = await _generateIntelligentSubtasks(
         title: title,
         description: description,
         estimatedMinutes: finalPrediction,
       );
-      
+
       // Generate tips
-      final tips = _generateContextualTips(category, priority, finalPrediction, userContext ?? {});
-      
+      final tips = _generateContextualTips(
+          category, priority, finalPrediction, userContext ?? {});
+
       return TaskEstimation(
         estimatedMinutes: finalPrediction.round(),
         confidenceLevel: confidence,
@@ -110,7 +112,6 @@ class SimplifiedEnterpriseMlService {
         alternativeEstimates: alternatives,
         tips: tips,
       );
-      
     } catch (e) {
       debugPrint('ML prediction failed, using fallback: $e');
       return _fallbackEstimation(title, description, category, priority);
@@ -126,24 +127,25 @@ class SimplifiedEnterpriseMlService {
     try {
       // Advanced text analysis
       final textFeatures = _advancedTextAnalysis(title, description);
-      
+
       // Category prediction using weighted scoring
       final categoryScores = _calculateCategoryScores(textFeatures);
       final bestCategory = _getBestCategory(categoryScores);
       final categoryConfidence = categoryScores[bestCategory.name] ?? 0.0;
-      
+
       // Priority analysis
       final priorityAnalysis = _analyzePriority(textFeatures, metadata ?? {});
-      
+
       // Smart tags generation
       final smartTags = _generateSmartTags(textFeatures);
-      
+
       // Related tasks
       final relatedTaskIds = await _findRelatedTasks(textFeatures);
-      
+
       // Subtask suggestions
-      final suggestedSubtasks = _suggestSubtasks(title, description, bestCategory);
-      
+      final suggestedSubtasks =
+          _suggestSubtasks(title, description, bestCategory);
+
       return TaskCategorizationResult(
         suggestedCategory: bestCategory,
         categoryConfidence: categoryConfidence,
@@ -153,7 +155,6 @@ class SimplifiedEnterpriseMlService {
         suggestedSubtasks: suggestedSubtasks,
         relatedTaskIds: relatedTaskIds,
       );
-      
     } catch (e) {
       debugPrint('Categorization failed: $e');
       return _fallbackCategorization(title, description);
@@ -170,19 +171,19 @@ class SimplifiedEnterpriseMlService {
     try {
       // Analyze user work patterns
       final workPatterns = await _analyzeWorkPatterns(tasks);
-      
+
       // Use genetic algorithm for optimization
       final geneticOptimizer = GeneticScheduleOptimizer(
         tasks: tasks,
         constraints: constraints ?? {},
         workPatterns: workPatterns,
       );
-      
+
       final scheduleResults = await geneticOptimizer.optimize(
         generations: 50,
         populationSize: 30,
       );
-      
+
       return TaskScheduleRecommendation(
         recommendedSchedule: scheduleResults.bestSchedule,
         confidenceScore: scheduleResults.fitnessScore,
@@ -190,7 +191,6 @@ class SimplifiedEnterpriseMlService {
         optimizationTips: scheduleResults.tips,
         riskFactors: scheduleResults.risks,
       );
-      
     } catch (e) {
       debugPrint('Schedule optimization failed: $e');
       return _fallbackScheduleOptimization(tasks, startDate, endDate);
@@ -201,15 +201,14 @@ class SimplifiedEnterpriseMlService {
   Future<void> learnFromCompletion(TaskCompletionEvent event) async {
     try {
       _trainingEvents.add(event);
-      
+
       // Update prediction accuracy
       _updatePredictionAccuracy(event);
-      
+
       // Incremental learning
       if (_trainingEvents.length % 5 == 0) {
         await _incrementalModelUpdate();
       }
-      
     } catch (e) {
       debugPrint('Learning from completion failed: $e');
     }
@@ -225,7 +224,7 @@ class SimplifiedEnterpriseMlService {
       final insights = _analyzeProductivityPatterns(userId, startDate, endDate);
       final recommendations = _generatePersonalizedRecommendations(insights);
       final futurePredictions = _predictFuturePerformance(insights);
-      
+
       return {
         'productivityScore': insights['score'] ?? 0.0,
         'topCategories': insights['categories'] ?? [],
@@ -234,7 +233,6 @@ class SimplifiedEnterpriseMlService {
         'futurePredictions': futurePredictions,
         'modelAccuracy': _modelAccuracies,
       };
-      
     } catch (e) {
       debugPrint('Insight generation failed: $e');
       return {'error': e.toString()};
@@ -250,74 +248,80 @@ class SimplifiedEnterpriseMlService {
     required Map<String, dynamic> userContext,
   }) {
     final features = <String, double>{};
-    
+
     // Text features
     features['title_length'] = title.length / 100.0;
     features['description_length'] = description.length / 1000.0;
-    features['word_count'] = (title.split(' ').length + description.split(' ').length) / 50.0;
-    
+    features['word_count'] =
+        (title.split(' ').length + description.split(' ').length) / 50.0;
+
     // Semantic features
-    features['technical_density'] = _calculateTechnicalDensity(title + ' ' + description);
+    features['technical_density'] =
+        _calculateTechnicalDensity('$title $description');
     features['complexity'] = _calculateTaskComplexity(title, description);
-    features['urgency_indicators'] = _detectUrgencyIndicators(title, description);
-    
+    features['urgency_indicators'] =
+        _detectUrgencyIndicators(title, description);
+
     // Category and priority encoding
     features['category'] = category.index / TaskCategory.values.length;
     features['priority'] = priority.index / TaskPriority.values.length;
-    
+
     // Temporal features
     final now = DateTime.now();
     features['hour_of_day'] = now.hour / 24.0;
     features['day_of_week'] = now.weekday / 7.0;
     features['is_weekend'] = (now.weekday >= 6) ? 1.0 : 0.0;
-    
+
     // User context
     features['user_experience'] = (userContext['experience'] as double?) ?? 0.5;
     features['current_workload'] = (userContext['workload'] as double?) ?? 0.5;
     features['energy_level'] = (userContext['energy'] as double?) ?? 0.5;
-    
+
     return features;
   }
 
   // Model implementations
   double _linearRegressionPredict(Map<String, double> features) {
     double prediction = 25.0; // Base estimate
-    
-    final weights = _durationWeights['linear'] ?? [0.5, 0.3, 0.2, 0.4, 0.6, 0.1, 0.2, 0.3];
+
+    final weights =
+        _durationWeights['linear'] ?? [0.5, 0.3, 0.2, 0.4, 0.6, 0.1, 0.2, 0.3];
     final featureValues = features.values.toList();
-    
+
     for (int i = 0; i < featureValues.length && i < weights.length; i++) {
       prediction += featureValues[i] * weights[i] * 30;
     }
-    
+
     return prediction.clamp(5.0, 240.0);
   }
 
   double _ruleBasedPredict(Map<String, double> features) {
     double base = 25.0;
-    
+
     // Category-based adjustment
     final category = (features['category'] ?? 0.5) * TaskCategory.values.length;
-    if (category >= TaskCategory.coding.index) base *= 1.8;
-    else if (category >= TaskCategory.research.index) base *= 1.6;
+    if (category >= TaskCategory.coding.index) {
+      base *= 1.8;
+    } else if (category >= TaskCategory.research.index)
+      base *= 1.6;
     else if (category >= TaskCategory.writing.index) base *= 1.4;
-    
+
     // Complexity adjustment
     base *= (0.5 + (features['complexity'] ?? 0.5));
-    
+
     // Priority adjustment
     base *= (0.8 + (features['priority'] ?? 0.5) * 0.4);
-    
+
     return base.clamp(10.0, 180.0);
   }
 
   double _similarityBasedPredict(Map<String, double> features) {
     // Find similar historical tasks
     if (_trainingEvents.isEmpty) return _ruleBasedPredict(features);
-    
+
     double totalSimilarity = 0.0;
     double weightedDuration = 0.0;
-    
+
     for (final event in _trainingEvents) {
       final similarity = _calculateSimilarity(features, event);
       if (similarity > 0.3) {
@@ -325,11 +329,11 @@ class SimplifiedEnterpriseMlService {
         weightedDuration += event.actualMinutes * similarity;
       }
     }
-    
+
     if (totalSimilarity > 0) {
       return (weightedDuration / totalSimilarity).clamp(5.0, 240.0);
     }
-    
+
     return _ruleBasedPredict(features);
   }
 
@@ -337,7 +341,7 @@ class SimplifiedEnterpriseMlService {
     // Simplified neural network simulation
     final inputs = features.values.toList();
     final hiddenLayer = List<double>.filled(5, 0.0);
-    
+
     // Hidden layer computation
     for (int i = 0; i < hiddenLayer.length; i++) {
       double sum = 0.0;
@@ -347,37 +351,44 @@ class SimplifiedEnterpriseMlService {
       }
       hiddenLayer[i] = _sigmoid(sum);
     }
-    
+
     // Output computation
     double output = 0.0;
     for (int i = 0; i < hiddenLayer.length; i++) {
       output += hiddenLayer[i] * (0.5 + i * 0.1);
     }
-    
+
     return (output * 60 + 20).clamp(10.0, 200.0);
   }
 
   double _ensemblePrediction(List<double> predictions) {
     if (predictions.isEmpty) return 25.0;
-    
+
     // Weighted ensemble
-    final weights = [0.3, 0.4, 0.2, 0.1]; // Linear, Rule-based, Similarity, Neural
+    final weights = [
+      0.3,
+      0.4,
+      0.2,
+      0.1
+    ]; // Linear, Rule-based, Similarity, Neural
     double weighted = 0.0;
-    
+
     for (int i = 0; i < predictions.length && i < weights.length; i++) {
       weighted += predictions[i] * weights[i];
     }
-    
+
     return weighted.clamp(5.0, 240.0);
   }
 
   double _calculateConfidence(List<double> predictions) {
     if (predictions.length < 2) return 0.6;
-    
+
     final mean = predictions.reduce((a, b) => a + b) / predictions.length;
-    final variance = predictions.map((p) => pow(p - mean, 2)).reduce((a, b) => a + b) / predictions.length;
+    final variance =
+        predictions.map((p) => pow(p - mean, 2)).reduce((a, b) => a + b) /
+            predictions.length;
     final stdDev = sqrt(variance);
-    
+
     // Lower standard deviation = higher confidence
     final confidence = 1.0 - (stdDev / mean).clamp(0.0, 0.9);
     return confidence.clamp(0.1, 0.95);
@@ -387,44 +398,72 @@ class SimplifiedEnterpriseMlService {
   double _calculateTechnicalDensity(String text) {
     final words = text.toLowerCase().split(RegExp(r'\W+'));
     final technicalTerms = {
-      'api', 'database', 'algorithm', 'code', 'implement', 'debug', 'test', 'deploy', 
-      'optimize', 'refactor', 'integrate', 'develop', 'program', 'script', 'query'
+      'api',
+      'database',
+      'algorithm',
+      'code',
+      'implement',
+      'debug',
+      'test',
+      'deploy',
+      'optimize',
+      'refactor',
+      'integrate',
+      'develop',
+      'program',
+      'script',
+      'query'
     };
-    
-    final technicalCount = words.where((word) => technicalTerms.contains(word)).length;
+
+    final technicalCount =
+        words.where((word) => technicalTerms.contains(word)).length;
     return words.isEmpty ? 0.0 : technicalCount / words.length;
   }
 
   double _calculateTaskComplexity(String title, String description) {
     final text = '$title $description'.toLowerCase();
     final words = text.split(' ');
-    
+
     double complexity = 0.0;
-    
+
     // Length factor
     complexity += (words.length / 50.0).clamp(0.0, 0.5);
-    
+
     // Technical complexity
     complexity += _calculateTechnicalDensity(text) * 0.3;
-    
+
     // Complexity keywords
-    final complexWords = ['complex', 'difficult', 'challenging', 'advanced', 'comprehensive'];
+    final complexWords = [
+      'complex',
+      'difficult',
+      'challenging',
+      'advanced',
+      'comprehensive'
+    ];
     for (final word in complexWords) {
       if (text.contains(word)) complexity += 0.1;
     }
-    
+
     return complexity.clamp(0.0, 1.0);
   }
 
   double _detectUrgencyIndicators(String title, String description) {
     final text = '$title $description'.toLowerCase();
-    final urgentTerms = ['urgent', 'asap', 'immediate', 'critical', 'emergency', 'deadline', 'rush'];
-    
+    final urgentTerms = [
+      'urgent',
+      'asap',
+      'immediate',
+      'critical',
+      'emergency',
+      'deadline',
+      'rush'
+    ];
+
     int count = 0;
     for (final term in urgentTerms) {
       if (text.contains(term)) count++;
     }
-    
+
     return (count / urgentTerms.length).clamp(0.0, 1.0);
   }
 
@@ -433,17 +472,18 @@ class SimplifiedEnterpriseMlService {
   // Initialize model weights
   void _initializeModelWeights() {
     final random = Random();
-    
-    _durationWeights['linear'] = List.generate(8, (_) => random.nextDouble() - 0.5);
-    
+
+    _durationWeights['linear'] =
+        List.generate(8, (_) => random.nextDouble() - 0.5);
+
     for (final category in TaskCategory.values) {
       _categoryWeights[category.name] = 0.5 + random.nextDouble() * 0.5;
     }
-    
+
     for (final priority in TaskPriority.values) {
       _priorityWeights[priority.name] = 0.3 + priority.index * 0.2;
     }
-    
+
     _modelAccuracies['duration'] = 0.75;
     _modelAccuracies['category'] = 0.80;
     _modelAccuracies['schedule'] = 0.70;
@@ -451,11 +491,11 @@ class SimplifiedEnterpriseMlService {
 
   void _initializeFallbackWeights() {
     _durationWeights['linear'] = [0.5, 0.3, 0.2, 0.4, 0.6, 0.1, 0.2, 0.3];
-    
+
     for (final category in TaskCategory.values) {
       _categoryWeights[category.name] = 0.5;
     }
-    
+
     _modelAccuracies['duration'] = 0.6;
     _modelAccuracies['category'] = 0.65;
   }
@@ -466,49 +506,68 @@ class SimplifiedEnterpriseMlService {
     return {
       'sentiment': _calculateSentiment(words),
       'complexity': _calculateTaskComplexity(title, description),
-      'technical_terms': _calculateTechnicalDensity(title + ' ' + description),
+      'technical_terms': _calculateTechnicalDensity('$title $description'),
       'word_count': words.length,
       'keywords': words.take(5).toList(),
     };
   }
 
   double _calculateSentiment(List<String> words) {
-    final positive = ['good', 'great', 'excellent', 'improve', 'enhance', 'optimize'];
-    final negative = ['bad', 'difficult', 'problem', 'issue', 'bug', 'error', 'fix'];
-    
+    final positive = [
+      'good',
+      'great',
+      'excellent',
+      'improve',
+      'enhance',
+      'optimize'
+    ];
+    final negative = [
+      'bad',
+      'difficult',
+      'problem',
+      'issue',
+      'bug',
+      'error',
+      'fix'
+    ];
+
     int pos = 0, neg = 0;
     for (final word in words) {
       if (positive.contains(word)) pos++;
       if (negative.contains(word)) neg++;
     }
-    
+
     if (pos + neg == 0) return 0.0;
     return (pos - neg) / (pos + neg);
   }
 
   // Additional helper methods and implementations...
-  Map<String, double> _calculateCategoryScores(Map<String, dynamic> textFeatures) {
+  Map<String, double> _calculateCategoryScores(
+      Map<String, dynamic> textFeatures) {
     final scores = <String, double>{};
-    
+
     for (final category in TaskCategory.values) {
       scores[category.name] = _categoryWeights[category.name] ?? 0.5;
     }
-    
+
     return scores;
   }
 
   TaskCategory _getBestCategory(Map<String, double> scores) {
-    String bestCategoryName = scores.entries.reduce((a, b) => a.value > b.value ? a : b).key;
-    return TaskCategory.values.firstWhere((c) => c.name == bestCategoryName, orElse: () => TaskCategory.general);
+    String bestCategoryName =
+        scores.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+    return TaskCategory.values.firstWhere((c) => c.name == bestCategoryName,
+        orElse: () => TaskCategory.general);
   }
 
-  PriorityAnalysis _analyzePriority(Map<String, dynamic> textFeatures, Map<String, dynamic> metadata) {
+  PriorityAnalysis _analyzePriority(
+      Map<String, dynamic> textFeatures, Map<String, dynamic> metadata) {
     final complexity = textFeatures['complexity'] as double? ?? 0.5;
     final urgency = _detectUrgencyIndicators(textFeatures.toString(), '');
-    
+
     TaskPriority priority;
     String reasoning;
-    
+
     if (urgency > 0.7 || complexity > 0.8) {
       priority = TaskPriority.critical;
       reasoning = 'High urgency or complexity detected';
@@ -522,7 +581,7 @@ class SimplifiedEnterpriseMlService {
       priority = TaskPriority.low;
       reasoning = 'Low complexity task';
     }
-    
+
     return PriorityAnalysis(priority: priority, reasoning: reasoning);
   }
 
@@ -533,7 +592,7 @@ class SimplifiedEnterpriseMlService {
     required double estimatedMinutes,
   }) async {
     final subtasks = <ai.TaskSubtask>[];
-    
+
     if (estimatedMinutes > 50) {
       final numSubtasks = (estimatedMinutes / 30).ceil();
       for (int i = 0; i < numSubtasks; i++) {
@@ -545,11 +604,12 @@ class SimplifiedEnterpriseMlService {
         ));
       }
     }
-    
+
     return subtasks;
   }
 
-  List<EstimateAlternative> _generateAlternatives(double basePrediction, double confidence) {
+  List<EstimateAlternative> _generateAlternatives(
+      double basePrediction, double confidence) {
     return [
       EstimateAlternative(
         scenario: 'Optimistic',
@@ -569,9 +629,13 @@ class SimplifiedEnterpriseMlService {
     ];
   }
 
-  List<String> _generateContextualTips(TaskCategory category, TaskPriority priority, double estimation, Map<String, dynamic> userContext) {
+  List<String> _generateContextualTips(
+      TaskCategory category,
+      TaskPriority priority,
+      double estimation,
+      Map<String, dynamic> userContext) {
     final tips = <String>[];
-    
+
     switch (category) {
       case TaskCategory.coding:
         tips.addAll([
@@ -597,55 +661,72 @@ class SimplifiedEnterpriseMlService {
       default:
         tips.add('Stay focused and take breaks as needed');
     }
-    
+
     if (priority == TaskPriority.critical) {
       tips.add('This is a critical task - schedule it during your peak hours');
     }
-    
+
     if (estimation > 90) {
       tips.add('Consider breaking this task into smaller parts');
     }
-    
+
     return tips.take(3).toList();
   }
 
   List<String> _generateSmartTags(Map<String, dynamic> textFeatures) {
     final tags = <String>[];
     final keywords = textFeatures['keywords'] as List<String>? ?? [];
-    
+
     for (final keyword in keywords.take(3)) {
       if (keyword.length > 3) tags.add('#$keyword');
     }
-    
+
     final complexity = textFeatures['complexity'] as double? ?? 0.0;
     if (complexity > 0.7) tags.add('#complex');
     if (complexity < 0.3) tags.add('#simple');
-    
+
     return tags;
   }
 
-  Future<List<String>> _findRelatedTasks(Map<String, dynamic> textFeatures) async {
+  Future<List<String>> _findRelatedTasks(
+      Map<String, dynamic> textFeatures) async {
     // Simplified related task finding
     return [];
   }
 
-  List<String> _suggestSubtasks(String title, String description, TaskCategory category) {
+  List<String> _suggestSubtasks(
+      String title, String description, TaskCategory category) {
     final suggestions = <String>[];
-    
+
     switch (category) {
       case TaskCategory.coding:
-        suggestions.addAll(['Plan approach', 'Write code', 'Test functionality', 'Review and refactor']);
+        suggestions.addAll([
+          'Plan approach',
+          'Write code',
+          'Test functionality',
+          'Review and refactor'
+        ]);
         break;
       case TaskCategory.writing:
-        suggestions.addAll(['Research topic', 'Create outline', 'Write draft', 'Edit and polish']);
+        suggestions.addAll([
+          'Research topic',
+          'Create outline',
+          'Write draft',
+          'Edit and polish'
+        ]);
         break;
       case TaskCategory.research:
-        suggestions.addAll(['Identify sources', 'Gather information', 'Analyze data', 'Summarize findings']);
+        suggestions.addAll([
+          'Identify sources',
+          'Gather information',
+          'Analyze data',
+          'Summarize findings'
+        ]);
         break;
       default:
         suggestions.addAll(['Plan', 'Execute', 'Review']);
     }
-    
+
     return suggestions;
   }
 
@@ -675,7 +756,8 @@ class SimplifiedEnterpriseMlService {
     // Incremental learning from recent events
   }
 
-  Map<String, dynamic> _analyzeProductivityPatterns(String userId, DateTime startDate, DateTime endDate) {
+  Map<String, dynamic> _analyzeProductivityPatterns(
+      String userId, DateTime startDate, DateTime endDate) {
     return {
       'score': 0.75,
       'categories': ['coding', 'writing'],
@@ -683,7 +765,8 @@ class SimplifiedEnterpriseMlService {
     };
   }
 
-  List<String> _generatePersonalizedRecommendations(Map<String, dynamic> insights) {
+  List<String> _generatePersonalizedRecommendations(
+      Map<String, dynamic> insights) {
     return [
       'Focus on high-priority tasks during peak hours',
       'Take regular breaks to maintain productivity',
@@ -691,7 +774,8 @@ class SimplifiedEnterpriseMlService {
     ];
   }
 
-  Map<String, dynamic> _predictFuturePerformance(Map<String, dynamic> insights) {
+  Map<String, dynamic> _predictFuturePerformance(
+      Map<String, dynamic> insights) {
     return {
       'expected_completion_rate': 0.85,
       'optimal_task_load': 6,
@@ -699,7 +783,8 @@ class SimplifiedEnterpriseMlService {
     };
   }
 
-  Future<Map<String, dynamic>> _analyzeWorkPatterns(List<EnhancedTask> tasks) async {
+  Future<Map<String, dynamic>> _analyzeWorkPatterns(
+      List<EnhancedTask> tasks) async {
     return {
       'peakHours': [9, 10, 11, 14, 15],
       'averageSessionLength': 45,
@@ -707,17 +792,18 @@ class SimplifiedEnterpriseMlService {
     };
   }
 
-  double _calculateSimilarity(Map<String, double> features, TaskCompletionEvent event) {
+  double _calculateSimilarity(
+      Map<String, double> features, TaskCompletionEvent event) {
     // Simple cosine similarity
     double dotProduct = 0.0;
     double norm1 = 0.0, norm2 = 0.0;
-    
+
     final eventFeatures = {
       'complexity': 0.5,
       'category': event.category.index / TaskCategory.values.length,
       'priority': event.priority.index / TaskPriority.values.length,
     };
-    
+
     for (final key in features.keys) {
       if (eventFeatures.containsKey(key)) {
         dotProduct += features[key]! * eventFeatures[key]!;
@@ -725,15 +811,16 @@ class SimplifiedEnterpriseMlService {
         norm2 += eventFeatures[key]! * eventFeatures[key]!;
       }
     }
-    
+
     if (norm1 == 0 || norm2 == 0) return 0.0;
     return dotProduct / (sqrt(norm1) * sqrt(norm2));
   }
 
   // Fallback methods
-  TaskEstimation _fallbackEstimation(String title, String description, TaskCategory category, TaskPriority priority) {
+  TaskEstimation _fallbackEstimation(String title, String description,
+      TaskCategory category, TaskPriority priority) {
     int baseMinutes = 25;
-    
+
     switch (category) {
       case TaskCategory.coding:
         baseMinutes = 45;
@@ -750,7 +837,7 @@ class SimplifiedEnterpriseMlService {
       default:
         baseMinutes = 25;
     }
-    
+
     return TaskEstimation(
       estimatedMinutes: baseMinutes,
       confidenceLevel: 0.6,
@@ -762,7 +849,8 @@ class SimplifiedEnterpriseMlService {
     );
   }
 
-  TaskCategorizationResult _fallbackCategorization(String title, String description) {
+  TaskCategorizationResult _fallbackCategorization(
+      String title, String description) {
     return TaskCategorizationResult(
       suggestedCategory: TaskCategory.general,
       categoryConfidence: 0.6,
@@ -774,10 +862,11 @@ class SimplifiedEnterpriseMlService {
     );
   }
 
-  TaskScheduleRecommendation _fallbackScheduleOptimization(List<EnhancedTask> tasks, DateTime startDate, DateTime endDate) {
+  TaskScheduleRecommendation _fallbackScheduleOptimization(
+      List<EnhancedTask> tasks, DateTime startDate, DateTime endDate) {
     final scheduledTasks = <ScheduledTask>[];
     DateTime currentTime = startDate;
-    
+
     for (final task in tasks) {
       scheduledTasks.add(ScheduledTask(
         taskId: task.id,
@@ -785,9 +874,10 @@ class SimplifiedEnterpriseMlService {
         endTime: currentTime.add(Duration(minutes: task.estimatedMinutes)),
         confidence: 0.6,
       ));
-      currentTime = currentTime.add(Duration(minutes: task.estimatedMinutes + 10));
+      currentTime =
+          currentTime.add(Duration(minutes: task.estimatedMinutes + 10));
     }
-    
+
     return TaskScheduleRecommendation(
       recommendedSchedule: scheduledTasks,
       confidenceScore: 0.6,

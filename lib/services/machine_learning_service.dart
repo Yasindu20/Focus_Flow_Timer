@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../models/enhanced_task.dart';
-import '../models/ai_insights.dart';
 import 'simplified_enterprise_ml_service.dart';
 
 class MachineLearningService {
@@ -10,8 +9,9 @@ class MachineLearningService {
       MachineLearningService._internal();
   factory MachineLearningService() => _instance;
   MachineLearningService._internal();
-  
-  final SimplifiedEnterpriseMlService _enterpriseML = SimplifiedEnterpriseMlService();
+
+  final SimplifiedEnterpriseMlService _enterpriseML =
+      SimplifiedEnterpriseMlService();
   // ML Model State
   Map<String, dynamic> _durationModel = {};
   Map<String, dynamic> _categoryModel = {};
@@ -59,7 +59,7 @@ class MachineLearningService {
         (e) => e.name == priority,
         orElse: () => TaskPriority.medium,
       );
-      
+
       // Use enterprise ML service
       final estimation = await _enterpriseML.predictTaskDuration(
         title: title,
@@ -73,7 +73,7 @@ class MachineLearningService {
           'historicalData': historicalData,
         },
       );
-      
+
       return estimation.estimatedMinutes.toDouble();
     } catch (e) {
       debugPrint('Error in duration prediction: $e');
@@ -88,7 +88,7 @@ class MachineLearningService {
       // Use simplified enterprise ML service for text analysis
       final fullText = '$title $description';
       final words = fullText.toLowerCase().split(RegExp(r'\W+'));
-      
+
       return {
         'keywords': words.where((w) => w.length > 3).take(5).toList(),
         'intent': _classifyIntent(words),
@@ -312,13 +312,13 @@ class MachineLearningService {
       'meeting': ['meeting', 'discuss', 'call', 'conference', 'presentation'],
       'review': ['review', 'check', 'validate', 'verify', 'audit', 'test'],
     };
-    
+
     for (final intent in intentMap.keys) {
       if (words.any((word) => intentMap[intent]!.contains(word))) {
         return intent;
       }
     }
-    
+
     return 'general';
   }
 
@@ -500,7 +500,6 @@ class MachineLearningService {
       ..sort((a, b) => b.value.compareTo(a.value));
     return sortedKeywords.take(10).map((entry) => entry.key).toList();
   }
-
 
   double _analyzeSentiment(List<String> tokens) {
     final positiveWords = {

@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../models/enhanced_task.dart';
 import '../models/task_analytics.dart';
-import '../models/productivity_metrics.dart';
 
 class TaskAnalyticsEngine {
   static final TaskAnalyticsEngine _instance = TaskAnalyticsEngine._internal();

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../../models/enhanced_task.dart';
@@ -9,38 +8,40 @@ import '../../services/machine_learning_service.dart' hide ScheduledTask;
 import '../../services/api_integration_service.dart';
 
 // Import with specific aliases to avoid conflicts
-import '../../models/enhanced_task.dart' as enhanced show TaskCategory, TaskPriority, TaskSubtask;
+import '../../models/enhanced_task.dart' as enhanced
+    show TaskCategory, TaskPriority, TaskSubtask;
 
 class TaskIntelligenceEngine {
-  static final TaskIntelligenceEngine _instance = TaskIntelligenceEngine._internal();
+  static final TaskIntelligenceEngine _instance =
+      TaskIntelligenceEngine._internal();
   factory TaskIntelligenceEngine() => _instance;
   TaskIntelligenceEngine._internal();
 
   final MachineLearningService _mlService = MachineLearningService();
   final ApiIntegrationService _apiService = ApiIntegrationService();
-  
+
   // AI Model State
   final Map<String, dynamic> _userBehaviorModel = {};
   final Map<String, double> _taskComplexityWeights = {};
   final Map<String, int> _historicalDurations = {};
   final Map<String, double> _accuracyScores = {};
-  
+
   // Real-time Learning
   Timer? _modelUpdateTimer;
   final List<TaskCompletionData> _recentEvents = [];
-  
+
   bool _isInitialized = false;
 
   /// Initialize the AI engine with historical data
   Future<void> initialize() async {
     if (_isInitialized) return;
-    
+
     try {
       await _loadHistoricalData();
       await _initializeMLModels();
       _startRealTimeLearning();
       _isInitialized = true;
-      
+
       debugPrint('TaskIntelligenceEngine initialized successfully');
     } catch (e) {
       debugPrint('Failed to initialize TaskIntelligenceEngine: $e');
@@ -60,16 +61,17 @@ class TaskIntelligenceEngine {
     try {
       // Analyze task complexity using NLP
       final complexityScore = await _analyzeTaskComplexity(title, description);
-      
+
       // Get historical patterns for similar tasks
-      final historicalPattern = _getHistoricalPattern(category, complexityScore);
-      
+      final historicalPattern =
+          _getHistoricalPattern(category, complexityScore);
+
       // Factor in user-specific behavior
       final userFactor = _getUserPerformanceFactor(userId ?? 'default');
-      
+
       // Consider external context (time of day, workload, etc.)
       final contextFactor = _analyzeContextualFactors(context);
-      
+
       // Apply ML model for final estimation
       final baseEstimate = await _mlService.predictDuration(
         title: title,
@@ -81,10 +83,11 @@ class TaskIntelligenceEngine {
         userFactor: userFactor,
         contextFactor: contextFactor,
       );
-      
+
       // Generate confidence intervals
-      final confidence = _calculateConfidenceLevel(baseEstimate, historicalPattern);
-      
+      final confidence =
+          _calculateConfidenceLevel(baseEstimate, historicalPattern);
+
       // Create estimation with breakdown
       return ai.TaskEstimation(
         estimatedMinutes: baseEstimate.round(),
@@ -96,14 +99,15 @@ class TaskIntelligenceEngine {
           'context_factor': contextFactor,
           'historical_factor': historicalPattern['average'] ?? 25.0,
         },
-        suggestedBreakdown: _generateAITaskBreakdown(title, description, baseEstimate),
-        alternativeEstimates: _generateAlternativeEstimates(baseEstimate, confidence),
+        suggestedBreakdown:
+            _generateAITaskBreakdown(title, description, baseEstimate),
+        alternativeEstimates:
+            _generateAlternativeEstimates(baseEstimate, confidence),
         tips: _generateProductivityTips(category, complexityScore, userFactor),
       );
-      
     } catch (e) {
       debugPrint('Error in task duration estimation: $e');
-      
+
       // Fallback to rule-based estimation
       return _fallbackEstimation(title, description, category, priority);
     }
@@ -117,12 +121,13 @@ class TaskIntelligenceEngine {
   }) async {
     try {
       // Use NLP to analyze task content
-      final nlpAnalysis = await _mlService.analyzeTaskContent(title, description);
-      
+      final nlpAnalysis =
+          await _mlService.analyzeTaskContent(title, description);
+
       // Extract keywords and intent
       final keywords = nlpAnalysis['keywords'] as List<String>? ?? [];
       final intent = nlpAnalysis['intent'] as String? ?? 'general';
-      
+
       // Apply ML classification model
       // final categoryProbabilities = await _mlService.classifyTaskCategory( // Disabled
       final categoryProbabilities = _simpleCategoryClassification(
@@ -132,24 +137,26 @@ class TaskIntelligenceEngine {
         intent: intent,
         metadata: metadata,
       );
-      
+
       // Determine priority based on content analysis
-      final priorityAnalysis = await _analyzePriority(title, description, keywords);
-      
+      final priorityAnalysis =
+          await _analyzePriority(title, description, keywords);
+
       // Generate tags automatically
       final smartTags = _generateSmartTags(keywords, intent, nlpAnalysis);
-      
+
       return ai.TaskCategorizationResult(
         suggestedCategory: _getBestCategory(categoryProbabilities),
-        categoryConfidence: categoryProbabilities.values.isNotEmpty ? 
-            categoryProbabilities.values.reduce(max) : 0.0,
+        categoryConfidence: categoryProbabilities.values.isNotEmpty
+            ? categoryProbabilities.values.reduce(max)
+            : 0.0,
         suggestedPriority: priorityAnalysis.priority,
         priorityReasoning: priorityAnalysis.reasoning,
         smartTags: smartTags,
-        suggestedSubtasks: _generateSubtaskSuggestions(title, description, intent),
+        suggestedSubtasks:
+            _generateSubtaskSuggestions(title, description, intent),
         relatedTaskIds: await _findRelatedTasks(keywords, intent),
       );
-      
     } catch (e) {
       debugPrint('Error in task categorization: $e');
       return _fallbackCategorization(title, description);
@@ -160,25 +167,24 @@ class TaskIntelligenceEngine {
   Future<void> learnFromCompletion(TaskCompletionData event) async {
     try {
       _recentEvents.add(event);
-      
+
       // Update user behavior model
       _updateUserBehaviorModel(event);
-      
+
       // Update task complexity weights
       _updateComplexityWeights(event);
-      
+
       // Calculate estimation accuracy
       _updateAccuracyScores(event);
-      
+
       // Store for batch processing
       await _storeCompletionEvent(event);
-      
+
       // Real-time model adjustment
       if (_recentEvents.length >= 10) {
         await _performRealTimeModelUpdate();
         _recentEvents.clear();
       }
-      
     } catch (e) {
       debugPrint('Error learning from task completion: $e');
     }
@@ -192,38 +198,36 @@ class TaskIntelligenceEngine {
   }) async {
     try {
       // Analyze productivity patterns
-      final productivityAnalysis = await _analyzeProductivityPatterns(
-        userId, startDate, endDate
-      );
-      
+      final productivityAnalysis =
+          await _analyzeProductivityPatterns(userId, startDate, endDate);
+
       // Identify time optimization opportunities
       final optimizationOpps = await _identifyOptimizationOpportunities(
-        userId, productivityAnalysis
-      );
-      
+          userId, productivityAnalysis);
+
       // Generate personalized recommendations
       final recommendations = await _generatePersonalizedRecommendations(
-        userId, productivityAnalysis, optimizationOpps
-      );
-      
+          userId, productivityAnalysis, optimizationOpps);
+
       // Predict future performance
-      final futurePredictions = await _predictFuturePerformance(
-        userId, productivityAnalysis
-      );
-      
+      final futurePredictions =
+          await _predictFuturePerformance(userId, productivityAnalysis);
+
       return ai.AIInsights(
         userId: userId,
         analysisDate: DateTime.now(),
         productivityScore: productivityAnalysis['overallScore'] ?? 0.0,
-        productivityTrend: productivityAnalysis['trend'] ?? ProductivityTrendDirection.stable,
+        productivityTrend:
+            productivityAnalysis['trend'] ?? ProductivityTrendDirection.stable,
         strengths: List<String>.from(productivityAnalysis['strengths'] ?? []),
-        improvementAreas: List<String>.from(productivityAnalysis['weaknesses'] ?? []),
+        improvementAreas:
+            List<String>.from(productivityAnalysis['weaknesses'] ?? []),
         recommendations: recommendations,
         optimizationOpportunities: optimizationOpps,
         futurePredictions: futurePredictions,
-        personalizedTips: _generatePersonalizedTips(userId, productivityAnalysis),
+        personalizedTips:
+            _generatePersonalizedTips(userId, productivityAnalysis),
       );
-      
     } catch (e) {
       debugPrint('Error generating AI insights: $e');
       return _fallbackInsights(userId);
@@ -240,10 +244,11 @@ class TaskIntelligenceEngine {
     try {
       // Analyze task dependencies
       final dependencies = _analyzeDependencies(tasks);
-      
+
       // Consider user's optimal performance times
-      final performanceTimes = await _getUserOptimalTimes(constraints['userId']);
-      
+      final performanceTimes =
+          await _getUserOptimalTimes(constraints['userId']);
+
       // Apply scheduling algorithm
       // final schedule = await _mlService.optimizeSchedule( // Disabled
       final schedule = _simpleScheduleOptimization(
@@ -254,7 +259,7 @@ class TaskIntelligenceEngine {
         startDate: startDate,
         endDate: endDate,
       );
-      
+
       return ai.TaskScheduleRecommendation(
         recommendedSchedule: schedule,
         confidenceScore: _calculateScheduleConfidence(schedule, tasks),
@@ -262,7 +267,6 @@ class TaskIntelligenceEngine {
         optimizationTips: _generateSchedulingTips(schedule, performanceTimes),
         riskFactors: _identifyScheduleRisks(schedule, tasks),
       );
-      
     } catch (e) {
       debugPrint('Error in schedule recommendation: $e');
       return _fallbackScheduleRecommendation(tasks);
@@ -286,22 +290,25 @@ class TaskIntelligenceEngine {
     });
   }
 
-  Future<double> _analyzeTaskComplexity(String title, String description) async {
+  Future<double> _analyzeTaskComplexity(
+      String title, String description) async {
     // NLP analysis for task complexity
     final textLength = (title + description).length;
     final keywordCount = _extractKeywords(title + description).length;
     final technicalWords = _countTechnicalWords(title + description);
-    
+
     // Weighted complexity score (0.0 to 1.0)
-    final complexity = (textLength * 0.1 + keywordCount * 0.3 + technicalWords * 0.6) / 100;
+    final complexity =
+        (textLength * 0.1 + keywordCount * 0.3 + technicalWords * 0.6) / 100;
     return complexity.clamp(0.0, 1.0);
   }
 
-  Map<String, dynamic> _getHistoricalPattern(TaskCategory category, double complexity) {
+  Map<String, dynamic> _getHistoricalPattern(
+      TaskCategory category, double complexity) {
     final categoryKey = category.name;
     final complexityBucket = (complexity * 10).round();
     final key = '${categoryKey}_$complexityBucket';
-    
+
     return _historicalDurations[key] != null
         ? {
             'average': _historicalDurations[key]!.toDouble(),
@@ -318,9 +325,9 @@ class TaskIntelligenceEngine {
 
   double _analyzeContextualFactors(Map<String, dynamic>? context) {
     if (context == null) return 1.0;
-    
+
     double factor = 1.0;
-    
+
     // Time of day factor
     if (context.containsKey('hour')) {
       final hour = context['hour'] as int;
@@ -332,30 +339,32 @@ class TaskIntelligenceEngine {
         factor *= 0.8; // Low energy times
       }
     }
-    
+
     // Workload factor
     if (context.containsKey('current_tasks')) {
       final currentTasks = context['current_tasks'] as int;
       factor *= (1.0 - (currentTasks * 0.05)).clamp(0.7, 1.0);
     }
-    
+
     return factor;
   }
 
-  double _calculateConfidenceLevel(double estimate, Map<String, dynamic> historical) {
+  double _calculateConfidenceLevel(
+      double estimate, Map<String, dynamic> historical) {
     final count = historical['count'] as int? ?? 0;
     final baseConfidence = historical['confidence'] as double? ?? 0.5;
-    
+
     // More data = higher confidence
     final dataConfidence = (count / (count + 10)).clamp(0.0, 0.9);
-    
+
     return (baseConfidence + dataConfidence) / 2;
   }
 
-  List<enhanced.TaskSubtask> _generateTaskBreakdown(String title, String description, double totalMinutes) {
+  List<enhanced.TaskSubtask> _generateTaskBreakdown(
+      String title, String description, double totalMinutes) {
     // AI-powered task breakdown logic (using enhanced_task TaskSubtask)
     final subtasks = <enhanced.TaskSubtask>[];
-    
+
     // Simple rule-based breakdown for now
     if (totalMinutes > 45) {
       final numSubtasks = (totalMinutes / 25).ceil();
@@ -369,14 +378,15 @@ class TaskIntelligenceEngine {
         ));
       }
     }
-    
+
     return subtasks;
   }
 
-  List<ai.TaskSubtask> _generateAITaskBreakdown(String title, String description, double totalMinutes) {
+  List<ai.TaskSubtask> _generateAITaskBreakdown(
+      String title, String description, double totalMinutes) {
     // AI-powered task breakdown logic (using ai_insights TaskSubtask)
     final subtasks = <ai.TaskSubtask>[];
-    
+
     // Simple rule-based breakdown for now
     if (totalMinutes > 45) {
       final numSubtasks = (totalMinutes / 25).ceil();
@@ -389,11 +399,12 @@ class TaskIntelligenceEngine {
         ));
       }
     }
-    
+
     return subtasks;
   }
 
-  List<ai.EstimateAlternative> _generateAlternativeEstimates(double base, double confidence) {
+  List<ai.EstimateAlternative> _generateAlternativeEstimates(
+      double base, double confidence) {
     return [
       ai.EstimateAlternative(
         scenario: 'Optimistic',
@@ -413,19 +424,20 @@ class TaskIntelligenceEngine {
     ];
   }
 
-  List<String> _generateProductivityTips(TaskCategory category, double complexity, double userFactor) {
+  List<String> _generateProductivityTips(
+      TaskCategory category, double complexity, double userFactor) {
     final tips = <String>[];
-    
+
     if (complexity > 0.7) {
       tips.add('Consider breaking this complex task into smaller parts');
       tips.add('Take regular breaks every 25 minutes');
     }
-    
+
     if (userFactor < 0.9) {
       tips.add('This might take longer than usual - plan accordingly');
       tips.add('Consider tackling this when you\'re most focused');
     }
-    
+
     switch (category) {
       case TaskCategory.coding:
         tips.add('Use the Pomodoro technique for sustained focus');
@@ -442,7 +454,7 @@ class TaskIntelligenceEngine {
       default:
         tips.add('Stay focused and take breaks as needed');
     }
-    
+
     return tips;
   }
 
@@ -463,7 +475,7 @@ class TaskIntelligenceEngine {
   }) {
     final Map<String, double> probabilities = {};
     final text = '$title $description'.toLowerCase();
-    
+
     // Simple keyword-based classification
     if (text.contains(RegExp(r'code|develop|program|bug|fix'))) {
       probabilities['coding'] = 0.8;
@@ -474,7 +486,7 @@ class TaskIntelligenceEngine {
     } else {
       probabilities['general'] = 0.6;
     }
-    
+
     return probabilities;
   }
 
@@ -490,20 +502,24 @@ class TaskIntelligenceEngine {
     final sortedTasks = List<EnhancedTask>.from(tasks);
     sortedTasks.sort((a, b) {
       if (a.priority.index != b.priority.index) {
-        return b.priority.index.compareTo(a.priority.index); // Higher priority first
+        return b.priority.index
+            .compareTo(a.priority.index); // Higher priority first
       }
       if (a.dueDate != null && b.dueDate != null) {
         return a.dueDate!.compareTo(b.dueDate!); // Earlier due date first
       }
       return 0;
     });
-    
-    return sortedTasks.map((task) => ai.ScheduledTask(
-      taskId: task.id,
-      startTime: DateTime.now(),
-      endTime: DateTime.now().add(Duration(minutes: task.estimatedMinutes)),
-      confidence: 0.7,
-    )).toList();
+
+    return sortedTasks
+        .map((task) => ai.ScheduledTask(
+              taskId: task.id,
+              startTime: DateTime.now(),
+              endTime:
+                  DateTime.now().add(Duration(minutes: task.estimatedMinutes)),
+              confidence: 0.7,
+            ))
+        .toList();
   }
 
   double _simpleDurationEstimate({
@@ -518,7 +534,7 @@ class TaskIntelligenceEngine {
   }) {
     // Simple rule-based estimation
     int baseMinutes = 25;
-    
+
     switch (category) {
       case enhanced.TaskCategory.coding:
         baseMinutes = 45;
@@ -535,16 +551,17 @@ class TaskIntelligenceEngine {
       default:
         baseMinutes = 25;
     }
-    
+
     // Apply factors
     final estimate = baseMinutes * complexityScore * userFactor * contextFactor;
     return estimate.clamp(5.0, 180.0); // Between 5 minutes and 3 hours
   }
 
-  ai.TaskEstimation _fallbackEstimation(String title, String description, TaskCategory category, TaskPriority priority) {
+  ai.TaskEstimation _fallbackEstimation(String title, String description,
+      TaskCategory category, TaskPriority priority) {
     // Rule-based fallback estimation
     int baseMinutes = 25;
-    
+
     switch (category) {
       case TaskCategory.coding:
         baseMinutes = 45;
@@ -561,7 +578,7 @@ class TaskIntelligenceEngine {
       default:
         baseMinutes = 25;
     }
-    
+
     // Adjust for priority
     switch (priority) {
       case TaskPriority.high:
@@ -576,7 +593,7 @@ class TaskIntelligenceEngine {
       default:
         break;
     }
-    
+
     return ai.TaskEstimation(
       estimatedMinutes: baseMinutes,
       confidenceLevel: 0.6,
@@ -589,14 +606,26 @@ class TaskIntelligenceEngine {
   }
 
   // Implementation of missing methods
-  Future<ai.PriorityAnalysis> _analyzePriority(String title, String description, List<String> keywords) async {
+  Future<ai.PriorityAnalysis> _analyzePriority(
+      String title, String description, List<String> keywords) async {
     // Analyze urgency keywords
-    final urgencyKeywords = ['urgent', 'asap', 'critical', 'deadline', 'emergency'];
-    final lowPriorityKeywords = ['later', 'someday', 'optional', 'nice-to-have'];
-    
+    final urgencyKeywords = [
+      'urgent',
+      'asap',
+      'critical',
+      'deadline',
+      'emergency'
+    ];
+    final lowPriorityKeywords = [
+      'later',
+      'someday',
+      'optional',
+      'nice-to-have'
+    ];
+
     int urgencyScore = 0;
     int lowPriorityScore = 0;
-    
+
     for (final keyword in keywords) {
       if (urgencyKeywords.contains(keyword.toLowerCase())) {
         urgencyScore++;
@@ -605,10 +634,10 @@ class TaskIntelligenceEngine {
         lowPriorityScore++;
       }
     }
-    
+
     TaskPriority priority;
     String reasoning;
-    
+
     if (urgencyScore > 0) {
       priority = TaskPriority.high;
       reasoning = 'Contains urgency indicators';
@@ -619,21 +648,22 @@ class TaskIntelligenceEngine {
       priority = TaskPriority.medium;
       reasoning = 'No clear priority indicators found';
     }
-    
+
     return ai.PriorityAnalysis(priority: priority, reasoning: reasoning);
   }
 
-  List<String> _generateSmartTags(List<String> keywords, String intent, Map<String, dynamic> nlpAnalysis) {
+  List<String> _generateSmartTags(
+      List<String> keywords, String intent, Map<String, dynamic> nlpAnalysis) {
     final tags = <String>[];
-    
+
     // Add intent as tag
     if (intent != 'general') {
       tags.add(intent);
     }
-    
+
     // Add relevant keywords as tags
     tags.addAll(keywords.take(3));
-    
+
     // Add complexity-based tags
     final complexity = nlpAnalysis['complexity_indicators'];
     if (complexity != null) {
@@ -641,56 +671,68 @@ class TaskIntelligenceEngine {
       if (complexityScore > 2) {
         tags.add('complex');
       }
-      
+
       final urgencyScore = complexity['urgency_score'] as int? ?? 0;
       if (urgencyScore > 0) {
         tags.add('urgent');
       }
     }
-    
+
     return tags.toSet().toList(); // Remove duplicates
   }
 
   TaskCategory _getBestCategory(Map<String, double> categoryProbabilities) {
     if (categoryProbabilities.isEmpty) return TaskCategory.general;
-    
-    final bestEntry = categoryProbabilities.entries.reduce(
-      (a, b) => a.value > b.value ? a : b
-    );
-    
+
+    final bestEntry = categoryProbabilities.entries
+        .reduce((a, b) => a.value > b.value ? a : b);
+
     return TaskCategory.values.firstWhere(
       (cat) => cat.name == bestEntry.key,
       orElse: () => TaskCategory.general,
     );
   }
 
-  List<String> _generateSubtaskSuggestions(String title, String description, String intent) {
+  List<String> _generateSubtaskSuggestions(
+      String title, String description, String intent) {
     final suggestions = <String>[];
-    
+
     switch (intent) {
       case 'create':
-        suggestions.addAll(['Plan and design', 'Implement core functionality', 'Test and refine']);
+        suggestions.addAll([
+          'Plan and design',
+          'Implement core functionality',
+          'Test and refine'
+        ]);
         break;
       case 'fix':
-        suggestions.addAll(['Identify root cause', 'Implement fix', 'Verify solution']);
+        suggestions.addAll(
+            ['Identify root cause', 'Implement fix', 'Verify solution']);
         break;
       case 'research':
-        suggestions.addAll(['Gather initial information', 'Deep dive analysis', 'Compile findings']);
+        suggestions.addAll([
+          'Gather initial information',
+          'Deep dive analysis',
+          'Compile findings'
+        ]);
         break;
       default:
-        suggestions.addAll(['Preparation phase', 'Main execution', 'Review and finalize']);
+        suggestions.addAll(
+            ['Preparation phase', 'Main execution', 'Review and finalize']);
     }
-    
+
     return suggestions;
   }
 
-  Future<List<String>> _findRelatedTasks(List<String> keywords, String intent) async {
+  Future<List<String>> _findRelatedTasks(
+      List<String> keywords, String intent) async {
     // In a real implementation, this would search existing tasks
     // For now, return empty list
     return [];
   }
 
-  ai.TaskCategorizationResult _fallbackCategorization(String title, String description) {
+  ai.TaskCategorizationResult _fallbackCategorization(
+      String title, String description) {
     return ai.TaskCategorizationResult(
       suggestedCategory: TaskCategory.general,
       categoryConfidence: 0.5,
@@ -702,7 +744,8 @@ class TaskIntelligenceEngine {
     );
   }
 
-  Future<Map<String, dynamic>> _analyzeProductivityPatterns(String userId, DateTime startDate, DateTime endDate) async {
+  Future<Map<String, dynamic>> _analyzeProductivityPatterns(
+      String userId, DateTime startDate, DateTime endDate) async {
     // Mock implementation
     return {
       'overallScore': 75.0,
@@ -712,7 +755,8 @@ class TaskIntelligenceEngine {
     };
   }
 
-  Future<List<OptimizationOpportunity>> _identifyOptimizationOpportunities(String userId, Map<String, dynamic> analysis) async {
+  Future<List<OptimizationOpportunity>> _identifyOptimizationOpportunities(
+      String userId, Map<String, dynamic> analysis) async {
     return [
       OptimizationOpportunity(
         type: OptimizationType.focus,
@@ -724,10 +768,9 @@ class TaskIntelligenceEngine {
   }
 
   Future<List<ProductivityRecommendation>> _generatePersonalizedRecommendations(
-    String userId, 
-    Map<String, dynamic> analysis, 
-    List<OptimizationOpportunity> opportunities
-  ) async {
+      String userId,
+      Map<String, dynamic> analysis,
+      List<OptimizationOpportunity> opportunities) async {
     return [
       ProductivityRecommendation(
         type: RecommendationType.focusTime,
@@ -739,11 +782,13 @@ class TaskIntelligenceEngine {
     ];
   }
 
-  Future<PredictiveAnalytics> _predictFuturePerformance(String userId, Map<String, dynamic> analysis) async {
+  Future<PredictiveAnalytics> _predictFuturePerformance(
+      String userId, Map<String, dynamic> analysis) async {
     return PredictiveAnalytics.empty();
   }
 
-  List<String> _generatePersonalizedTips(String userId, Map<String, dynamic> analysis) {
+  List<String> _generatePersonalizedTips(
+      String userId, Map<String, dynamic> analysis) {
     return [
       'Schedule important tasks during your peak hours (9-11 AM)',
       'Take breaks every 25 minutes to maintain focus',
@@ -757,11 +802,11 @@ class TaskIntelligenceEngine {
 
   Map<String, List<String>> _analyzeDependencies(List<EnhancedTask> tasks) {
     final dependencies = <String, List<String>>{};
-    
+
     for (final task in tasks) {
       dependencies[task.id] = task.dependencies;
     }
-    
+
     return dependencies;
   }
 
@@ -777,19 +822,24 @@ class TaskIntelligenceEngine {
     };
   }
 
-  double _calculateScheduleConfidence(List<ai.ScheduledTask> schedule, List<EnhancedTask> tasks) {
+  double _calculateScheduleConfidence(
+      List<ai.ScheduledTask> schedule, List<EnhancedTask> tasks) {
     if (schedule.isEmpty) return 0.0;
-    
-    final avgConfidence = schedule.map((s) => s.confidence).reduce((a, b) => a + b) / schedule.length;
+
+    final avgConfidence =
+        schedule.map((s) => s.confidence).reduce((a, b) => a + b) /
+            schedule.length;
     return avgConfidence;
   }
 
-  List<ai.ScheduledTask> _generateAlternativeSchedules(List<EnhancedTask> tasks, Map<String, dynamic> constraints) {
+  List<ai.ScheduledTask> _generateAlternativeSchedules(
+      List<EnhancedTask> tasks, Map<String, dynamic> constraints) {
     // Mock alternative schedules
     return [];
   }
 
-  List<String> _generateSchedulingTips(List<ai.ScheduledTask> schedule, Map<String, double> performanceTimes) {
+  List<String> _generateSchedulingTips(
+      List<ai.ScheduledTask> schedule, Map<String, double> performanceTimes) {
     return [
       'Consider scheduling complex tasks during high-performance hours',
       'Leave buffer time between tasks for transitions',
@@ -797,14 +847,16 @@ class TaskIntelligenceEngine {
     ];
   }
 
-  List<String> _identifyScheduleRisks(List<ai.ScheduledTask> schedule, List<EnhancedTask> tasks) {
+  List<String> _identifyScheduleRisks(
+      List<ai.ScheduledTask> schedule, List<EnhancedTask> tasks) {
     return [
       'Tight schedule with little buffer time',
       'Back-to-back meetings may cause fatigue',
     ];
   }
 
-  ai.TaskScheduleRecommendation _fallbackScheduleRecommendation(List<EnhancedTask> tasks) {
+  ai.TaskScheduleRecommendation _fallbackScheduleRecommendation(
+      List<EnhancedTask> tasks) {
     return ai.TaskScheduleRecommendation(
       recommendedSchedule: [],
       confidenceScore: 0.5,
@@ -817,7 +869,8 @@ class TaskIntelligenceEngine {
   // Helper methods
   List<String> _extractKeywords(String text) {
     // Simple keyword extraction
-    return text.toLowerCase()
+    return text
+        .toLowerCase()
         .split(RegExp(r'\W+'))
         .where((word) => word.length > 3)
         .toList();
@@ -825,10 +878,20 @@ class TaskIntelligenceEngine {
 
   int _countTechnicalWords(String text) {
     final technicalWords = [
-      'algorithm', 'api', 'database', 'code', 'function', 'variable',
-      'implement', 'refactor', 'optimize', 'debug', 'test', 'deploy'
+      'algorithm',
+      'api',
+      'database',
+      'code',
+      'function',
+      'variable',
+      'implement',
+      'refactor',
+      'optimize',
+      'debug',
+      'test',
+      'deploy'
     ];
-    
+
     final words = text.toLowerCase().split(RegExp(r'\W+'));
     return words.where((word) => technicalWords.contains(word)).length;
   }
@@ -876,20 +939,19 @@ class TaskIntelligenceEngine {
         'completion_time': DateTime.now().toIso8601String(),
         'difficulty_rating': task.difficultyRating ?? 0.5,
       };
-      
+
       // Store for future model training
       await _mlService.recordTaskCompletion(completionData);
     } catch (e) {
       debugPrint('Error recording task completion: $e');
     }
   }
-
 }
 
 class AIEngineException implements Exception {
   final String message;
   AIEngineException(this.message);
-  
+
   @override
   String toString() => 'AIEngineException: $message';
 }
