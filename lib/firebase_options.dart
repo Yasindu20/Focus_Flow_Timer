@@ -41,50 +41,50 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'your-web-api-key',
-    appId: '1:your-project-number:web:your-web-app-id',
-    messagingSenderId: 'your-messaging-sender-id',
-    projectId: 'your-project-id',
-    authDomain: 'your-project-id.firebaseapp.com',
-    storageBucket: 'your-project-id.appspot.com',
-    measurementId: 'G-your-measurement-id',
+    apiKey: 'demo-api-key',
+    appId: '1:123456789:web:abcdef123456',
+    messagingSenderId: '123456789',
+    projectId: 'focus-flow-demo',
+    authDomain: 'focus-flow-demo.firebaseapp.com',
+    storageBucket: 'focus-flow-demo.appspot.com',
+    measurementId: 'G-DEMO123456',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'your-android-api-key',
-    appId: '1:your-project-number:android:your-android-app-id',
-    messagingSenderId: 'your-messaging-sender-id',
-    projectId: 'your-project-id',
-    storageBucket: 'your-project-id.appspot.com',
+    apiKey: 'demo-android-api-key',
+    appId: '1:123456789:android:abcdef123456',
+    messagingSenderId: '123456789',
+    projectId: 'focus-flow-demo',
+    storageBucket: 'focus-flow-demo.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'your-ios-api-key',
-    appId: '1:your-project-number:ios:your-ios-app-id',
-    messagingSenderId: 'your-messaging-sender-id',
-    projectId: 'your-project-id',
-    storageBucket: 'your-project-id.appspot.com',
-    iosClientId: 'your-ios-client-id.apps.googleusercontent.com',
+    apiKey: 'demo-ios-api-key',
+    appId: '1:123456789:ios:abcdef123456',
+    messagingSenderId: '123456789',
+    projectId: 'focus-flow-demo',
+    storageBucket: 'focus-flow-demo.appspot.com',
+    iosClientId: '123456789-demo.apps.googleusercontent.com',
     iosBundleId: 'com.example.focusFlowTimer',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'your-macos-api-key',
-    appId: '1:your-project-number:ios:your-macos-app-id',
-    messagingSenderId: 'your-messaging-sender-id',
-    projectId: 'your-project-id',
-    storageBucket: 'your-project-id.appspot.com',
-    iosClientId: 'your-macos-client-id.apps.googleusercontent.com',
+    apiKey: 'demo-macos-api-key',
+    appId: '1:123456789:ios:abcdef123456',
+    messagingSenderId: '123456789',
+    projectId: 'focus-flow-demo',
+    storageBucket: 'focus-flow-demo.appspot.com',
+    iosClientId: '123456789-demo.apps.googleusercontent.com',
     iosBundleId: 'com.example.focusFlowTimer',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'your-windows-api-key',
-    appId: '1:your-project-number:web:your-windows-app-id',
-    messagingSenderId: 'your-messaging-sender-id',
-    projectId: 'your-project-id',
-    authDomain: 'your-project-id.firebaseapp.com',
-    storageBucket: 'your-project-id.appspot.com',
-    measurementId: 'G-your-measurement-id',
+    apiKey: 'demo-windows-api-key',
+    appId: '1:123456789:web:abcdef123456',
+    messagingSenderId: '123456789',
+    projectId: 'focus-flow-demo',
+    authDomain: 'focus-flow-demo.firebaseapp.com',
+    storageBucket: 'focus-flow-demo.appspot.com',
+    measurementId: 'G-DEMO123456',
   );
 }

@@ -9,6 +9,7 @@ import '../models/enhanced_task.dart';
 import '../models/task_analytics.dart';
 import 'error_handler_service.dart';
 import 'connectivity_service.dart';
+import '../firebase_options.dart';
 
 class FirebaseService {
   static final FirebaseService _instance = FirebaseService._internal();
@@ -65,6 +66,14 @@ class FirebaseService {
 
   /// Sign in with email and password
   Future<UserCredential> signInWithEmail(String email, String password) async {
+    // Check if we're in demo mode (using demo API keys)
+    if (DefaultFirebaseOptions.currentPlatform.projectId == 'focus-flow-demo') {
+      throw FirebaseAuthException(
+        code: 'demo-mode',
+        message: 'Authentication is disabled in demo mode. Please configure real Firebase credentials.',
+      );
+    }
+    
     return _errorHandler.handleFirebaseOperation(() async {
       return await _auth.signInWithEmailAndPassword(
         email: email,
@@ -80,6 +89,14 @@ class FirebaseService {
     String? displayName,
     Map<String, dynamic>? userData,
   }) async {
+    // Check if we're in demo mode (using demo API keys)
+    if (DefaultFirebaseOptions.currentPlatform.projectId == 'focus-flow-demo') {
+      throw FirebaseAuthException(
+        code: 'demo-mode',
+        message: 'Authentication is disabled in demo mode. Please configure real Firebase credentials.',
+      );
+    }
+    
     return _errorHandler.handleFirebaseOperation(() async {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,

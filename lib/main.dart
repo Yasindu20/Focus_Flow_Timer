@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'firebase_options.dart';
 
 import 'core/theme/app_theme.dart';
 import 'services/storage_service.dart';
@@ -25,11 +26,17 @@ import 'screens/settings_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp();
-  
-  // Initialize Firebase Crashlytics
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  try {
+    // Initialize Firebase
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    
+    // Initialize Firebase Crashlytics
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  } catch (e) {
+    debugPrint('Firebase initialization error: $e');
+  }
 
   // Initialize timezone data
   tz.initializeTimeZones();
@@ -37,8 +44,12 @@ void main() async {
   // Initialize storage
   await StorageService.initialize();
   
-  // Initialize Firebase services
-  await FirebaseService().initialize();
+  try {
+    // Initialize Firebase services
+    await FirebaseService().initialize();
+  } catch (e) {
+    debugPrint('Firebase Service initialization error: $e');
+  }
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([

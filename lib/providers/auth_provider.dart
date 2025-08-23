@@ -10,6 +10,7 @@ class AuthProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   StreamSubscription<User?>? _authSubscription;
+  bool _disposed = false;
 
   AuthProvider() {
     _initialize();
@@ -27,9 +28,11 @@ class AuthProvider with ChangeNotifier {
   // Initialize the auth provider
   void _initialize() {
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((User? user) {
-      _user = user;
-      _errorMessage = null;
-      notifyListeners();
+      if (!_disposed) {
+        _user = user;
+        _errorMessage = null;
+        notifyListeners();
+      }
     });
   }
 
@@ -268,13 +271,17 @@ class AuthProvider with ChangeNotifier {
 
   // Private helper methods
   void _setLoading(bool loading) {
-    _isLoading = loading;
-    notifyListeners();
+    if (!_disposed) {
+      _isLoading = loading;
+      notifyListeners();
+    }
   }
 
   void _setError(String error) {
-    _errorMessage = error;
-    notifyListeners();
+    if (!_disposed) {
+      _errorMessage = error;
+      notifyListeners();
+    }
   }
 
   void _clearError() {
@@ -322,6 +329,9 @@ class AuthProvider with ChangeNotifier {
       case 'network-request-failed':
         _setError('Network error. Please check your connection and try again.');
         break;
+      case 'demo-mode':
+        _setError('Authentication is disabled in demo mode. Please configure real Firebase credentials to enable sign-in.');
+        break;
       default:
         _setError(e.message ?? 'An authentication error occurred.');
         break;
@@ -330,6 +340,7 @@ class AuthProvider with ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _authSubscription?.cancel();
     super.dispose();
   }
