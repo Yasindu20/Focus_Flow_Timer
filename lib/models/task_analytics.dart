@@ -209,6 +209,62 @@ class UserAnalytics extends HiveObject {
     required this.lastUpdated,
   });
 
+  Map<String, dynamic> toJson() => {
+        'userId': userId,
+        'totalTasksCompleted': totalTasksCompleted,
+        'totalTimeSpent': totalTimeSpent.inMilliseconds,
+        'averageSessionLength': averageSessionLength.inMilliseconds,
+        'productivityScore': productivityScore,
+        'focusScore': focusScore,
+        'estimationAccuracy': estimationAccuracy,
+        'preferredWorkingHours': preferredWorkingHours,
+        'mostProductiveDay': mostProductiveDay,
+        'categoryPerformance': categoryPerformance.map(
+          (k, v) => MapEntry(k.name, {
+            'category': v.category.name,
+            'totalTasks': v.totalTasks,
+            'completedTasks': v.completedTasks,
+            'averageTime': v.averageTime.inMilliseconds,
+            'estimationAccuracy': v.estimationAccuracy,
+            'productivityScore': v.productivityScore,
+          }),
+        ),
+        'recentTrend': recentTrend.name,
+        'lastUpdated': lastUpdated.toIso8601String(),
+      };
+
+  factory UserAnalytics.fromJson(Map<String, dynamic> json) {
+    return UserAnalytics(
+      userId: json['userId'],
+      totalTasksCompleted: json['totalTasksCompleted'],
+      totalTimeSpent: Duration(milliseconds: json['totalTimeSpent']),
+      averageSessionLength: Duration(milliseconds: json['averageSessionLength']),
+      productivityScore: json['productivityScore']?.toDouble() ?? 0.0,
+      focusScore: json['focusScore']?.toDouble() ?? 0.0,
+      estimationAccuracy: json['estimationAccuracy']?.toDouble() ?? 0.0,
+      preferredWorkingHours: List<int>.from(json['preferredWorkingHours'] ?? []),
+      mostProductiveDay: json['mostProductiveDay'] ?? 1,
+      categoryPerformance: (json['categoryPerformance'] as Map<String, dynamic>? ?? {}).map(
+        (k, v) => MapEntry(
+          TaskCategory.values.firstWhere((c) => c.name == k),
+          CategoryPerformance(
+            category: TaskCategory.values.firstWhere((c) => c.name == v['category']),
+            totalTasks: v['totalTasks'],
+            completedTasks: v['completedTasks'],
+            averageTime: Duration(milliseconds: v['averageTime']),
+            estimationAccuracy: v['estimationAccuracy']?.toDouble() ?? 0.0,
+            productivityScore: v['productivityScore']?.toDouble() ?? 0.0,
+          ),
+        ),
+      ),
+      recentTrend: ProductivityTrendDirection.values.firstWhere(
+        (t) => t.name == json['recentTrend'],
+        orElse: () => ProductivityTrendDirection.stable,
+      ),
+      lastUpdated: DateTime.parse(json['lastUpdated']),
+    );
+  }
+
   factory UserAnalytics.empty(String userId) {
     return UserAnalytics(
       userId: userId,
