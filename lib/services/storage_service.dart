@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter/foundation.dart';
 import '../models/task.dart';
 import '../models/enhanced_task.dart';
 import '../models/pomodoro_session.dart';
@@ -7,6 +8,7 @@ import '../models/daily_stats.dart';
 import '../models/task_analytics.dart';
 import '../models/timer_session.dart';
 import 'firebase_service.dart';
+import 'web_storage_service.dart';
 
 class StorageService {
   static late SharedPreferences _prefs;
@@ -19,6 +21,7 @@ class StorageService {
   static final FirebaseService _firebaseService = FirebaseService();
   static bool _isInitialized = false;
   static bool _syncEnabled = true;
+  static bool _useWebFallback = false;
 
   /// Initialize the storage service
   static Future<void> initialize() async {
@@ -28,63 +31,130 @@ class StorageService {
   }
 
   static Future<void> init() async {
-    _prefs = await SharedPreferences.getInstance();
+    try {
+      _prefs = await SharedPreferences.getInstance();
+    } catch (e) {
+      debugPrint('SharedPreferences initialization failed: $e');
+      if (kIsWeb) {
+        await WebStorageService.initialize();
+        _useWebFallback = true;
+      } else {
+        rethrow;
+      }
+    }
 
-    await Hive.initFlutter();
+    if (!_useWebFallback) {
+      try {
+        await Hive.initFlutter();
 
-    // Register adapters
-    Hive.registerAdapter(TaskAdapter());
-    Hive.registerAdapter(TaskPriorityAdapter());
-    Hive.registerAdapter(TaskCategoryAdapter());
-    Hive.registerAdapter(TaskStatusAdapter());
-    Hive.registerAdapter(TaskUrgencyAdapter());
-    Hive.registerAdapter(RecurrenceTypeAdapter());
-    Hive.registerAdapter(ProductivityTrendDirectionAdapter());
-    Hive.registerAdapter(EnhancedTaskAdapter());
-    Hive.registerAdapter(TaskSubtaskAdapter());
-    Hive.registerAdapter(TaskProgressAdapter());
-    Hive.registerAdapter(ProgressCheckpointAdapter());
-    Hive.registerAdapter(TaskCommentAdapter());
-    Hive.registerAdapter(TaskAttachmentAdapter());
-    Hive.registerAdapter(TaskRecurrenceAdapter());
-    Hive.registerAdapter(TaskAIDataAdapter());
-    Hive.registerAdapter(TaskMetricsAdapter());
-    Hive.registerAdapter(TaskTimeEntryAdapter());
-    Hive.registerAdapter(PomodoroSessionAdapter());
-    Hive.registerAdapter(TimerSessionAdapter());
-    Hive.registerAdapter(SessionTypeAdapter());
-    Hive.registerAdapter(DailyStatsAdapter());
-    Hive.registerAdapter(UserAnalyticsAdapter());
-    Hive.registerAdapter(CategoryPerformanceAdapter());
-    Hive.registerAdapter(ProductivityRecommendationAdapter());
-    Hive.registerAdapter(ProductivityPatternAdapter());
+        // Register adapters
+        Hive.registerAdapter(TaskAdapter());
+        Hive.registerAdapter(TaskPriorityAdapter());
+        Hive.registerAdapter(TaskCategoryAdapter());
+        Hive.registerAdapter(TaskStatusAdapter());
+        Hive.registerAdapter(TaskUrgencyAdapter());
+        Hive.registerAdapter(RecurrenceTypeAdapter());
+        Hive.registerAdapter(ProductivityTrendDirectionAdapter());
+        Hive.registerAdapter(EnhancedTaskAdapter());
+        Hive.registerAdapter(TaskSubtaskAdapter());
+        Hive.registerAdapter(TaskProgressAdapter());
+        Hive.registerAdapter(ProgressCheckpointAdapter());
+        Hive.registerAdapter(TaskCommentAdapter());
+        Hive.registerAdapter(TaskAttachmentAdapter());
+        Hive.registerAdapter(TaskRecurrenceAdapter());
+        Hive.registerAdapter(TaskAIDataAdapter());
+        Hive.registerAdapter(TaskMetricsAdapter());
+        Hive.registerAdapter(TaskTimeEntryAdapter());
+        Hive.registerAdapter(PomodoroSessionAdapter());
+        Hive.registerAdapter(TimerSessionAdapter());
+        Hive.registerAdapter(SessionTypeAdapter());
+        Hive.registerAdapter(DailyStatsAdapter());
+        Hive.registerAdapter(UserAnalyticsAdapter());
+        Hive.registerAdapter(CategoryPerformanceAdapter());
+        Hive.registerAdapter(ProductivityRecommendationAdapter());
+        Hive.registerAdapter(ProductivityPatternAdapter());
 
-    // Open boxes
-    _tasksBox = await Hive.openBox<Task>('tasks');
-    _enhancedTasksBox = await Hive.openBox<EnhancedTask>('enhanced_tasks');
-    _sessionsBox = await Hive.openBox<PomodoroSession>('sessions');
-    _timerSessionsBox = await Hive.openBox<TimerSession>('timer_sessions');
-    _statsBox = await Hive.openBox<DailyStats>('stats');
-    _analyticsBox = await Hive.openBox<UserAnalytics>('analytics');
+        // Open boxes
+        _tasksBox = await Hive.openBox<Task>('tasks');
+        _enhancedTasksBox = await Hive.openBox<EnhancedTask>('enhanced_tasks');
+        _sessionsBox = await Hive.openBox<PomodoroSession>('sessions');
+        _timerSessionsBox = await Hive.openBox<TimerSession>('timer_sessions');
+        _statsBox = await Hive.openBox<DailyStats>('stats');
+        _analyticsBox = await Hive.openBox<UserAnalytics>('analytics');
+        
+        debugPrint('Hive storage initialized successfully');
+      } catch (e) {
+        debugPrint('Hive initialization failed: $e');
+        if (kIsWeb) {
+          await WebStorageService.initialize();
+          _useWebFallback = true;
+          debugPrint('Using web storage fallback');
+        } else {
+          rethrow;
+        }
+      }
+    }
   }
 
   // Theme settings
-  static bool get isDarkMode => _prefs.getBool('isDarkMode') ?? false;
-  static Future<void> setDarkMode(bool value) =>
-      _prefs.setBool('isDarkMode', value);
+  static bool get isDarkMode {
+    if (_useWebFallback) {
+      return WebStorageService.getBool('isDarkMode') ?? false;
+    }
+    return _prefs.getBool('isDarkMode') ?? false;
+  }
+  
+  static Future<void> setDarkMode(bool value) async {
+    if (_useWebFallback) {
+      await WebStorageService.setBool('isDarkMode', value);
+    } else {
+      await _prefs.setBool('isDarkMode', value);
+    }
+  }
 
   // Sound settings
-  static String get selectedSound =>
-      _prefs.getString('selectedSound') ?? 'Forest Rain';
-  static Future<void> setSelectedSound(String sound) =>
-      _prefs.setString('selectedSound', sound);
+  static String get selectedSound {
+    if (_useWebFallback) {
+      return WebStorageService.getString('selectedSound') ?? 'Forest Rain';
+    }
+    return _prefs.getString('selectedSound') ?? 'Forest Rain';
+  }
+  
+  static Future<void> setSelectedSound(String sound) async {
+    if (_useWebFallback) {
+      await WebStorageService.setString('selectedSound', sound);
+    } else {
+      await _prefs.setString('selectedSound', sound);
+    }
+  }
 
-  static double get soundVolume => _prefs.getDouble('soundVolume') ?? 0.5;
-  static Future<void> setSoundVolume(double volume) =>
-      _prefs.setDouble('soundVolume', volume);
+  static double get soundVolume {
+    if (_useWebFallback) {
+      return WebStorageService.getDouble('soundVolume') ?? 0.5;
+    }
+    return _prefs.getDouble('soundVolume') ?? 0.5;
+  }
+  
+  static Future<void> setSoundVolume(double volume) async {
+    if (_useWebFallback) {
+      await WebStorageService.setDouble('soundVolume', volume);
+    } else {
+      await _prefs.setDouble('soundVolume', volume);
+    }
+  }
 
   // Tasks
-  static List<Task> get tasks => _tasksBox.values.toList();
+  static List<Task> get tasks {
+    if (_useWebFallback) {
+      final tasksJson = WebStorageService.getStringList('tasks') ?? [];
+      return tasksJson.map((json) => Task.fromJson(Map<String, dynamic>.from(
+          Map.fromEntries(json.split('|').map((item) {
+        final parts = item.split(':');
+        return MapEntry(parts[0], parts[1]);
+      }))))).toList();
+    }
+    return _tasksBox.values.toList();
+  }
 
   static Future<void> addTask(Task task) async {
     await _tasksBox.put(task.id, task);

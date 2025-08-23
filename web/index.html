@@ -18,19 +18,129 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Focus Flow Timer - Professional Pomodoro Timer">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="focus_flow_timer">
+  <meta name="apple-mobile-web-app-title" content="Focus Flow Timer">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>focus_flow_timer</title>
+  <title>Focus Flow Timer</title>
   <link rel="manifest" href="manifest.json">
+  
+  <!-- Loading screen styles -->
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      overflow: hidden;
+    }
+    
+    .loading-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      z-index: 9999;
+    }
+    
+    .loading-logo {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 24px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+    }
+    
+    .loading-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .loading-subtitle {
+      font-size: 16px;
+      opacity: 0.8;
+      margin-bottom: 32px;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .fade-out {
+      opacity: 0;
+      transition: opacity 0.5s ease-out;
+    }
+  </style>
+  
+  <!-- Storage fallback detection -->
+  <script>
+    // Check if storage is available and handle tracking prevention
+    function checkStorageSupport() {
+      try {
+        if (typeof Storage === 'undefined') {
+          console.warn('Web Storage not supported, using fallback');
+          window.storageSupported = false;
+          return false;
+        }
+        
+        // Test if we can actually use localStorage
+        localStorage.setItem('test', 'test');
+        localStorage.removeItem('test');
+        
+        // Test if IndexedDB is available (needed for Hive)
+        if (!window.indexedDB) {
+          console.warn('IndexedDB not supported, using fallback');
+          window.storageSupported = false;
+          return false;
+        }
+        
+        window.storageSupported = true;
+        return true;
+      } catch (e) {
+        console.warn('Storage blocked by tracking prevention, using fallback:', e);
+        window.storageSupported = false;
+        return false;
+      }
+    }
+    
+    window.storageSupported = checkStorageSupport();
+    
+    // Provide error handling for Flutter
+    window.addEventListener('error', function(e) {
+      console.error('Global error:', e.error);
+    });
+    
+    window.addEventListener('unhandledrejection', function(e) {
+      console.error('Unhandled promise rejection:', e.reason);
+    });
+  </script>
   
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -42,6 +152,34 @@
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage-compat.js"></script>
 </head>
 <body>
+  <!-- Loading screen -->
+  <div id="loading" class="loading-container">
+    <div class="loading-logo">⏱️</div>
+    <div class="loading-title">Focus Flow Timer</div>
+    <div class="loading-subtitle">Professional Pomodoro Timer</div>
+    <div class="loading-spinner"></div>
+  </div>
+
+  <script>
+    // Hide loading screen when Flutter is ready
+    window.addEventListener('flutter-initialized', function() {
+      const loading = document.getElementById('loading');
+      if (loading) {
+        loading.classList.add('fade-out');
+        setTimeout(() => loading.remove(), 500);
+      }
+    });
+    
+    // Fallback timeout to hide loading screen
+    setTimeout(function() {
+      const loading = document.getElementById('loading');
+      if (loading) {
+        loading.classList.add('fade-out');
+        setTimeout(() => loading.remove(), 500);
+      }
+    }, 10000); // 10 second timeout
+  </script>
+  
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

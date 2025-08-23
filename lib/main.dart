@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -26,36 +27,57 @@ import 'screens/settings_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize storage first (critical for app state)
   try {
-    // Initialize Firebase
+    await StorageService.initialize();
+    debugPrint('Storage service initialized');
+  } catch (e) {
+    debugPrint('Storage initialization error: $e');
+  }
+
+  // Initialize timezone data (safe to do early)
+  try {
+    tz.initializeTimeZones();
+    debugPrint('Timezone data initialized');
+  } catch (e) {
+    debugPrint('Timezone initialization error: $e');
+  }
+
+  // Set preferred orientations (web-safe)
+  if (!kIsWeb) {
+    try {
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    } catch (e) {
+      debugPrint('Orientation setting error: $e');
+    }
+  }
+
+  // Initialize Firebase (may fail on web due to tracking prevention)
+  try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
     
-    // Initialize Firebase Crashlytics
-    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    if (!kIsWeb) {
+      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    }
+    debugPrint('Firebase initialized successfully');
   } catch (e) {
-    debugPrint('Firebase initialization error: $e');
+    debugPrint('Firebase initialization error (this is expected on some browsers): $e');
   }
 
-  // Initialize timezone data
-  tz.initializeTimeZones();
-
-  // Initialize storage
-  await StorageService.initialize();
-  
-  try {
-    // Initialize Firebase services
-    await FirebaseService().initialize();
-  } catch (e) {
-    debugPrint('Firebase Service initialization error: $e');
-  }
-
-  // Set preferred orientations
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  // Initialize Firebase services (non-blocking)
+  Future.microtask(() async {
+    try {
+      await FirebaseService().initialize();
+      debugPrint('Firebase services initialized');
+    } catch (e) {
+      debugPrint('Firebase Service initialization error: $e');
+    }
+  });
 
   runApp(const FocusFlowApp());
 }
@@ -83,13 +105,15 @@ class FocusFlowApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,
-            home: _getHomeScreen(authProvider),
+            home: ErrorBoundary(
+              child: _getHomeScreen(authProvider),
+            ),
             routes: {
-              '/auth': (context) => const AuthScreen(),
-              '/splash': (context) => const SplashScreen(),
-              '/tasks': (context) => const TasksScreen(),
-              '/analytics': (context) => const AnalyticsScreen(),
-              '/settings': (context) => const SettingsScreen(),
+              '/auth': (context) => ErrorBoundary(child: const AuthScreen()),
+              '/splash': (context) => ErrorBoundary(child: const SplashScreen()),
+              '/tasks': (context) => ErrorBoundary(child: const TasksScreen()),
+              '/analytics': (context) => ErrorBoundary(child: const AnalyticsScreen()),
+              '/settings': (context) => ErrorBoundary(child: const SettingsScreen()),
             },
           );
         },
@@ -107,6 +131,112 @@ class FocusFlowApp extends StatelessWidget {
     }
     
     return const AuthScreen();
+  }
+}
+
+class ErrorBoundary extends StatefulWidget {
+  final Widget child;
+  
+  const ErrorBoundary({super.key, required this.child});
+  
+  @override
+  State<ErrorBoundary> createState() => _ErrorBoundaryState();
+}
+
+class _ErrorBoundaryState extends State<ErrorBoundary> {
+  bool _hasError = false;
+  String? _errorMessage;
+  
+  @override
+  void initState() {
+    super.initState();
+    
+    // Set up global error handler
+    FlutterError.onError = (FlutterErrorDetails details) {
+      setState(() {
+        _hasError = true;
+        _errorMessage = details.exception.toString();
+      });
+      debugPrint('Flutter Error: ${details.exception}');
+    };
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    if (_hasError) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF667eea),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 80,
+                  color: Colors.white,
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Oops! Something went wrong',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'We\'re working on fixing this issue. Please try refreshing the page.',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _errorMessage!,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 12,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _hasError = false;
+                      _errorMessage = null;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF667eea),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  ),
+                  child: const Text('Try Again'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    
+    return widget.child;
   }
 }
 
