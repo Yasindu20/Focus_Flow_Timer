@@ -5,10 +5,10 @@ import '../models/enhanced_task.dart';
 
 class FirebaseSmartTaskProvider with ChangeNotifier {
   final FirebaseService _firebaseService = FirebaseService();
-  
+
   List<EnhancedTask> _tasks = [];
   List<EnhancedTask> _recommendations = [];
-  Map<String, dynamic> _aiProcessingCache = {};
+  final Map<String, dynamic> _aiProcessingCache = {};
   bool _isLoading = false;
   bool _isSyncing = false;
   String? _errorMessage;
@@ -17,18 +17,24 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
   // Getters
   List<EnhancedTask> get tasks => _tasks;
   List<EnhancedTask> get recommendations => _recommendations;
-  List<EnhancedTask> get incompleteTasks => _tasks.where((task) => !task.isCompleted).toList();
-  List<EnhancedTask> get completedTasks => _tasks.where((task) => task.isCompleted).toList();
-  List<EnhancedTask> get todayTasks => _tasks.where((task) => _isToday(task.createdAt)).toList();
-  List<EnhancedTask> get overdueTasks => _tasks.where((task) => task.isOverdue).toList();
-  List<EnhancedTask> get dueSoonTasks => _tasks.where((task) => task.isDueSoon).toList();
-  
+  List<EnhancedTask> get incompleteTasks =>
+      _tasks.where((task) => !task.isCompleted).toList();
+  List<EnhancedTask> get completedTasks =>
+      _tasks.where((task) => task.isCompleted).toList();
+  List<EnhancedTask> get todayTasks =>
+      _tasks.where((task) => _isToday(task.createdAt)).toList();
+  List<EnhancedTask> get overdueTasks =>
+      _tasks.where((task) => task.isOverdue).toList();
+  List<EnhancedTask> get dueSoonTasks =>
+      _tasks.where((task) => task.isDueSoon).toList();
+
   bool get isLoading => _isLoading;
   bool get isSyncing => _isSyncing;
   String? get errorMessage => _errorMessage;
   int get totalTasks => _tasks.length;
   int get completedTasksCount => completedTasks.length;
-  double get completionRate => _tasks.isEmpty ? 0.0 : completedTasksCount / totalTasks;
+  double get completionRate =>
+      _tasks.isEmpty ? 0.0 : completedTasksCount / totalTasks;
 
   // Initialize the provider
   Future<void> initialize() async {
@@ -48,7 +54,7 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
   // Subscribe to real-time task updates
   Future<void> _subscribeToTasks() async {
     _tasksSubscription?.cancel();
-    
+
     _tasksSubscription = _firebaseService.getTasksStream().listen(
       (tasks) {
         _tasks = tasks;
@@ -95,10 +101,12 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
         if (aiEnhancements != null) {
           // Update task with AI data
           task.aiData = TaskAIData(
-            complexityScore: aiEnhancements['complexityScore']?.toDouble() ?? 0.5,
+            complexityScore:
+                aiEnhancements['complexityScore']?.toDouble() ?? 0.5,
             confidenceLevel: aiEnhancements['confidence']?.toDouble() ?? 0.7,
             suggestedTags: List<String>.from(aiEnhancements['tags'] ?? []),
-            optimizationTips: List<String>.from(aiEnhancements['optimizationTips'] ?? []),
+            optimizationTips:
+                List<String>.from(aiEnhancements['optimizationTips'] ?? []),
             lastAnalyzed: DateTime.now(),
           );
 
@@ -109,7 +117,7 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
 
           // Add AI-suggested tags
           final aiTags = List<String>.from(aiEnhancements['tags'] ?? []);
-          task.tags = [...task.tags, ...aiTags].toSet().toList();
+          task.tags = <dynamic>{...task.tags, ...aiTags}.toList();
         }
       }
 
@@ -118,7 +126,6 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
 
       debugPrint('Task created successfully: ${task.title}');
       return task;
-
     } catch (e) {
       _setError('Failed to create task: ${e.toString()}');
       debugPrint('Create task error: $e');
@@ -135,10 +142,9 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
       _clearError();
 
       await _firebaseService.saveTask(task);
-      
+
       debugPrint('Task updated successfully: ${task.title}');
       return true;
-
     } catch (e) {
       _setError('Failed to update task: ${e.toString()}');
       debugPrint('Update task error: $e');
@@ -155,10 +161,9 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
       _clearError();
 
       await _firebaseService.deleteTask(taskId);
-      
+
       debugPrint('Task deleted successfully: $taskId');
       return true;
-
     } catch (e) {
       _setError('Failed to delete task: ${e.toString()}');
       debugPrint('Delete task error: $e');
@@ -197,7 +202,8 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
   }
 
   // Add subtask
-  Future<bool> addSubtask(String taskId, String subtaskTitle, {String description = ''}) async {
+  Future<bool> addSubtask(String taskId, String subtaskTitle,
+      {String description = ''}) async {
     final task = _tasks.firstWhere((t) => t.id == taskId);
     final subtask = TaskSubtask(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -217,7 +223,8 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
   }
 
   // Add comment to task
-  Future<bool> addComment(String taskId, String content, {String authorId = 'current_user'}) async {
+  Future<bool> addComment(String taskId, String content,
+      {String authorId = 'current_user'}) async {
     final task = _tasks.firstWhere((t) => t.id == taskId);
     final comment = TaskComment(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -231,7 +238,7 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
 
   // Add time entry to task
   Future<bool> addTimeEntry(
-    String taskId, 
+    String taskId,
     DateTime startTime, {
     DateTime? endTime,
     String description = '',
@@ -278,12 +285,12 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
   // Search tasks
   List<EnhancedTask> searchTasks(String query) {
     if (query.isEmpty) return _tasks;
-    
+
     final lowercaseQuery = query.toLowerCase();
     return _tasks.where((task) {
       return task.title.toLowerCase().contains(lowercaseQuery) ||
-             task.description.toLowerCase().contains(lowercaseQuery) ||
-             task.tags.any((tag) => tag.toLowerCase().contains(lowercaseQuery));
+          task.description.toLowerCase().contains(lowercaseQuery) ||
+          task.tags.any((tag) => tag.toLowerCase().contains(lowercaseQuery));
     }).toList();
   }
 
@@ -298,9 +305,10 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
   Map<String, dynamic> getProductivityMetrics() {
     final totalTasks = _tasks.length;
     final completed = completedTasksCount;
-    final inProgress = _tasks.where((t) => t.status == TaskStatus.inProgress).length;
+    final inProgress =
+        _tasks.where((t) => t.status == TaskStatus.inProgress).length;
     final overdue = overdueTasks.length;
-    
+
     return {
       'totalTasks': totalTasks,
       'completedTasks': completed,
@@ -315,8 +323,8 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
   List<EnhancedTask> getTodaysFocusTasks({int limit = 5}) {
     final today = DateTime.now();
     final focusTasks = _tasks.where((task) {
-      return !task.isCompleted && 
-             (task.dueDate?.day == today.day || 
+      return !task.isCompleted &&
+          (task.dueDate?.day == today.day ||
               task.status == TaskStatus.inProgress ||
               task.priority == TaskPriority.high ||
               task.priority == TaskPriority.critical);
@@ -333,10 +341,11 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
   }
 
   // Bulk operations
-  Future<bool> bulkUpdateTasks(List<String> taskIds, Map<String, dynamic> updates) async {
+  Future<bool> bulkUpdateTasks(
+      List<String> taskIds, Map<String, dynamic> updates) async {
     try {
       _setLoading(true);
-      
+
       for (final taskId in taskIds) {
         final taskIndex = _tasks.indexWhere((t) => t.id == taskId);
         if (taskIndex != -1) {
@@ -345,7 +354,7 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
           await updateTask(_tasks[taskIndex]);
         }
       }
-      
+
       return true;
     } catch (e) {
       _setError('Bulk update failed: ${e.toString()}');
@@ -436,7 +445,7 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
 
       // Cache the result
       _aiProcessingCache[cacheKey] = result;
-      
+
       // Limit cache size
       if (_aiProcessingCache.length > 50) {
         _aiProcessingCache.clear();
@@ -455,14 +464,14 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
       if (a.isCompleted != b.isCompleted) {
         return a.isCompleted ? 1 : -1;
       }
-      
+
       // Then by urgency
       final aUrgency = _getUrgencyScore(a);
       final bUrgency = _getUrgencyScore(b);
       if (aUrgency != bUrgency) {
         return bUrgency.compareTo(aUrgency);
       }
-      
+
       // Finally by creation date (newest first)
       return b.createdAt.compareTo(a.createdAt);
     });
@@ -470,7 +479,7 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
 
   int _getUrgencyScore(EnhancedTask task) {
     int score = 0;
-    
+
     // Priority score
     switch (task.priority) {
       case TaskPriority.critical:
@@ -486,33 +495,37 @@ class FirebaseSmartTaskProvider with ChangeNotifier {
         score += 1;
         break;
     }
-    
+
     // Due date score
     if (task.isOverdue) {
       score += 5;
     } else if (task.isDueSoon) {
       score += 3;
     }
-    
+
     // Status score
     if (task.status == TaskStatus.inProgress) {
       score += 2;
     }
-    
+
     return score;
   }
 
   double _calculateAverageTimeSpent() {
-    final completedWithTime = completedTasks.where((task) => task.actualMinutes != null);
+    final completedWithTime =
+        completedTasks.where((task) => task.actualMinutes != null);
     if (completedWithTime.isEmpty) return 0.0;
-    
-    final totalMinutes = completedWithTime.fold(0, (sum, task) => sum + task.actualMinutes!);
+
+    final totalMinutes =
+        completedWithTime.fold(0, (sum, task) => sum + task.actualMinutes!);
     return totalMinutes / completedWithTime.length;
   }
 
   bool _isToday(DateTime date) {
     final now = DateTime.now();
-    return date.year == now.year && date.month == now.month && date.day == now.day;
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
   }
 
   void _setLoading(bool loading) {

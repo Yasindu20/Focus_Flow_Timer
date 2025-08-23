@@ -10,14 +10,15 @@ class ErrorHandlerService {
   ErrorHandlerService._internal();
 
   final List<AppError> _errorHistory = [];
-  final StreamController<AppError> _errorStreamController = StreamController.broadcast();
-  
+  final StreamController<AppError> _errorStreamController =
+      StreamController.broadcast();
+
   bool _isInitialized = false;
-  int _maxErrorHistory = 100;
-  
+  final int _maxErrorHistory = 100;
+
   /// Stream of errors for UI feedback
   Stream<AppError> get errorStream => _errorStreamController.stream;
-  
+
   /// Get recent error history
   List<AppError> get errorHistory => List.unmodifiable(_errorHistory);
 
@@ -42,7 +43,7 @@ class ErrorHandlerService {
 
   /// Handle and categorize errors
   Future<void> handleError(
-    dynamic error, 
+    dynamic error,
     StackTrace? stackTrace, {
     String? context,
     ErrorSeverity severity = ErrorSeverity.medium,
@@ -91,7 +92,7 @@ class ErrorHandlerService {
         return await operation();
       } catch (error, stackTrace) {
         attempts++;
-        
+
         if (!_shouldRetry(error) || attempts >= maxRetries) {
           await handleError(
             error,
@@ -106,7 +107,8 @@ class ErrorHandlerService {
         await Future.delayed(delay);
         delay = Duration(milliseconds: (delay.inMilliseconds * 1.5).round());
 
-        debugPrint('Retrying operation (attempt $attempts/$maxRetries) after error: $error');
+        debugPrint(
+            'Retrying operation (attempt $attempts/$maxRetries) after error: $error');
       }
     }
 
@@ -122,7 +124,7 @@ class ErrorHandlerService {
       return await operation();
     } catch (error, stackTrace) {
       final errorType = _categorizeFirebaseError(error);
-      
+
       await handleError(
         error,
         stackTrace,
@@ -188,15 +190,18 @@ class ErrorHandlerService {
     final last24Hours = now.subtract(const Duration(hours: 24));
     final last7Days = now.subtract(const Duration(days: 7));
 
-    final recent24h = _errorHistory.where((e) => e.timestamp.isAfter(last24Hours)).toList();
-    final recent7d = _errorHistory.where((e) => e.timestamp.isAfter(last7Days)).toList();
+    final recent24h =
+        _errorHistory.where((e) => e.timestamp.isAfter(last24Hours)).toList();
+    final recent7d =
+        _errorHistory.where((e) => e.timestamp.isAfter(last7Days)).toList();
 
     final typeGroups = <ErrorType, int>{};
     final severityGroups = <ErrorSeverity, int>{};
 
     for (final error in _errorHistory) {
       typeGroups[error.errorType] = (typeGroups[error.errorType] ?? 0) + 1;
-      severityGroups[error.severity] = (severityGroups[error.severity] ?? 0) + 1;
+      severityGroups[error.severity] =
+          (severityGroups[error.severity] ?? 0) + 1;
     }
 
     return ErrorStatistics(
@@ -242,9 +247,11 @@ class ErrorHandlerService {
       return ErrorType.network;
     } else if (error is FormatException || error is TypeError) {
       return ErrorType.parsing;
-    } else if (error.toString().contains('firebase') || error.toString().contains('Firebase')) {
+    } else if (error.toString().contains('firebase') ||
+        error.toString().contains('Firebase')) {
       return ErrorType.firebase;
-    } else if (error.toString().contains('permission') || error.toString().contains('Permission')) {
+    } else if (error.toString().contains('permission') ||
+        error.toString().contains('Permission')) {
       return ErrorType.permission;
     } else if (error is StorageError) {
       return ErrorType.storage;
@@ -257,10 +264,11 @@ class ErrorHandlerService {
 
   FirebaseErrorType _categorizeFirebaseError(dynamic error) {
     final errorString = error.toString().toLowerCase();
-    
+
     if (errorString.contains('network') || errorString.contains('offline')) {
       return FirebaseErrorType.network;
-    } else if (errorString.contains('permission') || errorString.contains('unauthorized')) {
+    } else if (errorString.contains('permission') ||
+        errorString.contains('unauthorized')) {
       return FirebaseErrorType.permission;
     } else if (errorString.contains('quota') || errorString.contains('limit')) {
       return FirebaseErrorType.quota;
@@ -286,19 +294,20 @@ class ErrorHandlerService {
   }
 
   bool _isRecoverableFirebaseError(FirebaseErrorType errorType) {
-    return errorType == FirebaseErrorType.network || errorType == FirebaseErrorType.quota;
+    return errorType == FirebaseErrorType.network ||
+        errorType == FirebaseErrorType.quota;
   }
 
   bool _shouldRetry(dynamic error) {
     if (error is SocketException || error is HttpException) {
       return true;
     }
-    
+
     final errorString = error.toString().toLowerCase();
-    return errorString.contains('network') || 
-           errorString.contains('timeout') ||
-           errorString.contains('connection') ||
-           errorString.contains('unavailable');
+    return errorString.contains('network') ||
+        errorString.contains('timeout') ||
+        errorString.contains('connection') ||
+        errorString.contains('unavailable');
   }
 
   Future<void> _handleSpecificError(AppError appError) async {
@@ -334,7 +343,7 @@ class ErrorHandlerService {
 
   void _addToHistory(AppError error) {
     _errorHistory.add(error);
-    
+
     // Keep history size manageable
     if (_errorHistory.length > _maxErrorHistory) {
       _errorHistory.removeRange(0, _errorHistory.length - _maxErrorHistory);

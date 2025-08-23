@@ -47,7 +47,8 @@ class SoundscapeDownload {
 }
 
 class SoundscapeDownloadService extends ChangeNotifier {
-  static final SoundscapeDownloadService _instance = SoundscapeDownloadService._internal();
+  static final SoundscapeDownloadService _instance =
+      SoundscapeDownloadService._internal();
   factory SoundscapeDownloadService() => _instance;
   SoundscapeDownloadService._internal();
 
@@ -60,7 +61,7 @@ class SoundscapeDownloadService extends ChangeNotifier {
   bool get isInitialized => _initialized;
 
   SoundscapeDownload? getDownload(String trackId) => _downloads[trackId];
-  
+
   bool isDownloaded(String trackId) {
     return _downloads[trackId]?.status == DownloadStatus.downloaded;
   }
@@ -97,12 +98,12 @@ class SoundscapeDownloadService extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       final audioService = AudioService();
-      
+
       for (final track in audioService.availableTracks) {
         final isDownloaded = prefs.getBool('downloaded_${track.id}') ?? false;
         final localPath = prefs.getString('path_${track.id}');
         final downloadDateStr = prefs.getString('date_${track.id}');
-        
+
         DateTime? downloadDate;
         if (downloadDateStr != null) {
           downloadDate = DateTime.tryParse(downloadDateStr);
@@ -141,7 +142,7 @@ class SoundscapeDownloadService extends ChangeNotifier {
   // Download a soundscape track
   Future<void> downloadTrack(String trackId) async {
     if (!_initialized) await initialize();
-    
+
     final audioService = AudioService();
     final track = audioService.availableTracks.firstWhere(
       (t) => t.id == trackId,
@@ -163,7 +164,7 @@ class SoundscapeDownloadService extends ChangeNotifier {
 
       // Simulate download progress (in a real app, this would be actual HTTP download)
       final localPath = '${_localDirectory.path}/sounds/${track.id}.mp3';
-      
+
       // For demo purposes, simulate downloading by creating a placeholder file
       // In production, you would download from a CDN or streaming service
       await _simulateDownload(trackId, localPath);
@@ -178,9 +179,8 @@ class SoundscapeDownloadService extends ChangeNotifier {
         localPath: localPath,
         downloadDate: DateTime.now(),
       );
-      
+
       notifyListeners();
-      
     } catch (e) {
       _downloads[trackId] = SoundscapeDownload(
         trackId: trackId,
@@ -196,19 +196,19 @@ class SoundscapeDownloadService extends ChangeNotifier {
   Future<void> _simulateDownload(String trackId, String localPath) async {
     const steps = 10;
     const stepDelay = Duration(milliseconds: 200);
-    
+
     for (int i = 1; i <= steps; i++) {
       await Future.delayed(stepDelay);
-      
+
       _downloads[trackId] = _downloads[trackId]!.copyWith(
         progress: i / steps,
       );
       notifyListeners();
     }
-    
+
     // Create placeholder file (in production, write actual audio data)
     final file = File(localPath);
-    await file.writeAsString('placeholder_audio_data_for_${trackId}');
+    await file.writeAsString('placeholder_audio_data_for_$trackId');
   }
 
   // Delete downloaded track
@@ -225,14 +225,13 @@ class SoundscapeDownloadService extends ChangeNotifier {
       }
 
       await _clearDownloadStatus(trackId);
-      
+
       _downloads[trackId] = SoundscapeDownload(
         trackId: trackId,
         status: DownloadStatus.notDownloaded,
       );
-      
+
       notifyListeners();
-      
     } catch (e) {
       debugPrint('Error deleting track $trackId: $e');
     }
@@ -253,9 +252,10 @@ class SoundscapeDownloadService extends ChangeNotifier {
   // Get total storage used by downloads
   Future<int> getTotalStorageUsed() async {
     int totalBytes = 0;
-    
+
     for (final download in _downloads.values) {
-      if (download.status == DownloadStatus.downloaded && download.localPath != null) {
+      if (download.status == DownloadStatus.downloaded &&
+          download.localPath != null) {
         try {
           final file = File(download.localPath!);
           if (await file.exists()) {
@@ -267,7 +267,7 @@ class SoundscapeDownloadService extends ChangeNotifier {
         }
       }
     }
-    
+
     return totalBytes;
   }
 
@@ -299,7 +299,8 @@ class SoundscapeDownloadService extends ChangeNotifier {
   static String formatBytes(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    if (bytes < 1024 * 1024 * 1024)
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
     return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
   }
 }

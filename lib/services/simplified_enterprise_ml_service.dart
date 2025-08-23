@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:isolate';
 import 'package:flutter/foundation.dart';
-import 'package:vector_math/vector_math.dart';
 import '../models/enhanced_task.dart';
 import '../models/ai_insights.dart' as ai;
 import '../models/ai_insights.dart';

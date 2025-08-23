@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -70,10 +69,11 @@ class FirebaseService {
     if (DefaultFirebaseOptions.currentPlatform.projectId == 'focus-flow-demo') {
       throw FirebaseAuthException(
         code: 'demo-mode',
-        message: 'Authentication is disabled in demo mode. Please configure real Firebase credentials.',
+        message:
+            'Authentication is disabled in demo mode. Please configure real Firebase credentials.',
       );
     }
-    
+
     return _errorHandler.handleFirebaseOperation(() async {
       return await _auth.signInWithEmailAndPassword(
         email: email,
@@ -84,7 +84,7 @@ class FirebaseService {
 
   /// Register with email and password
   Future<UserCredential> registerWithEmail(
-    String email, 
+    String email,
     String password, {
     String? displayName,
     Map<String, dynamic>? userData,
@@ -93,10 +93,11 @@ class FirebaseService {
     if (DefaultFirebaseOptions.currentPlatform.projectId == 'focus-flow-demo') {
       throw FirebaseAuthException(
         code: 'demo-mode',
-        message: 'Authentication is disabled in demo mode. Please configure real Firebase credentials.',
+        message:
+            'Authentication is disabled in demo mode. Please configure real Firebase credentials.',
       );
     }
-    
+
     return _errorHandler.handleFirebaseOperation(() async {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -603,7 +604,7 @@ class FirebaseService {
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
         debugPrint('Push notifications permission granted');
-        
+
         // Get FCM token
         final token = await _messaging.getToken();
         if (token != null) {
@@ -623,7 +624,8 @@ class FirebaseService {
         });
 
         // Handle background messages
-        FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+        FirebaseMessaging.onBackgroundMessage(
+            _firebaseMessagingBackgroundHandler);
 
         // Handle foreground messages
         FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -663,7 +665,8 @@ class FirebaseService {
     }
   }
 
-  Future<void> _createUserDocument(User user, Map<String, dynamic>? userData) async {
+  Future<void> _createUserDocument(
+      User user, Map<String, dynamic>? userData) async {
     try {
       await _firestore.collection('users').doc(user.uid).set({
         'uid': user.uid,
@@ -723,11 +726,15 @@ extension UserAnalyticsExtension on UserAnalytics {
     return UserAnalytics(
       userId: json['userId'] ?? '',
       totalTasksCompleted: json['metrics']?['totalTasks'] ?? 0,
-      totalTimeSpent: Duration(milliseconds: json['metrics']?['totalTimeSpent'] ?? 0),
-      averageSessionLength: Duration(milliseconds: json['metrics']?['averageTimePerTask'] ?? 0),
-      productivityScore: (json['metrics']?['productivityScore'] ?? 0.0).toDouble(),
+      totalTimeSpent:
+          Duration(milliseconds: json['metrics']?['totalTimeSpent'] ?? 0),
+      averageSessionLength:
+          Duration(milliseconds: json['metrics']?['averageTimePerTask'] ?? 0),
+      productivityScore:
+          (json['metrics']?['productivityScore'] ?? 0.0).toDouble(),
       focusScore: (json['efficiency']?['focus'] ?? 0.0).toDouble(),
-      estimationAccuracy: (json['metrics']?['estimationAccuracy'] ?? 0.0).toDouble(),
+      estimationAccuracy:
+          (json['metrics']?['estimationAccuracy'] ?? 0.0).toDouble(),
       preferredWorkingHours: [],
       mostProductiveDay: 1,
       categoryPerformance: {},
