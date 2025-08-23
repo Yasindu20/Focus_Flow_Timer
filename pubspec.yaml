@@ -81,11 +81,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   
-  assets:
-    - assets/sounds/
-    - assets/sounds/completion/
-    - assets/icons/
-    - assets/images/
+  # assets:
+  #   - assets/sounds/
+  #   - assets/sounds/completion/
+  #   - assets/icons/
+  #   - assets/images/
   
   # fonts:
   #   - family: TimerIcons
