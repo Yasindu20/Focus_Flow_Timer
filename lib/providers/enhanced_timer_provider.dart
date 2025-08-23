@@ -3,6 +3,7 @@ import '../services/advanced_timer_service.dart';
 import '../services/audio_service.dart';
 import '../services/background_task_handler.dart';
 import '../services/session_recovery_service.dart';
+import '../services/storage_service.dart';
 import '../models/timer_session.dart';
 import '../models/timer_settings.dart';
 
@@ -102,9 +103,93 @@ class EnhancedTimerProvider extends ChangeNotifier {
       notifyListeners();
     };
 
-    _timerService.onInterruption = (reason) {
-      _handleInterruption(reason);
-    };
+    // Note: onTimerTick and onError callbacks would need to be implemented in AdvancedTimerService
+  }
+
+  // Enhanced audio management methods
+  Future<void> _startBackgroundAudio() async {
+    try {
+      final selectedSound = StorageService.selectedSound;
+      if (selectedSound.isNotEmpty) {
+        await _audioService.playTrackByName(selectedSound);
+      }
+    } catch (e) {
+      // Non-critical error, don't break timer functionality
+      debugPrint('Error starting background audio: $e');
+    }
+  }
+
+  Future<void> _pauseBackgroundAudio() async {
+    try {
+      if (_audioService.isPlaying) {
+        await _audioService.pauseTrack(withFadeOut: true);
+      }
+    } catch (e) {
+      debugPrint('Error pausing background audio: $e');
+    }
+  }
+
+  Future<void> _resumeBackgroundAudio() async {
+    try {
+      if (!_audioService.isPlaying) {
+        await _audioService.resumeTrack(withFadeIn: true);
+      }
+    } catch (e) {
+      debugPrint('Error resuming background audio: $e');
+    }
+  }
+
+  Future<void> _handleAudioOnSessionComplete() async {
+    try {
+      // Fade out background audio when session completes
+      if (_audioService.isPlaying) {
+        await _audioService.stopTrack(withFadeOut: true);
+      }
+    } catch (e) {
+      debugPrint('Error handling audio on session complete: $e');
+    }
+  }
+
+  Future<void> _playCompletionSound() async {
+    try {
+      await _audioService.playCompletionSound(_timerService.currentType);
+    } catch (e) {
+      debugPrint('Error playing completion sound: $e');
+    }
+  }
+
+  // Audio control methods for UI
+  Future<void> toggleBackgroundAudio() async {
+    try {
+      if (_audioService.isPlaying) {
+        await _audioService.stopTrack();
+      } else {
+        await _startBackgroundAudio();
+      }
+      notifyListeners();
+    } catch (e) {
+      _handleError('Failed to toggle background audio', e);
+    }
+  }
+
+  Future<void> setBackgroundTrack(String trackId) async {
+    try {
+      if (_audioService.isPlaying) {
+        await _audioService.playTrack(trackId);
+      }
+      notifyListeners();
+    } catch (e) {
+      _handleError('Failed to set background track', e);
+    }
+  }
+
+  Future<void> setAudioVolume(double volume) async {
+    try {
+      await _audioService.setVolume(volume);
+      notifyListeners();
+    } catch (e) {
+      _handleError('Failed to set audio volume', e);
+    }
   }
 
   /// Start a new timer session
@@ -306,31 +391,9 @@ class EnhancedTimerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _startBackgroundAudio() async {
-    if (_timerService.settings.enableAmbientSounds) {
-      final selectedSound = _timerService.settings.selectedAmbientSound;
-      if (selectedSound.isNotEmpty) {
-        await _audioService.playTrack(selectedSound);
-      }
-    }
-  }
 
   Future<void> _stopBackgroundAudio() async {
     await _audioService.stopTrack();
-  }
-
-  Future<void> _pauseBackgroundAudio() async {
-    await _audioService.pauseTrack();
-  }
-
-  Future<void> _resumeBackgroundAudio() async {
-    await _audioService.resumeTrack();
-  }
-
-  Future<void> _playCompletionSound() async {
-    if (_timerService.settings.enableCompletionSounds) {
-      await _audioService.playCompletionSound(_timerService.currentType);
-    }
   }
 
   Future<void> _updatePerformanceMetrics() async {

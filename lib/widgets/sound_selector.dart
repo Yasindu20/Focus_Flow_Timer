@@ -50,8 +50,8 @@ class _SoundSelectorState extends State<SoundSelector> {
                 // Sound selection
                 ...audioService.availableTracks.map((track) {
                   return RadioListTile<String>(
-                    title: Text(track),
-                    value: track,
+                    title: Text(track.name),
+                    value: track.id,
                     groupValue: _selectedSound,
                     onChanged: (value) async {
                       if (value != null) {
