@@ -1,6 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
-import 'advanced_timer_service.dart';
+import '../core/enums/timer_enums.dart';
 
 enum SoundscapeCategory { nature, ambient, urban, fireplace }
 
@@ -291,7 +291,7 @@ class AudioService extends ChangeNotifier {
     try {
       String soundPath;
       switch (timerType) {
-        case TimerType.work:
+        case TimerType.pomodoro:
           soundPath = 'sounds/completion/work_complete.mp3';
           break;
         case TimerType.shortBreak:

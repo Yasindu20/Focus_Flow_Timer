@@ -198,7 +198,7 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
                 Text(
                   'We\'re working on fixing this issue. Please try refreshing the page.',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 16,
                   ),
                   textAlign: TextAlign.center,
@@ -208,13 +208,13 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       _errorMessage!,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 12,
                         fontFamily: 'monospace',
                       ),

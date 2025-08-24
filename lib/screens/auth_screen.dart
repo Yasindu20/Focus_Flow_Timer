@@ -71,7 +71,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: TextButton(
                         onPressed: () => setState(() => _isSignIn = true),
                         style: TextButton.styleFrom(
-                          backgroundColor: _isSignIn ? Colors.blue.withOpacity(0.1) : null,
+                          backgroundColor: _isSignIn ? Colors.blue.withValues(alpha: 0.1) : null,
                         ),
                         child: const Text('Sign In'),
                       ),
@@ -80,7 +80,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: TextButton(
                         onPressed: () => setState(() => _isSignIn = false),
                         style: TextButton.styleFrom(
-                          backgroundColor: !_isSignIn ? Colors.blue.withOpacity(0.1) : null,
+                          backgroundColor: !_isSignIn ? Colors.blue.withValues(alpha: 0.1) : null,
                         ),
                         child: const Text('Sign Up'),
                       ),
@@ -195,9 +195,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       return Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
+                          color: Colors.red.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red.withOpacity(0.3)),
+                          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                         ),
                         child: Text(
                           authProvider.errorMessage!,

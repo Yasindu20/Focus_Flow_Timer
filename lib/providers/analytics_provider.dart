@@ -33,23 +33,22 @@ class AnalyticsProvider extends ChangeNotifier {
 
       // Calculate today's stats
       final todaySessions = sessions.where((session) {
-        final sessionDate = DateTime.parse(session['completedAt'] ?? '');
-        return sessionDate.day == today.day &&
-            sessionDate.month == today.month &&
-            sessionDate.year == today.year;
+        if (session.endTime == null) return false;
+        return session.endTime!.day == today.day &&
+            session.endTime!.month == today.month &&
+            session.endTime!.year == today.year &&
+            session.completed;
       }).toList();
 
       _completedSessions = todaySessions.length;
       _totalMinutes = todaySessions.fold(
-          0, (sum, session) => sum + (session['duration'] as int? ?? 0));
+          0, (sum, session) => sum + session.duration);
 
       final todayTasks = tasks.where((task) {
-        final taskDate =
-            DateTime.parse(task['completedAt'] ?? task['createdAt'] ?? '');
-        return task['isCompleted'] == true &&
-            taskDate.day == today.day &&
-            taskDate.month == today.month &&
-            taskDate.year == today.year;
+        if (!task.isCompleted || task.completedAt == null) return false;
+        return task.completedAt!.day == today.day &&
+            task.completedAt!.month == today.month &&
+            task.completedAt!.year == today.year;
       }).toList();
 
       _tasksCompleted = todayTasks.length;

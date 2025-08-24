@@ -690,8 +690,9 @@ class FreeApiIntegrationService {
       final name = label['name']?.toString().toLowerCase();
       if (name?.contains('bug') == true) return TaskCategory.testing;
       if (name?.contains('feature') == true) return TaskCategory.coding;
-      if (name?.contains('documentation') == true)
+      if (name?.contains('documentation') == true) {
         return TaskCategory.documentation;
+      }
     }
     return TaskCategory.general;
   }

@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
-import '../providers/firebase_analytics_provider.dart';
-import '../providers/firebase_smart_task_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -50,23 +46,19 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Future<void> _initializeApp() async {
     try {
       // Wait for minimum splash duration
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 3));
       
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      
-      if (authProvider.isAuthenticated) {
-        // Initialize authenticated user services
-        final analyticsProvider = Provider.of<FirebaseAnalyticsProvider>(context, listen: false);
-        final tasksProvider = Provider.of<FirebaseSmartTaskProvider>(context, listen: false);
-        
-        await Future.wait([
-          analyticsProvider.initialize(),
-          tasksProvider.initialize(),
-        ]);
+      // Navigate to main app
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/main');
       }
       
     } catch (e) {
       debugPrint('App initialization error: $e');
+      // Still navigate to main app even if there's an error
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/main');
+      }
     }
   }
 
@@ -79,102 +71,103 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).primaryColor,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
               Theme.of(context).primaryColor,
-              Theme.of(context).primaryColor.withOpacity(0.8),
+              Theme.of(context).primaryColor.withValues(alpha: 0.7),
             ],
           ),
         ),
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Animated Logo
-              AnimatedBuilder(
-                animation: _animationController,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _scaleAnimation.value,
-                    child: FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
+          child: AnimatedBuilder(
+            animation: _animationController,
+            builder: (context, child) {
+              return FadeTransition(
+                opacity: _fadeAnimation,
+                child: ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // App Icon
+                      Container(
+                        width: 120,
+                        height: 120,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
                         ),
                         child: const Icon(
                           Icons.timer,
-                          size: 80,
-                          color: Colors.white,
+                          size: 60,
+                          color: Colors.deepPurple,
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
-              
-              const SizedBox(height: 32),
-              
-              // App Title
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: Text(
-                  'Focus Flow Timer',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                      
+                      const SizedBox(height: 30),
+                      
+                      // App Name
+                      Text(
+                        'Focus Flow Timer',
+                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 32,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      
+                      const SizedBox(height: 12),
+                      
+                      // Tagline
+                      Text(
+                        'Stay focused, get things done',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 18,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      
+                      const SizedBox(height: 40),
+                      
+                      // Loading indicator
+                      SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white.withValues(alpha: 0.8),
+                          ),
+                          strokeWidth: 3,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 20),
+                      
+                      Text(
+                        'Initializing...',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              
-              const SizedBox(height: 8),
-              
-              // Subtitle
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: Text(
-                  'Enterprise Productivity Solution',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 64),
-              
-              // Loading Indicator
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: const SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 16),
-              
-              // Loading Text
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: Text(
-                  'Initializing your workspace...',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                ),
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),

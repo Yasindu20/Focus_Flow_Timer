@@ -247,8 +247,9 @@ class FreeMlService {
 
   // HuggingFace API integration (free tier: 1000 requests/month)
   Future<Map<String, dynamic>> _analyzeWithHuggingFace(String text) async {
-    if (_huggingFaceApiKey == null)
+    if (_huggingFaceApiKey == null) {
       throw Exception('HuggingFace API key not configured');
+    }
 
     final headers = {
       'Authorization': 'Bearer $_huggingFaceApiKey',
@@ -264,12 +265,7 @@ class FreeMlService {
         body: jsonEncode({'inputs': text}),
       );
 
-      // Text classification for intent
-      final classificationResponse = await http.post(
-        Uri.parse('$_huggingFaceBaseUrl/models/microsoft/DialoGPT-medium'),
-        headers: headers,
-        body: jsonEncode({'inputs': text}),
-      );
+      // Text classification for intent (placeholder for future use)
 
       double sentiment = 0.0;
       if (sentimentResponse.statusCode == 200) {
