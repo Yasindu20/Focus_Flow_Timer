@@ -1,5 +1,5 @@
 import 'package:hive/hive.dart';
-import '../services/advanced_timer_service.dart';
+import '../core/enums/timer_enums.dart';
 
 part 'timer_session.g.dart';
 

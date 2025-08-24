@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/enhanced_timer_provider.dart';
-import '../services/storage_service.dart';
-import '../services/audio_service.dart';
-import '../services/soundscape_download_service.dart';
+import '../services/optimized_storage_service.dart';
 
 class EnhancedSoundSelector extends StatefulWidget {
   const EnhancedSoundSelector({super.key});
@@ -12,49 +10,56 @@ class EnhancedSoundSelector extends StatefulWidget {
   State<EnhancedSoundSelector> createState() => _EnhancedSoundSelectorState();
 }
 
-class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> with TickerProviderStateMixin {
-  String _selectedTrackId = 'forest_rain';
+class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
+  String _selectedSound = 'None';
   double _volume = 0.5;
-  late TabController _tabController;
-  late SoundscapeDownloadService _downloadService;
+  final OptimizedStorageService _storage = OptimizedStorageService();
+
+  // Basic sound options for free version
+  final List<Map<String, dynamic>> _availableSounds = [
+    {'id': 'none', 'name': 'None', 'icon': Icons.volume_off, 'description': 'No background sound'},
+    {'id': 'rain', 'name': 'Rain', 'icon': Icons.water_drop, 'description': 'Gentle rain sounds'},
+    {'id': 'forest', 'name': 'Forest', 'icon': Icons.forest, 'description': 'Nature forest ambiance'},
+    {'id': 'ocean', 'name': 'Ocean', 'icon': Icons.waves, 'description': 'Ocean waves'},
+    {'id': 'cafe', 'name': 'Café', 'icon': Icons.local_cafe, 'description': 'Coffee shop ambiance'},
+  ];
 
   @override
   void initState() {
     super.initState();
-    _downloadService = SoundscapeDownloadService();
-    _downloadService.initialize();
-    _tabController = TabController(length: 4, vsync: this);
     _loadSettings();
   }
 
   Future<void> _loadSettings() async {
-    final selectedSound = StorageService.selectedSound;
-    final audioService = AudioService();
-    
-    // Try to find track by name for backward compatibility
-    final track = audioService.availableTracks.firstWhere(
-      (t) => t.name == selectedSound,
-      orElse: () => audioService.availableTracks.first,
-    );
-    
-    setState(() {
-      _selectedTrackId = track.id;
-      _volume = StorageService.soundVolume;
-    });
+    try {
+      final settings = await _storage.getCachedData('sound_settings');
+      if (settings != null) {
+        setState(() {
+          _selectedSound = settings['selectedSound'] ?? 'None';
+          _volume = (settings['volume'] ?? 0.5).toDouble();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading sound settings: $e');
+    }
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+  Future<void> _saveSoundSettings() async {
+    try {
+      await _storage.cacheData('sound_settings', {
+        'selectedSound': _selectedSound,
+        'volume': _volume,
+        'updatedAt': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      debugPrint('Error saving sound settings: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<EnhancedTimerProvider>(
       builder: (context, timerProvider, child) {
-        final audioService = timerProvider.audioService;
-
         return Card(
           elevation: 4,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -66,342 +71,194 @@ class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> with Tick
                 // Header
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.waves,
-                        color: Theme.of(context).primaryColor,
-                        size: 28,
-                      ),
+                    Icon(
+                      Icons.audiotrack,
+                      color: Theme.of(context).primaryColor,
+                      size: 24,
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Ambient Soundscapes',
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Background Sounds',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
-                          Text(
-                            'Professional audio for focus',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
-                    // Current track status
-                    if (audioService.isPlaying)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  ],
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Sound Options
+                Text(
+                  'Choose a background sound:',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Sound Grid
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 2.5,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                  ),
+                  itemCount: _availableSounds.length,
+                  itemBuilder: (context, index) {
+                    final sound = _availableSounds[index];
+                    final isSelected = _selectedSound == sound['name'];
+                    
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedSound = sound['name'];
+                        });
+                        _saveSoundSettings();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.green.withOpacity(0.3)),
+                          color: isSelected 
+                              ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+                              : Colors.grey.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSelected 
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey.withValues(alpha: 0.3),
+                            width: isSelected ? 2 : 1,
+                          ),
                         ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
+                        child: Row(
                           children: [
-                            Icon(Icons.play_circle_fill, color: Colors.green, size: 16),
-                            SizedBox(width: 4),
-                            Text(
-                              'Playing',
-                              style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w600),
+                            Icon(
+                              sound['icon'],
+                              color: isSelected 
+                                  ? Theme.of(context).primaryColor
+                                  : Colors.grey[600],
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    sound['name'],
+                                    style: TextStyle(
+                                      fontWeight: isSelected 
+                                          ? FontWeight.bold 
+                                          : FontWeight.normal,
+                                      color: isSelected 
+                                          ? Theme.of(context).primaryColor
+                                          : null,
+                                    ),
+                                  ),
+                                  Text(
+                                    sound['description'],
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey[600],
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
                       ),
-                  ],
+                    );
+                  },
                 ),
-
-                const SizedBox(height: 24),
-
-                // Category tabs
-                TabBar(
-                  controller: _tabController,
-                  isScrollable: true,
-                  labelColor: Theme.of(context).primaryColor,
-                  unselectedLabelColor: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
-                  indicatorColor: Theme.of(context).primaryColor,
-                  tabs: const [
-                    Tab(text: 'Nature', icon: Icon(Icons.forest, size: 20)),
-                    Tab(text: 'Ambient', icon: Icon(Icons.blur_on, size: 20)),
-                    Tab(text: 'Urban', icon: Icon(Icons.location_city, size: 20)),
-                    Tab(text: 'Fireplace', icon: Icon(Icons.whatshot, size: 20)),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // Track selection
-                SizedBox(
-                  height: 280,
-                  child: TabBarView(
-                    controller: _tabController,
+                
+                if (_selectedSound != 'None') ...[
+                  const SizedBox(height: 24),
+                  
+                  // Volume Control
+                  Text(
+                    'Volume',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                  ),
+                  
+                  const SizedBox(height: 8),
+                  
+                  Row(
                     children: [
-                      _buildTrackGrid(audioService, SoundscapeCategory.nature),
-                      _buildTrackGrid(audioService, SoundscapeCategory.ambient),
-                      _buildTrackGrid(audioService, SoundscapeCategory.urban),
-                      _buildTrackGrid(audioService, SoundscapeCategory.fireplace),
+                      Icon(
+                        Icons.volume_down,
+                        color: Colors.grey[600],
+                        size: 20,
+                      ),
+                      Expanded(
+                        child: Slider(
+                          value: _volume,
+                          min: 0.0,
+                          max: 1.0,
+                          divisions: 10,
+                          label: '${(_volume * 100).round()}%',
+                          onChanged: (value) {
+                            setState(() {
+                              _volume = value;
+                            });
+                          },
+                          onChangeEnd: (value) {
+                            _saveSoundSettings();
+                          },
+                        ),
+                      ),
+                      Icon(
+                        Icons.volume_up,
+                        color: Colors.grey[600],
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ],
+                
+                const SizedBox(height: 16),
+                
+                // Info Note
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.blue[700],
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Background sounds help maintain focus during timer sessions.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue[700],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-
-                const SizedBox(height: 24),
-
-                // Volume and fade controls
-                _buildAudioControls(audioService),
-
-                const SizedBox(height: 20),
-
-                // Playback controls
-                _buildPlaybackControls(audioService),
               ],
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildTrackGrid(AudioService audioService, SoundscapeCategory category) {
-    final tracks = audioService.getTracksByCategory(category);
-    
-    return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 1.2,
-      ),
-      itemCount: tracks.length,
-      itemBuilder: (context, index) {
-        final track = tracks[index];
-        final isSelected = _selectedTrackId == track.id;
-        final isCurrentPlaying = audioService.currentTrackId == track.id && audioService.isPlaying;
-        
-        return GestureDetector(
-          onTap: () async {
-            setState(() {
-              _selectedTrackId = track.id;
-            });
-            await StorageService.setSelectedSound(track.name);
-            
-            if (audioService.isPlaying) {
-              await audioService.playTrack(track.id);
-            }
-          },
-          child: ChangeNotifierProvider.value(
-            value: _downloadService,
-            child: Consumer<SoundscapeDownloadService>(
-              builder: (context, downloadService, child) {
-                final download = downloadService.getDownload(track.id);
-                final isDownloaded = download?.status == DownloadStatus.downloaded;
-                final isDownloading = download?.status == DownloadStatus.downloading;
-                
-                return Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected 
-                          ? Theme.of(context).primaryColor
-                          : Theme.of(context).dividerColor,
-                      width: isSelected ? 2 : 1,
-                    ),
-                    color: isSelected 
-                        ? Theme.of(context).primaryColor.withOpacity(0.05)
-                        : null,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                track.name,
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (isCurrentPlaying)
-                              const Icon(Icons.play_circle_fill, color: Colors.green, size: 20)
-                            else if (isDownloading)
-                              SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  value: download?.progress,
-                                ),
-                              )
-                            else if (isDownloaded)
-                              const Icon(Icons.download_done, color: Colors.blue, size: 20)
-                            else
-                              GestureDetector(
-                                onTap: () => downloadService.downloadTrack(track.id),
-                                child: const Icon(Icons.download, color: Colors.grey, size: 20),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          track.description,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const Spacer(),
-                        if (isDownloading && download != null)
-                          LinearProgressIndicator(
-                            value: download.progress,
-                            backgroundColor: Colors.grey.withOpacity(0.3),
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAudioControls(AudioService audioService) {
-    return Column(
-      children: [
-        // Volume control
-        Row(
-          children: [
-            Icon(Icons.volume_down, color: Theme.of(context).primaryColor),
-            Expanded(
-              child: Slider(
-                value: _volume,
-                onChanged: (value) async {
-                  setState(() {
-                    _volume = value;
-                  });
-                  await audioService.setVolume(value);
-                  await StorageService.setSoundVolume(value);
-                },
-                activeColor: Theme.of(context).primaryColor,
-              ),
-            ),
-            Icon(Icons.volume_up, color: Theme.of(context).primaryColor),
-            const SizedBox(width: 8),
-            Text(
-              '${(_volume * 100).round()}%',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        
-        // Fade controls
-        Row(
-          children: [
-            Icon(Icons.tune, color: Theme.of(context).primaryColor, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Fade: ${audioService.fadeInDuration.inSeconds}s in, ${audioService.fadeOutDuration.inSeconds}s out',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-            TextButton(
-              onPressed: () => _showFadeSettings(audioService),
-              child: const Text('Adjust'),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPlaybackControls(AudioService audioService) {
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () async {
-              if (audioService.isPlaying) {
-                await audioService.stopTrack();
-              } else {
-                await audioService.playTrack(_selectedTrackId);
-              }
-            },
-            icon: Icon(
-              audioService.isPlaying ? Icons.stop : Icons.play_arrow,
-            ),
-            label: Text(audioService.isPlaying ? 'Stop' : 'Play'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        if (audioService.isPlaying)
-          ElevatedButton.icon(
-            onPressed: () async {
-              await audioService.pauseTrack(withFadeOut: true);
-            },
-            icon: const Icon(Icons.pause),
-            label: const Text('Pause'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  void _showFadeSettings(AudioService audioService) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Fade Settings'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Customize fade in/out durations'),
-            const SizedBox(height: 16),
-            Text('Fade In: ${audioService.fadeInDuration.inSeconds}s'),
-            Text('Fade Out: ${audioService.fadeOutDuration.inSeconds}s'),
-            const SizedBox(height: 16),
-            const Text('Adjust fade settings for smoother transitions'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
     );
   }
 }

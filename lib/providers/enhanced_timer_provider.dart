@@ -3,6 +3,7 @@ import 'dart:async';
 import '../core/enums/timer_enums.dart';
 import '../services/optimized_storage_service.dart';
 import '../services/notification_manager.dart';
+import '../models/timer_session.dart';
 
 class EnhancedTimerProvider extends ChangeNotifier {
   final OptimizedStorageService _storage = OptimizedStorageService();
@@ -15,7 +16,6 @@ class EnhancedTimerProvider extends ChangeNotifier {
   Duration _totalTime = const Duration(minutes: 25);
   Timer? _timer;
   DateTime? _startTime;
-  DateTime? _pauseTime;
   
   // Session tracking
   String? _currentTaskId;
@@ -66,7 +66,7 @@ class EnhancedTimerProvider extends ChangeNotifier {
   
   Future<void> _loadSettings() async {
     try {
-      final settings = await _storage.getTimerSettings();
+      final settings = await _storage.getCachedData('timer_settings');
       if (settings != null) {
         _currentType = TimerType.values.firstWhere(
           (type) => type.toString() == settings['currentType'],
@@ -107,10 +107,17 @@ class EnhancedTimerProvider extends ChangeNotifier {
   
   Future<void> _showNotification() async {
     try {
-      await _notifications.showTimerCompletionNotification(
-        _currentType.displayName,
-        'Timer completed! Great work!',
+      // Create a basic timer session for notification
+      final session = TimerSession(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        type: _currentType,
+        plannedDuration: _totalTime.inMilliseconds,
+        actualDuration: _totalTime.inMilliseconds,
+        startTime: _startTime ?? DateTime.now(),
+        endTime: DateTime.now(),
+        completed: true,
       );
+      await _notifications.showSessionCompletedNotification(session);
     } catch (e) {
       debugPrint('Error showing notification: $e');
     }
@@ -118,14 +125,15 @@ class EnhancedTimerProvider extends ChangeNotifier {
   
   Future<void> _saveSession() async {
     try {
+      final sessionId = DateTime.now().millisecondsSinceEpoch.toString();
       final session = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'id': sessionId,
         'type': _currentType.toString(),
         'duration': _totalTime.inMinutes,
         'completedAt': DateTime.now().toIso8601String(),
         'taskId': _currentTaskId,
       };
-      await _storage.saveTimerSession(session);
+      await _storage.cacheData('timer_session_$sessionId', session);
     } catch (e) {
       debugPrint('Error saving session: $e');
     }
@@ -163,7 +171,6 @@ class EnhancedTimerProvider extends ChangeNotifier {
       if (_state.canPause) {
         _stopTimer();
         _state = TimerState.paused;
-        _pauseTime = DateTime.now();
         notifyListeners();
       }
     } catch (e) {
@@ -239,7 +246,7 @@ class EnhancedTimerProvider extends ChangeNotifier {
         'currentType': _currentType.toString(),
         'sessionCount': _sessionCount,
       };
-      await _storage.saveTimerSettings(settings);
+      await _storage.cacheData('timer_settings', settings);
     } catch (e) {
       debugPrint('Error saving settings: $e');
     }

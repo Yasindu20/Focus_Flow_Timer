@@ -4,7 +4,6 @@ import '../providers/enhanced_timer_provider.dart';
 import '../core/enums/timer_enums.dart';
 import '../core/constants/colors.dart';
 import 'timer_controls.dart';
-import 'session_recovery_dialog.dart';
 
 class EnhancedTimerWidget extends StatefulWidget {
   const EnhancedTimerWidget({super.key});
@@ -149,28 +148,22 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
 
   Widget _buildStateIndicator(TimerState state) {
     Color color;
-    IconData icon;
 
     switch (state) {
       case TimerState.idle:
         color = Colors.white60;
-        icon = Icons.timer_outlined;
         break;
       case TimerState.running:
         color = Colors.green;
-        icon = Icons.play_arrow;
         break;
       case TimerState.paused:
         color = Colors.orange;
-        icon = Icons.pause;
         break;
       case TimerState.completed:
         color = Colors.blue;
-        icon = Icons.check_circle;
         break;
       case TimerState.cancelled:
         color = Colors.red;
-        icon = Icons.warning;
         break;
     }
 
@@ -448,16 +441,6 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
     }
   }
 
-  String _formatDuration(int milliseconds) {
-    final duration = Duration(milliseconds: milliseconds);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-
-    if (hours > 0) {
-      return '${hours}h ${minutes}m';
-    }
-    return '${minutes}m';
-  }
 
   @override
   void dispose() {
