@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,7 +18,7 @@ class FreeApiIntegrationService {
   /// Initialize the service with free API configurations
   Future<void> initialize() async {
     if (_isInitialized) return;
-    
+
     await _loadIntegrationConfigs();
     _isInitialized = true;
     debugPrint('FreeApiIntegrationService initialized');
@@ -58,7 +57,7 @@ class FreeApiIntegrationService {
       }
 
       final config = _integrations[provider]!;
-      
+
       switch (provider.toLowerCase()) {
         case 'todoist':
           return await _syncWithTodoist(config, localTasks, bidirectional);
@@ -95,7 +94,7 @@ class FreeApiIntegrationService {
     }
 
     final config = _integrations[provider]!;
-    
+
     switch (provider.toLowerCase()) {
       case 'todoist':
         return await _pushToTodoist(config, task, options);
@@ -125,7 +124,7 @@ class FreeApiIntegrationService {
     }
 
     final config = _integrations[provider]!;
-    
+
     switch (provider.toLowerCase()) {
       case 'todoist':
         return await _pullFromTodoist(config, filters);
@@ -147,19 +146,20 @@ class FreeApiIntegrationService {
     bool bidirectional,
   ) async {
     final syncResult = TaskSyncResult();
-    
+
     try {
       // Pull from Todoist
       final todoistTasks = await _getTodoistTasks(config);
       final pulledTasks = _convertTodoistTasksToEnhanced(todoistTasks);
       syncResult.pulledTasks = pulledTasks;
-      
+
       // Cache for offline access
       await _cacheTasks('todoist', pulledTasks);
 
       // Push to Todoist (if bidirectional and within limits)
       if (bidirectional && localTasks != null) {
-        for (final task in localTasks.take(10)) { // Limit to avoid hitting API limits
+        for (final task in localTasks.take(10)) {
+          // Limit to avoid hitting API limits
           if (!_hasExternalRef(task, 'todoist')) {
             final todoistTask = await _createTodoistTask(config, task);
             if (todoistTask != null) {
@@ -168,14 +168,14 @@ class FreeApiIntegrationService {
           }
         }
       }
-      
+
       syncResult.success = true;
       syncResult.message = 'Successfully synced with Todoist';
     } catch (e) {
       syncResult.success = false;
       syncResult.message = 'Todoist sync failed: $e';
     }
-    
+
     return syncResult;
   }
 
@@ -186,18 +186,19 @@ class FreeApiIntegrationService {
     bool bidirectional,
   ) async {
     final syncResult = TaskSyncResult();
-    
+
     try {
       // Pull from GitHub Issues
       final issues = await _getGitHubIssues(config);
       final pulledTasks = _convertGitHubIssuesToTasks(issues);
       syncResult.pulledTasks = pulledTasks;
-      
+
       await _cacheTasks('github', pulledTasks);
 
       // Push to GitHub (if bidirectional)
       if (bidirectional && localTasks != null) {
-        for (final task in localTasks.take(5)) { // Be conservative with GitHub API
+        for (final task in localTasks.take(5)) {
+          // Be conservative with GitHub API
           if (!_hasExternalRef(task, 'github')) {
             final issue = await _createGitHubIssue(config, task);
             if (issue != null) {
@@ -206,14 +207,14 @@ class FreeApiIntegrationService {
           }
         }
       }
-      
+
       syncResult.success = true;
       syncResult.message = 'Successfully synced with GitHub';
     } catch (e) {
       syncResult.success = false;
       syncResult.message = 'GitHub sync failed: $e';
     }
-    
+
     return syncResult;
   }
 
@@ -224,16 +225,17 @@ class FreeApiIntegrationService {
     bool bidirectional,
   ) async {
     final syncResult = TaskSyncResult();
-    
+
     try {
       final clickupTasks = await _getClickUpTasks(config);
       final pulledTasks = _convertClickUpTasksToEnhanced(clickupTasks);
       syncResult.pulledTasks = pulledTasks;
-      
+
       await _cacheTasks('clickup', pulledTasks);
 
       if (bidirectional && localTasks != null) {
-        for (final task in localTasks.take(15)) { // ClickUp has generous limits
+        for (final task in localTasks.take(15)) {
+          // ClickUp has generous limits
           if (!_hasExternalRef(task, 'clickup')) {
             final clickupTask = await _createClickUpTask(config, task);
             if (clickupTask != null) {
@@ -242,14 +244,14 @@ class FreeApiIntegrationService {
           }
         }
       }
-      
+
       syncResult.success = true;
       syncResult.message = 'Successfully synced with ClickUp';
     } catch (e) {
       syncResult.success = false;
       syncResult.message = 'ClickUp sync failed: $e';
     }
-    
+
     return syncResult;
   }
 
@@ -260,29 +262,30 @@ class FreeApiIntegrationService {
     bool bidirectional,
   ) async {
     final syncResult = TaskSyncResult();
-    
+
     try {
       // This handles offline sync and local backup
       if (localTasks != null) {
         await _cacheTasksLocally(localTasks);
         syncResult.pushedTasks = localTasks;
       }
-      
+
       final cachedTasks = await _getCachedTasks('local');
       syncResult.pulledTasks = cachedTasks;
-      
+
       syncResult.success = true;
       syncResult.message = 'Local sync completed';
     } catch (e) {
       syncResult.success = false;
       syncResult.message = 'Local sync failed: $e';
     }
-    
+
     return syncResult;
   }
 
   // API Implementation Methods
-  Future<List<Map<String, dynamic>>> _getTodoistTasks(IntegrationConfig config) async {
+  Future<List<Map<String, dynamic>>> _getTodoistTasks(
+      IntegrationConfig config) async {
     final response = await http.get(
       Uri.parse('https://api.todoist.com/rest/v2/tasks'),
       headers: {
@@ -298,7 +301,8 @@ class FreeApiIntegrationService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> _getGitHubIssues(IntegrationConfig config) async {
+  Future<List<Map<String, dynamic>>> _getGitHubIssues(
+      IntegrationConfig config) async {
     final repo = config.config['repository'] ?? 'user/repo';
     final response = await http.get(
       Uri.parse('https://api.github.com/repos/$repo/issues'),
@@ -315,7 +319,8 @@ class FreeApiIntegrationService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> _getClickUpTasks(IntegrationConfig config) async {
+  Future<List<Map<String, dynamic>>> _getClickUpTasks(
+      IntegrationConfig config) async {
     final listId = config.config['list_id'] ?? '';
     final response = await http.get(
       Uri.parse('https://api.clickup.com/api/v2/list/$listId/task'),
@@ -334,7 +339,8 @@ class FreeApiIntegrationService {
   }
 
   // Convert external tasks to EnhancedTask
-  List<EnhancedTask> _convertTodoistTasksToEnhanced(List<Map<String, dynamic>> tasks) {
+  List<EnhancedTask> _convertTodoistTasksToEnhanced(
+      List<Map<String, dynamic>> tasks) {
     return tasks.map((task) {
       return EnhancedTask(
         id: 'todoist_${task['id']}',
@@ -352,7 +358,8 @@ class FreeApiIntegrationService {
     }).toList();
   }
 
-  List<EnhancedTask> _convertGitHubIssuesToTasks(List<Map<String, dynamic>> issues) {
+  List<EnhancedTask> _convertGitHubIssuesToTasks(
+      List<Map<String, dynamic>> issues) {
     return issues.map((issue) {
       return EnhancedTask(
         id: 'github_${issue['number']}',
@@ -370,7 +377,8 @@ class FreeApiIntegrationService {
     }).toList();
   }
 
-  List<EnhancedTask> _convertClickUpTasksToEnhanced(List<Map<String, dynamic>> tasks) {
+  List<EnhancedTask> _convertClickUpTasksToEnhanced(
+      List<Map<String, dynamic>> tasks) {
     return tasks.map((task) {
       return EnhancedTask(
         id: 'clickup_${task['id']}',
@@ -632,7 +640,8 @@ class FreeApiIntegrationService {
   }
 
   bool _isIntegrationEnabled(String provider) {
-    return _integrations.containsKey(provider) && _integrations[provider]!.isEnabled;
+    return _integrations.containsKey(provider) &&
+        _integrations[provider]!.isEnabled;
   }
 
   bool _hasExternalRef(EnhancedTask task, String provider) {
@@ -644,15 +653,15 @@ class FreeApiIntegrationService {
     final prefs = await SharedPreferences.getInstance();
     final configsJson = prefs.getString('integration_configs') ?? '{}';
     final configs = jsonDecode(configsJson) as Map<String, dynamic>;
-    
-    _integrations = configs.map((key, value) =>
-        MapEntry(key, IntegrationConfig.fromJson(value)));
+
+    _integrations = configs
+        .map((key, value) => MapEntry(key, IntegrationConfig.fromJson(value)));
   }
 
   Future<void> _saveIntegrationConfig(String provider) async {
     final prefs = await SharedPreferences.getInstance();
-    final configs = _integrations.map((key, value) =>
-        MapEntry(key, value.toJson()));
+    final configs =
+        _integrations.map((key, value) => MapEntry(key, value.toJson()));
     await prefs.setString('integration_configs', jsonEncode(configs));
   }
 
@@ -664,10 +673,14 @@ class FreeApiIntegrationService {
 
   TaskPriority _mapTodoistPriority(int? priority) {
     switch (priority) {
-      case 4: return TaskPriority.critical;
-      case 3: return TaskPriority.high;
-      case 2: return TaskPriority.medium;
-      default: return TaskPriority.low;
+      case 4:
+        return TaskPriority.critical;
+      case 3:
+        return TaskPriority.high;
+      case 2:
+        return TaskPriority.medium;
+      default:
+        return TaskPriority.low;
     }
   }
 
@@ -677,7 +690,8 @@ class FreeApiIntegrationService {
       final name = label['name']?.toString().toLowerCase();
       if (name?.contains('bug') == true) return TaskCategory.testing;
       if (name?.contains('feature') == true) return TaskCategory.coding;
-      if (name?.contains('documentation') == true) return TaskCategory.documentation;
+      if (name?.contains('documentation') == true)
+        return TaskCategory.documentation;
     }
     return TaskCategory.general;
   }
@@ -705,38 +719,55 @@ class FreeApiIntegrationService {
     if (priority == null) return TaskPriority.medium;
     final priorityValue = priority['priority']?.toString();
     switch (priorityValue) {
-      case '1': return TaskPriority.critical;
-      case '2': return TaskPriority.high;
-      case '3': return TaskPriority.medium;
-      default: return TaskPriority.low;
+      case '1':
+        return TaskPriority.critical;
+      case '2':
+        return TaskPriority.high;
+      case '3':
+        return TaskPriority.medium;
+      default:
+        return TaskPriority.low;
     }
   }
 
   int _mapPriorityToTodoist(TaskPriority priority) {
     switch (priority) {
-      case TaskPriority.critical: return 4;
-      case TaskPriority.high: return 3;
-      case TaskPriority.medium: return 2;
-      case TaskPriority.low: return 1;
+      case TaskPriority.critical:
+        return 4;
+      case TaskPriority.high:
+        return 3;
+      case TaskPriority.medium:
+        return 2;
+      case TaskPriority.low:
+        return 1;
     }
   }
 
   List<String> _mapCategoryToGitHubLabels(TaskCategory category) {
     switch (category) {
-      case TaskCategory.coding: return ['feature'];
-      case TaskCategory.testing: return ['bug'];
-      case TaskCategory.documentation: return ['documentation'];
-      case TaskCategory.review: return ['review'];
-      default: return ['task'];
+      case TaskCategory.coding:
+        return ['feature'];
+      case TaskCategory.testing:
+        return ['bug'];
+      case TaskCategory.documentation:
+        return ['documentation'];
+      case TaskCategory.review:
+        return ['review'];
+      default:
+        return ['task'];
     }
   }
 
   int _mapPriorityToClickUp(TaskPriority priority) {
     switch (priority) {
-      case TaskPriority.critical: return 1;
-      case TaskPriority.high: return 2;
-      case TaskPriority.medium: return 3;
-      case TaskPriority.low: return 4;
+      case TaskPriority.critical:
+        return 1;
+      case TaskPriority.high:
+        return 2;
+      case TaskPriority.medium:
+        return 3;
+      case TaskPriority.low:
+        return 4;
     }
   }
 }

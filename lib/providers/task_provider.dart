@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/task.dart';
+import '../models/enhanced_task.dart';
 import '../services/optimized_storage_service.dart';
 import '../services/free_ml_service.dart';
 
@@ -7,18 +8,21 @@ class TaskProvider extends ChangeNotifier {
   final List<Task> _tasks = [];
   final OptimizedStorageService _storage = OptimizedStorageService();
   final FreeMlService _mlService = FreeMlService();
-  
+
   String? _currentTaskId;
   bool _isLoading = false;
   String? _error;
 
   // Getters
   List<Task> get tasks => List.unmodifiable(_tasks);
-  List<Task> get incompleteTasks => _tasks.where((task) => !task.isCompleted).toList();
-  List<Task> get completedTasks => _tasks.where((task) => task.isCompleted).toList();
-  
+  List<Task> get incompleteTasks =>
+      _tasks.where((task) => !task.isCompleted).toList();
+  List<Task> get completedTasks =>
+      _tasks.where((task) => task.isCompleted).toList();
+
   String? get currentTaskId => _currentTaskId;
-  Task? get currentTask => _currentTaskId != null ? getTaskById(_currentTaskId!) : null;
+  Task? get currentTask =>
+      _currentTaskId != null ? getTaskById(_currentTaskId!) : null;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -26,20 +30,28 @@ class TaskProvider extends ChangeNotifier {
   int get totalTasks => _tasks.length;
   int get completedTasksCount => completedTasks.length;
   int get pendingTasksCount => incompleteTasks.length;
-  double get completionRate => totalTasks > 0 ? completedTasksCount / totalTasks : 0.0;
+  double get completionRate =>
+      totalTasks > 0 ? completedTasksCount / totalTasks : 0.0;
 
   // Productivity Metrics
-  int get totalPomodorosCompleted => _tasks.fold(0, (sum, task) => sum + (task.completedPomodoros ?? 0));
-  int get totalMinutesWorked => _tasks.fold(0, (sum, task) => sum + (task.actualMinutes ?? 0));
-  double get averageTaskDuration => completedTasks.isNotEmpty 
-      ? completedTasks.fold(0, (sum, task) => sum + (task.actualMinutes ?? 0)) / completedTasks.length 
+  int get totalPomodorosCompleted =>
+      _tasks.fold(0, (sum, task) => sum + task.completedPomodoros);
+  int get totalMinutesWorked =>
+      _tasks.fold(0, (sum, task) => sum + (task.actualMinutes ?? 0));
+  double get averageTaskDuration => completedTasks.isNotEmpty
+      ? completedTasks.fold(0, (sum, task) => sum + (task.actualMinutes ?? 0)) /
+          completedTasks.length
       : 0.0;
 
   // Priority-based getters
-  List<Task> get highPriorityTasks => incompleteTasks.where((task) => 
-      task.priority?.toLowerCase() == 'high' || task.priority?.toLowerCase() == 'critical').toList();
-  List<Task> get todayTasks => incompleteTasks.where((task) => 
-      task.createdAt.day == DateTime.now().day).toList();
+  List<Task> get highPriorityTasks => incompleteTasks
+      .where((task) =>
+          task.priority == TaskPriority.high ||
+          task.priority == TaskPriority.critical)
+      .toList();
+  List<Task> get todayTasks => incompleteTasks
+      .where((task) => task.createdAt.day == DateTime.now().day)
+      .toList();
 
   Future<void> initialize() async {
     try {
@@ -58,14 +70,14 @@ class TaskProvider extends ChangeNotifier {
 
   Future<void> _loadTasks() async {
     try {
-      final storedTasks = await _storage.getTasks();
+      final storedTasks = await _storage.getAllTasks();
       _tasks.clear();
-      
-      for (final taskData in storedTasks) {
-        final task = Task.fromMap(taskData);
+
+      for (final enhancedTask in storedTasks) {
+        final task = Task.fromEnhancedTask(enhancedTask);
         _tasks.add(task);
       }
-      
+
       _sortTasks();
       notifyListeners();
     } catch (e) {
@@ -83,7 +95,7 @@ class TaskProvider extends ChangeNotifier {
   }) async {
     try {
       _setLoading(true);
-      
+
       String finalCategory = category ?? 'general';
       String finalPriority = priority ?? 'medium';
       int finalEstimatedMinutes = estimatedMinutes ?? 25;
@@ -92,7 +104,8 @@ class TaskProvider extends ChangeNotifier {
       // Use ML service for basic categorization if available
       if (category == null || priority == null) {
         try {
-          final analysis = await _mlService.analyzeTaskText('$title $description');
+          final analysis =
+              await _mlService.analyzeTaskContent(title, description);
           if (analysis.isNotEmpty) {
             finalCategory = category ?? analysis['category'] ?? 'general';
             finalPriority = priority ?? analysis['priority'] ?? 'medium';
@@ -106,8 +119,8 @@ class TaskProvider extends ChangeNotifier {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         title: title,
         description: description,
-        category: finalCategory,
-        priority: finalPriority,
+        category: _parseTaskCategory(finalCategory),
+        priority: _parseTaskPriority(finalPriority),
         estimatedMinutes: finalEstimatedMinutes,
         tags: finalTags,
         createdAt: DateTime.now(),
@@ -115,11 +128,11 @@ class TaskProvider extends ChangeNotifier {
       );
 
       _tasks.add(task);
-      await _storage.saveTask(task.toMap());
-      
+      await _storage.saveTask(task.toEnhancedTask());
+
       _sortTasks();
       notifyListeners();
-      
+
       return task;
     } catch (e) {
       _setError('Failed to add task: $e');
@@ -134,8 +147,8 @@ class TaskProvider extends ChangeNotifier {
       final index = _tasks.indexWhere((task) => task.id == updatedTask.id);
       if (index != -1) {
         _tasks[index] = updatedTask;
-        await _storage.updateTask(updatedTask.id, updatedTask.toMap());
-        
+        await _storage.saveTask(updatedTask.toEnhancedTask());
+
         _sortTasks();
         notifyListeners();
       }
@@ -153,7 +166,7 @@ class TaskProvider extends ChangeNotifier {
           completedAt: DateTime.now(),
           actualMinutes: task.actualMinutes ?? task.estimatedMinutes,
         );
-        
+
         await updateTask(completedTask);
       }
     } catch (e) {
@@ -187,7 +200,8 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateTaskProgress(String taskId, {
+  Future<void> updateTaskProgress(
+    String taskId, {
     int? completedPomodoros,
     int? actualMinutes,
   }) async {
@@ -195,7 +209,8 @@ class TaskProvider extends ChangeNotifier {
       final task = getTaskById(taskId);
       if (task != null) {
         final updatedTask = task.copyWith(
-          completedPomodoros: completedPomodoros ?? (task.completedPomodoros ?? 0),
+          completedPomodoros:
+              completedPomodoros ?? task.completedPomodoros,
           actualMinutes: actualMinutes ?? task.actualMinutes,
         );
         await updateTask(updatedTask);
@@ -205,28 +220,31 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
-  List<Task> getTasksByCategory(String category) {
+  List<Task> getTasksByCategory(TaskCategory category) {
     return _tasks.where((task) => task.category == category).toList();
   }
 
-  List<Task> getTasksByPriority(String priority) {
+  List<Task> getTasksByPriority(TaskPriority priority) {
     return _tasks.where((task) => task.priority == priority).toList();
   }
 
   List<Task> getTasksByDateRange(DateTime start, DateTime end) {
-    return _tasks.where((task) => 
-        task.createdAt.isAfter(start) && task.createdAt.isBefore(end)).toList();
+    return _tasks
+        .where((task) =>
+            task.createdAt.isAfter(start) && task.createdAt.isBefore(end))
+        .toList();
   }
 
   List<Task> searchTasks(String query) {
     if (query.isEmpty) return _tasks;
-    
+
     final lowercaseQuery = query.toLowerCase();
-    return _tasks.where((task) =>
-        task.title.toLowerCase().contains(lowercaseQuery) ||
-        task.description.toLowerCase().contains(lowercaseQuery) ||
-        (task.tags?.any((tag) => tag.toLowerCase().contains(lowercaseQuery)) ?? false)
-    ).toList();
+    return _tasks
+        .where((task) =>
+            task.title.toLowerCase().contains(lowercaseQuery) ||
+            task.description.toLowerCase().contains(lowercaseQuery) ||
+            task.tags.any((tag) => tag.toLowerCase().contains(lowercaseQuery)))
+        .toList();
   }
 
   Future<Map<String, dynamic>> getProductivityInsights() async {
@@ -252,7 +270,7 @@ class TaskProvider extends ChangeNotifier {
 
   Map<String, dynamic> exportData() {
     return {
-      'tasks': _tasks.map((task) => task.toMap()).toList(),
+      'tasks': _tasks.map((task) => task.toJson()).toList(),
       'metadata': {
         'exportDate': DateTime.now().toIso8601String(),
         'totalTasks': totalTasks,
@@ -266,15 +284,15 @@ class TaskProvider extends ChangeNotifier {
     try {
       _setLoading(true);
       final tasksData = data['tasks'] as List;
-      
+
       for (final taskData in tasksData) {
-        final task = Task.fromMap(taskData);
+        final task = Task.fromJson(taskData);
         if (!_tasks.any((existing) => existing.id == task.id)) {
           _tasks.add(task);
-          await _storage.saveTask(task.toMap());
+          await _storage.saveTask(task.toEnhancedTask());
         }
       }
-      
+
       _sortTasks();
       notifyListeners();
     } catch (e) {
@@ -300,14 +318,17 @@ class TaskProvider extends ChangeNotifier {
       return b.createdAt.compareTo(a.createdAt);
     });
   }
-  
-  int _getPriorityValue(String? priority) {
-    switch (priority?.toLowerCase()) {
-      case 'critical': return 4;
-      case 'high': return 3;
-      case 'medium': return 2;
-      case 'low': return 1;
-      default: return 2;
+
+  int _getPriorityValue(TaskPriority priority) {
+    switch (priority) {
+      case TaskPriority.critical:
+        return 4;
+      case TaskPriority.high:
+        return 3;
+      case TaskPriority.medium:
+        return 2;
+      case TaskPriority.low:
+        return 1;
     }
   }
 
@@ -324,7 +345,7 @@ class TaskProvider extends ChangeNotifier {
   Map<String, int> _getCategoryBreakdown() {
     final breakdown = <String, int>{};
     for (final task in _tasks) {
-      final category = task.category ?? 'general';
+      final category = task.category.name;
       breakdown[category] = (breakdown[category] ?? 0) + 1;
     }
     return breakdown;
@@ -333,10 +354,56 @@ class TaskProvider extends ChangeNotifier {
   Map<String, int> _getPriorityBreakdown() {
     final breakdown = <String, int>{};
     for (final task in _tasks) {
-      final priority = task.priority ?? 'medium';
+      final priority = task.priority.name;
       breakdown[priority] = (breakdown[priority] ?? 0) + 1;
     }
     return breakdown;
+  }
+
+  TaskCategory _parseTaskCategory(String category) {
+    switch (category.toLowerCase()) {
+      case 'coding':
+        return TaskCategory.coding;
+      case 'writing':
+        return TaskCategory.writing;
+      case 'meeting':
+        return TaskCategory.meeting;
+      case 'research':
+        return TaskCategory.research;
+      case 'design':
+        return TaskCategory.design;
+      case 'planning':
+        return TaskCategory.planning;
+      case 'review':
+        return TaskCategory.review;
+      case 'testing':
+        return TaskCategory.testing;
+      case 'documentation':
+        return TaskCategory.documentation;
+      case 'communication':
+        return TaskCategory.communication;
+      case 'maintenance':
+        return TaskCategory.maintenance;
+      case 'learning':
+        return TaskCategory.learning;
+      default:
+        return TaskCategory.general;
+    }
+  }
+
+  TaskPriority _parseTaskPriority(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'critical':
+        return TaskPriority.critical;
+      case 'high':
+        return TaskPriority.high;
+      case 'medium':
+        return TaskPriority.medium;
+      case 'low':
+        return TaskPriority.low;
+      default:
+        return TaskPriority.medium;
+    }
   }
 
   @override

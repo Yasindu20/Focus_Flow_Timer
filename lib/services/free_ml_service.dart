@@ -15,7 +15,7 @@ class FreeMlService {
   Map<String, dynamic> _localModels = {};
   List<Map<String, dynamic>> _trainingData = [];
   bool _isInitialized = false;
-  
+
   // Free API configurations
   String? _huggingFaceApiKey;
   final String _huggingFaceBaseUrl = 'https://api-inference.huggingface.co';
@@ -61,10 +61,10 @@ class FreeMlService {
 
       // Use local lightweight model
       final prediction = _applyLocalDurationModel(features);
-      
+
       // Store for future training
       await _recordPrediction('duration', features, prediction);
-      
+
       return prediction;
     } catch (e) {
       debugPrint('Error in duration prediction: $e');
@@ -74,15 +74,15 @@ class FreeMlService {
 
   /// Analyze task content using free NLP APIs and local processing
   Future<Map<String, dynamic>> analyzeTaskContent(
-    String title, 
+    String title,
     String description,
   ) async {
     try {
       final fullText = '$title $description';
-      
+
       // Primary: Local text analysis (always available)
       final localAnalysis = await _analyzeTextLocally(fullText);
-      
+
       // Secondary: Try free API if available and within limits
       Map<String, dynamic>? apiAnalysis;
       if (_huggingFaceApiKey != null && await _checkApiLimit('huggingface')) {
@@ -130,10 +130,10 @@ class FreeMlService {
 
       // Apply local classification model
       final probabilities = _applyLocalCategoryModel(features);
-      
+
       // Store for training
       await _recordPrediction('category', features, probabilities);
-      
+
       return probabilities;
     } catch (e) {
       debugPrint('Error in category classification: $e');
@@ -157,7 +157,8 @@ class FreeMlService {
       var currentTime = availableTime;
 
       // Sort tasks by priority and dependencies
-      final sortedTasks = _sortTasksForScheduling(tasks, dependencies, performanceTimes);
+      final sortedTasks =
+          _sortTasksForScheduling(tasks, dependencies, performanceTimes);
 
       for (final task in sortedTasks) {
         final estimatedDuration = await predictDuration(
@@ -167,8 +168,9 @@ class FreeMlService {
           priority: task.priority,
         );
 
-        final taskEndTime = currentTime.add(Duration(minutes: estimatedDuration.round()));
-        
+        final taskEndTime =
+            currentTime.add(Duration(minutes: estimatedDuration.round()));
+
         // Check if task fits within constraints
         if (taskEndTime.isBefore(endDate)) {
           scheduledTasks.add(ScheduledTask(
@@ -177,8 +179,9 @@ class FreeMlService {
             endTime: taskEndTime,
             confidence: _calculateSchedulingConfidence(task, performanceTimes),
           ));
-          
-          currentTime = taskEndTime.add(const Duration(minutes: 5)); // Buffer time
+
+          currentTime =
+              taskEndTime.add(const Duration(minutes: 5)); // Buffer time
         }
       }
 
@@ -193,11 +196,11 @@ class FreeMlService {
   Future<void> trainModels(List<Map<String, dynamic>> newData) async {
     try {
       _trainingData.addAll(newData);
-      
+
       // Simple online learning for local models
       await _updateLocalModels(newData);
       await _saveLocalModels();
-      
+
       debugPrint('Local ML models updated with ${newData.length} samples');
     } catch (e) {
       debugPrint('Error training models: $e');
@@ -219,7 +222,9 @@ class FreeMlService {
       },
       'analysis_sources': {
         'local': 'Always available',
-        'huggingface_api': _huggingFaceApiKey != null ? 'Available (free tier)' : 'Not configured',
+        'huggingface_api': _huggingFaceApiKey != null
+            ? 'Available (free tier)'
+            : 'Not configured',
       },
       'total_training_data': _trainingData.length,
     };
@@ -229,7 +234,7 @@ class FreeMlService {
   Future<Map<String, dynamic>> _analyzeTextLocally(String text) async {
     final tokens = _tokenize(text);
     final processedTokens = _preprocessTokens(tokens);
-    
+
     return {
       'keywords': _extractKeywords(processedTokens).take(5).toList(),
       'intent': _classifyIntent(processedTokens),
@@ -243,7 +248,8 @@ class FreeMlService {
 
   // HuggingFace API integration (free tier: 1000 requests/month)
   Future<Map<String, dynamic>> _analyzeWithHuggingFace(String text) async {
-    if (_huggingFaceApiKey == null) throw Exception('HuggingFace API key not configured');
+    if (_huggingFaceApiKey == null)
+      throw Exception('HuggingFace API key not configured');
 
     final headers = {
       'Authorization': 'Bearer $_huggingFaceApiKey',
@@ -253,7 +259,8 @@ class FreeMlService {
     try {
       // Sentiment analysis
       final sentimentResponse = await http.post(
-        Uri.parse('$_huggingFaceBaseUrl/models/cardiffnlp/twitter-roberta-base-sentiment-latest'),
+        Uri.parse(
+            '$_huggingFaceBaseUrl/models/cardiffnlp/twitter-roberta-base-sentiment-latest'),
         headers: headers,
         body: jsonEncode({'inputs': text}),
       );
@@ -271,9 +278,11 @@ class FreeMlService {
         if (sentimentData is List && sentimentData.isNotEmpty) {
           final scores = sentimentData[0] as List;
           for (final score in scores) {
-            if (score['label'] == 'LABEL_2') { // Positive
+            if (score['label'] == 'LABEL_2') {
+              // Positive
               sentiment += score['score'];
-            } else if (score['label'] == 'LABEL_0') { // Negative
+            } else if (score['label'] == 'LABEL_0') {
+              // Negative
               sentiment -= score['score'];
             }
           }
@@ -284,14 +293,16 @@ class FreeMlService {
       _recordApiCall('huggingface');
 
       return {
-        'keywords': _extractKeywords(_preprocessTokens(_tokenize(text))).take(5).toList(),
+        'keywords': _extractKeywords(_preprocessTokens(_tokenize(text)))
+            .take(5)
+            .toList(),
         'intent': _classifyIntent(_preprocessTokens(_tokenize(text))),
         'sentiment': sentiment,
         'entities': _recognizeEntities(_preprocessTokens(_tokenize(text))),
       };
     } catch (e) {
       debugPrint('HuggingFace API error: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -318,13 +329,13 @@ class FreeMlService {
   double _applyLocalDurationModel(List<double> features) {
     final weights = _localModels['duration']?['weights'] as List<double>? ??
         [25.0, 15.0, 10.0, 8.0, 12.0, 20.0, 5.0, 5.0]; // Default weights
-    
+
     double prediction = 25.0; // Base duration
-    
+
     for (int i = 0; i < features.length && i < weights.length; i++) {
       prediction += features[i] * weights[i];
     }
-    
+
     return prediction.clamp(5.0, 240.0); // 5 minutes to 4 hours
   }
 
@@ -344,33 +355,41 @@ class FreeMlService {
 
     // Add keyword-based category indicators
     features.addAll(_getCategoryIndicators(keywords));
-    
+
     return features;
   }
 
   Map<String, double> _applyLocalCategoryModel(List<double> features) {
     final categories = [
-      'coding', 'writing', 'meeting', 'research', 'design',
-      'planning', 'review', 'testing', 'documentation', 'communication'
+      'coding',
+      'writing',
+      'meeting',
+      'research',
+      'design',
+      'planning',
+      'review',
+      'testing',
+      'documentation',
+      'communication'
     ];
 
     final probabilities = <String, double>{};
-    
+
     // Simple rule-based classification based on features
     for (int i = 0; i < categories.length; i++) {
       double score = 0.1; // Base score
-      
+
       // Feature-based scoring
       if (i < features.length) {
         score += features[i] * 0.5;
       }
-      
+
       // Keyword-based adjustments
       if (features.length > 4) {
         final keywordScore = features.sublist(4).reduce((a, b) => a + b);
         score += keywordScore * 0.3;
       }
-      
+
       probabilities[categories[i]] = score;
     }
 
@@ -409,7 +428,7 @@ class FreeMlService {
       readyTasks.sort((a, b) {
         final priorityCompare = b.priority.index.compareTo(a.priority.index);
         if (priorityCompare != 0) return priorityCompare;
-        
+
         final perfA = performanceTimes[a.category.name] ?? 1.0;
         final perfB = performanceTimes[b.category.name] ?? 1.0;
         return perfA.compareTo(perfB);
@@ -447,20 +466,20 @@ class FreeMlService {
     final predicted = data['predicted_duration']?.toDouble() ?? 0.0;
     final actual = data['actual_duration']?.toDouble() ?? 0.0;
     final features = data['features'] as List<double>? ?? [];
-    
+
     if (features.isEmpty) return;
-    
+
     final error = actual - predicted;
-    final learningRate = 0.01;
-    
+    const learningRate = 0.01;
+
     // Update weights
     final weights = _localModels['duration']?['weights'] as List<double>? ??
         List.filled(features.length, 1.0);
-    
+
     for (int i = 0; i < features.length && i < weights.length; i++) {
       weights[i] += learningRate * error * features[i];
     }
-    
+
     _localModels['duration'] = {
       'weights': weights,
       'last_updated': DateTime.now().toIso8601String(),
@@ -471,7 +490,7 @@ class FreeMlService {
     final prefs = await SharedPreferences.getInstance();
     final modelsJson = prefs.getString('ml_local_models') ?? '{}';
     _localModels = jsonDecode(modelsJson);
-    
+
     if (_localModels.isEmpty) {
       _initializeEmptyModels();
     }
@@ -520,17 +539,17 @@ class FreeMlService {
   Future<bool> _checkApiLimit(String provider) async {
     final now = DateTime.now();
     _apiCallHistory[provider] ??= [];
-    
+
     // Remove calls older than 30 days (monthly limit)
     _apiCallHistory[provider]!.removeWhere(
       (time) => now.difference(time).inDays >= 30,
     );
-    
+
     // Check monthly limits
     final monthlyLimits = {
       'huggingface': 1000, // Free tier limit
     };
-    
+
     final limit = monthlyLimits[provider] ?? 100;
     return _apiCallHistory[provider]!.length < limit;
   }
@@ -551,7 +570,7 @@ class FreeMlService {
       'prediction': prediction,
       'timestamp': DateTime.now().toIso8601String(),
     });
-    
+
     // Keep only last 1000 records to manage memory
     if (_trainingData.length > 1000) {
       _trainingData = _trainingData.sublist(_trainingData.length - 1000);
@@ -560,7 +579,8 @@ class FreeMlService {
 
   // Helper methods (similar to original but simplified)
   List<String> _tokenize(String text) {
-    return text.toLowerCase()
+    return text
+        .toLowerCase()
         .replaceAll(RegExp(r'[^\w\s]'), ' ')
         .split(RegExp(r'\s+'))
         .where((token) => token.isNotEmpty)
@@ -569,12 +589,45 @@ class FreeMlService {
 
   List<String> _preprocessTokens(List<String> tokens) {
     final stopWords = {
-      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
-      'of', 'with', 'by', 'from', 'is', 'are', 'was', 'were', 'be', 'been',
-      'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
-      'could', 'should', 'can', 'may', 'might', 'must', 'shall'
+      'the',
+      'a',
+      'an',
+      'and',
+      'or',
+      'but',
+      'in',
+      'on',
+      'at',
+      'to',
+      'for',
+      'of',
+      'with',
+      'by',
+      'from',
+      'is',
+      'are',
+      'was',
+      'were',
+      'be',
+      'been',
+      'being',
+      'have',
+      'has',
+      'had',
+      'do',
+      'does',
+      'did',
+      'will',
+      'would',
+      'could',
+      'should',
+      'can',
+      'may',
+      'might',
+      'must',
+      'shall'
     };
-    
+
     return tokens
         .where((token) => !stopWords.contains(token) && token.length > 2)
         .toList();
@@ -585,10 +638,10 @@ class FreeMlService {
     for (final token in tokens) {
       keywordCounts[token] = (keywordCounts[token] ?? 0) + 1;
     }
-    
+
     final sortedKeywords = keywordCounts.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    
+
     return sortedKeywords.take(10).map((e) => e.key).toList();
   }
 
@@ -612,25 +665,54 @@ class FreeMlService {
 
   double _analyzeSentiment(List<String> tokens) {
     final positiveWords = {
-      'good', 'great', 'excellent', 'amazing', 'awesome', 'fantastic',
-      'wonderful', 'perfect', 'outstanding', 'brilliant', 'superb',
-      'improve', 'enhance', 'optimize', 'upgrade', 'better'
+      'good',
+      'great',
+      'excellent',
+      'amazing',
+      'awesome',
+      'fantastic',
+      'wonderful',
+      'perfect',
+      'outstanding',
+      'brilliant',
+      'superb',
+      'improve',
+      'enhance',
+      'optimize',
+      'upgrade',
+      'better'
     };
-    
+
     final negativeWords = {
-      'bad', 'terrible', 'awful', 'horrible', 'worst', 'hate',
-      'difficult', 'hard', 'complex', 'challenging', 'problem',
-      'issue', 'bug', 'error', 'fix', 'broken', 'failed', 'urgent', 'critical'
+      'bad',
+      'terrible',
+      'awful',
+      'horrible',
+      'worst',
+      'hate',
+      'difficult',
+      'hard',
+      'complex',
+      'challenging',
+      'problem',
+      'issue',
+      'bug',
+      'error',
+      'fix',
+      'broken',
+      'failed',
+      'urgent',
+      'critical'
     };
 
     int positive = 0;
     int negative = 0;
-    
+
     for (final token in tokens) {
       if (positiveWords.contains(token)) positive++;
       if (negativeWords.contains(token)) negative++;
     }
-    
+
     if (positive == 0 && negative == 0) return 0.0;
     return (positive - negative) / (positive + negative);
   }
@@ -643,14 +725,43 @@ class FreeMlService {
     };
 
     final techKeywords = {
-      'api', 'database', 'frontend', 'backend', 'ui', 'ux', 'mobile', 'web',
-      'ios', 'android', 'react', 'flutter', 'angular', 'vue', 'node',
-      'python', 'java', 'javascript', 'typescript', 'swift', 'kotlin', 'dart'
+      'api',
+      'database',
+      'frontend',
+      'backend',
+      'ui',
+      'ux',
+      'mobile',
+      'web',
+      'ios',
+      'android',
+      'react',
+      'flutter',
+      'angular',
+      'vue',
+      'node',
+      'python',
+      'java',
+      'javascript',
+      'typescript',
+      'swift',
+      'kotlin',
+      'dart'
     };
 
     final actionKeywords = {
-      'implement', 'develop', 'create', 'build', 'design', 'test',
-      'deploy', 'review', 'update', 'fix', 'optimize', 'refactor'
+      'implement',
+      'develop',
+      'create',
+      'build',
+      'design',
+      'test',
+      'deploy',
+      'review',
+      'update',
+      'fix',
+      'optimize',
+      'refactor'
     };
 
     for (final token in tokens) {
@@ -667,13 +778,28 @@ class FreeMlService {
 
   Map<String, dynamic> _identifyComplexityIndicators(List<String> tokens) {
     final complexityKeywords = {
-      'algorithm', 'optimization', 'integration', 'architecture',
-      'performance', 'security', 'scalability', 'database', 'api',
-      'complex', 'advanced', 'sophisticated', 'comprehensive'
+      'algorithm',
+      'optimization',
+      'integration',
+      'architecture',
+      'performance',
+      'security',
+      'scalability',
+      'database',
+      'api',
+      'complex',
+      'advanced',
+      'sophisticated',
+      'comprehensive'
     };
 
     final urgencyKeywords = {
-      'urgent', 'asap', 'immediate', 'critical', 'priority', 'deadline'
+      'urgent',
+      'asap',
+      'immediate',
+      'critical',
+      'priority',
+      'deadline'
     };
 
     int complexityScore = 0;
@@ -701,8 +827,14 @@ class FreeMlService {
 
   double _getIntentEncoding(String intent) {
     final intentMap = {
-      'create': 1.0, 'update': 2.0, 'fix': 3.0, 'research': 4.0,
-      'meeting': 5.0, 'review': 6.0, 'plan': 7.0, 'communicate': 8.0,
+      'create': 1.0,
+      'update': 2.0,
+      'fix': 3.0,
+      'research': 4.0,
+      'meeting': 5.0,
+      'review': 6.0,
+      'plan': 7.0,
+      'communicate': 8.0,
       'general': 0.0,
     };
     return (intentMap[intent] ?? 0.0) / 8.0;
@@ -711,23 +843,26 @@ class FreeMlService {
   double _getWordComplexity(String text) {
     final words = text.split(' ').where((w) => w.isNotEmpty).toList();
     if (words.isEmpty) return 0.0;
-    
-    final avgLength = words.map((w) => w.length).reduce((a, b) => a + b) / words.length;
+
+    final avgLength =
+        words.map((w) => w.length).reduce((a, b) => a + b) / words.length;
     return (avgLength / 15).clamp(0.0, 1.0);
   }
 
   double _getTechnicalComplexity(String text) {
     final technicalPatterns = [
-      RegExp(r'\b(api|database|algorithm|framework|library)\b', caseSensitive: false),
-      RegExp(r'\b(implement|develop|integrate|optimize)\b', caseSensitive: false),
+      RegExp(r'\b(api|database|algorithm|framework|library)\b',
+          caseSensitive: false),
+      RegExp(r'\b(implement|develop|integrate|optimize)\b',
+          caseSensitive: false),
       RegExp(r'\b(frontend|backend|fullstack|devops)\b', caseSensitive: false),
     ];
-    
+
     int matches = 0;
     for (final pattern in technicalPatterns) {
       matches += pattern.allMatches(text).length;
     }
-    
+
     final wordCount = text.split(' ').length;
     return wordCount > 0 ? (matches / wordCount).clamp(0.0, 1.0) : 0.0;
   }
@@ -750,7 +885,8 @@ class FreeMlService {
   }
 
   // Fallback methods
-  double _fallbackDurationPrediction(TaskCategory category, double complexityScore) {
+  double _fallbackDurationPrediction(
+      TaskCategory category, double complexityScore) {
     final baseDurations = {
       TaskCategory.coding: 45.0,
       TaskCategory.writing: 30.0,
@@ -763,12 +899,13 @@ class FreeMlService {
       TaskCategory.documentation: 25.0,
       TaskCategory.communication: 15.0,
     };
-    
+
     final base = baseDurations[category] ?? 25.0;
     return base * (1.0 + complexityScore * 0.5);
   }
 
-  Map<String, dynamic> _fallbackContentAnalysis(String title, String description) {
+  Map<String, dynamic> _fallbackContentAnalysis(
+      String title, String description) {
     final tokens = _tokenize('$title $description');
     return {
       'keywords': tokens.take(5).toList(),
@@ -817,14 +954,14 @@ class FreeMlService {
       if (currentTime.isBefore(endDate)) {
         final duration = _fallbackDurationPrediction(task.category, 0.5);
         final endTime = currentTime.add(Duration(minutes: duration.round()));
-        
+
         scheduledTasks.add(ScheduledTask(
           taskId: task.id,
           startTime: currentTime,
           endTime: endTime,
           confidence: 0.6,
         ));
-        
+
         currentTime = endTime.add(const Duration(minutes: 5));
       }
     }

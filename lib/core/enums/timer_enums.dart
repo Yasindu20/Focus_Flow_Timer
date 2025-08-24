@@ -76,7 +76,7 @@ extension TimerPrecisionExtension on TimerPrecision {
         final minutes = duration.inMinutes;
         final seconds = duration.inSeconds % 60;
         final tenths = (duration.inMilliseconds % 1000) ~/ 100;
-        return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}.${tenths}';
+        return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}.$tenths';
       case TimerPrecision.hundredthSeconds:
         final minutes = duration.inMinutes;
         final seconds = duration.inSeconds % 60;
