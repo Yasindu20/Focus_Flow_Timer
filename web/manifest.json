@@ -1,13 +1,15 @@
 {
-    "name": "focus_flow_timer",
-    "short_name": "focus_flow_timer",
-    "start_url": ".",
+    "name": "Focus Flow Timer",
+    "short_name": "Focus Flow",
+    "start_url": "/",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#667eea",
+    "theme_color": "#667eea",
+    "description": "Professional Pomodoro timer with AI-powered task management and free-tier optimization",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
+    "categories": ["productivity", "utilities", "lifestyle"],
+    "lang": "en-US",
     "icons": [
         {
             "src": "icons/Icon-192.png",
@@ -30,6 +32,32 @@
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Start Pomodoro",
+            "short_name": "Start",
+            "description": "Start a new pomodoro session",
+            "url": "/?action=start",
+            "icons": [
+                {
+                    "src": "icons/Icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "View Tasks",
+            "short_name": "Tasks",
+            "description": "View and manage tasks",
+            "url": "/?action=tasks",
+            "icons": [
+                {
+                    "src": "icons/Icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
         }
     ]
 }

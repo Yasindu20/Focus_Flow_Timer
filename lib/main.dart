@@ -8,14 +8,15 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'firebase_options.dart';
 
 import 'core/theme/app_theme.dart';
-import 'services/storage_service.dart';
-import 'services/firebase_service.dart';
+import 'services/optimized_storage_service.dart';
+import 'services/free_ml_service.dart';
+import 'services/free_api_integration_service.dart';
+import 'services/offline_pwa_service.dart';
+import 'services/notification_manager.dart';
 import 'providers/enhanced_timer_provider.dart';
-import 'providers/smart_task_provider.dart';
-import 'providers/firebase_smart_task_provider.dart';
+import 'providers/task_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/analytics_provider.dart';
-import 'providers/firebase_analytics_provider.dart';
 import 'providers/auth_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth_screen.dart';
@@ -27,10 +28,10 @@ import 'screens/settings_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize storage first (critical for app state)
+  // Initialize optimized storage first (critical for app state)
   try {
-    await StorageService.initialize();
-    debugPrint('Storage service initialized');
+    await OptimizedStorageService().initialize();
+    debugPrint('Optimized storage service initialized');
   } catch (e) {
     debugPrint('Storage initialization error: $e');
   }
@@ -60,22 +61,27 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    
+
     if (!kIsWeb) {
-      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+      FlutterError.onError =
+          FirebaseCrashlytics.instance.recordFlutterFatalError;
     }
     debugPrint('Firebase initialized successfully');
   } catch (e) {
-    debugPrint('Firebase initialization error (this is expected on some browsers): $e');
+    debugPrint(
+        'Firebase initialization error (this is expected on some browsers): $e');
   }
 
-  // Initialize Firebase services (non-blocking)
+  // Initialize free services (non-blocking)
   Future.microtask(() async {
     try {
-      await FirebaseService().initialize();
-      debugPrint('Firebase services initialized');
+      await FreeMlService().initialize();
+      await FreeApiIntegrationService().initialize();
+      await OfflinePwaService().initialize();
+      await NotificationManager().initialize();
+      debugPrint('Free services initialized');
     } catch (e) {
-      debugPrint('Firebase Service initialization error: $e');
+      debugPrint('Free services initialization error: $e');
     }
   });
 
@@ -92,10 +98,8 @@ class FocusFlowApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => EnhancedTimerProvider()),
-        ChangeNotifierProvider(create: (_) => SmartTaskProvider()),
-        ChangeNotifierProvider(create: (_) => FirebaseSmartTaskProvider()),
+        ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
-        ChangeNotifierProvider(create: (_) => FirebaseAnalyticsProvider()),
       ],
       child: Consumer2<ThemeProvider, AuthProvider>(
         builder: (context, themeProvider, authProvider, child) {
@@ -109,11 +113,14 @@ class FocusFlowApp extends StatelessWidget {
               child: _getHomeScreen(authProvider),
             ),
             routes: {
-              '/auth': (context) => ErrorBoundary(child: const AuthScreen()),
-              '/splash': (context) => ErrorBoundary(child: const SplashScreen()),
-              '/tasks': (context) => ErrorBoundary(child: const TasksScreen()),
-              '/analytics': (context) => ErrorBoundary(child: const AnalyticsScreen()),
-              '/settings': (context) => ErrorBoundary(child: const SettingsScreen()),
+              '/auth': (context) => const ErrorBoundary(child: AuthScreen()),
+              '/splash': (context) =>
+                  const ErrorBoundary(child: SplashScreen()),
+              '/tasks': (context) => const ErrorBoundary(child: TasksScreen()),
+              '/analytics': (context) =>
+                  const ErrorBoundary(child: AnalyticsScreen()),
+              '/settings': (context) =>
+                  const ErrorBoundary(child: SettingsScreen()),
             },
           );
         },
@@ -125,20 +132,20 @@ class FocusFlowApp extends StatelessWidget {
     if (authProvider.isLoading) {
       return const SplashScreen();
     }
-    
+
     if (authProvider.isAuthenticated) {
       return const MainScreen();
     }
-    
+
     return const AuthScreen();
   }
 }
 
 class ErrorBoundary extends StatefulWidget {
   final Widget child;
-  
+
   const ErrorBoundary({super.key, required this.child});
-  
+
   @override
   State<ErrorBoundary> createState() => _ErrorBoundaryState();
 }
@@ -146,11 +153,11 @@ class ErrorBoundary extends StatefulWidget {
 class _ErrorBoundaryState extends State<ErrorBoundary> {
   bool _hasError = false;
   String? _errorMessage;
-  
+
   @override
   void initState() {
     super.initState();
-    
+
     // Set up global error handler
     FlutterError.onError = (FlutterErrorDetails details) {
       setState(() {
@@ -160,7 +167,7 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
       debugPrint('Flutter Error: ${details.exception}');
     };
   }
-  
+
   @override
   Widget build(BuildContext context) {
     if (_hasError) {
@@ -225,7 +232,8 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: const Color(0xFF667eea),
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 16),
                   ),
                   child: const Text('Try Again'),
                 ),
@@ -235,7 +243,7 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
         ),
       );
     }
-    
+
     return widget.child;
   }
 }
