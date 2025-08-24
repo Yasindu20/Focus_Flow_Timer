@@ -1,11 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../services/firebase_service.dart';
 
 class AuthProvider with ChangeNotifier {
-  final FirebaseService _firebaseService = FirebaseService();
-  
   User? _user;
   bool _isLoading = false;
   String? _errorMessage;
@@ -36,41 +33,14 @@ class AuthProvider with ChangeNotifier {
     });
   }
 
-  // Sign in with email and password
   Future<bool> signInWithEmail(String email, String password) async {
     try {
       _setLoading(true);
       _clearError();
 
-      await _firebaseService.signInWithEmail(email, password);
-      return true;
-    } on FirebaseAuthException catch (e) {
-      _handleAuthError(e);
-      return false;
-    } catch (e) {
-      _setError('An unexpected error occurred: ${e.toString()}');
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  // Register with email and password
-  Future<bool> registerWithEmail(
-    String email, 
-    String password, {
-    String? displayName,
-    Map<String, dynamic>? additionalData,
-  }) async {
-    try {
-      _setLoading(true);
-      _clearError();
-
-      await _firebaseService.registerWithEmail(
-        email, 
-        password,
-        displayName: displayName,
-        userData: additionalData,
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
       );
       return true;
     } on FirebaseAuthException catch (e) {
@@ -84,13 +54,45 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Sign out
+  Future<bool> registerWithEmail(
+    String email, 
+    String password, {
+    String? displayName,
+    Map<String, dynamic>? additionalData,
+  }) async {
+    try {
+      _setLoading(true);
+      _clearError();
+
+      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      
+      if (displayName != null && credential.user != null) {
+        await credential.user!.updateDisplayName(displayName);
+        await credential.user!.reload();
+        _user = FirebaseAuth.instance.currentUser;
+      }
+      
+      return true;
+    } on FirebaseAuthException catch (e) {
+      _handleAuthError(e);
+      return false;
+    } catch (e) {
+      _setError('An unexpected error occurred: ${e.toString()}');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> signOut() async {
     try {
       _setLoading(true);
       _clearError();
       
-      await _firebaseService.signOut();
+      await FirebaseAuth.instance.signOut();
     } catch (e) {
       _setError('Failed to sign out: ${e.toString()}');
     } finally {

@@ -1,17 +1,12 @@
 import 'package:flutter/foundation.dart';
 import '../models/task.dart';
-import '../models/enhanced_task.dart';
-import '../services/storage_service.dart';
-import '../services/analytics_service.dart';
-import '../core/ai/task_intelligence_engine.dart';
+import '../services/optimized_storage_service.dart';
+import '../services/free_ml_service.dart';
 
-/// Enterprise-level Task Provider with AI integration and analytics
 class TaskProvider extends ChangeNotifier {
   final List<Task> _tasks = [];
-  final List<EnhancedTask> _enhancedTasks = [];
-  final StorageService _storage = StorageService();
-  final AnalyticsService _analytics = AnalyticsService();
-  final TaskIntelligenceEngine _aiEngine = TaskIntelligenceEngine();
+  final OptimizedStorageService _storage = OptimizedStorageService();
+  final FreeMlService _mlService = FreeMlService();
   
   String? _currentTaskId;
   bool _isLoading = false;
@@ -21,7 +16,6 @@ class TaskProvider extends ChangeNotifier {
   List<Task> get tasks => List.unmodifiable(_tasks);
   List<Task> get incompleteTasks => _tasks.where((task) => !task.isCompleted).toList();
   List<Task> get completedTasks => _tasks.where((task) => task.isCompleted).toList();
-  List<EnhancedTask> get enhancedTasks => List.unmodifiable(_enhancedTasks);
   
   String? get currentTaskId => _currentTaskId;
   Task? get currentTask => _currentTaskId != null ? getTaskById(_currentTaskId!) : null;
@@ -35,7 +29,7 @@ class TaskProvider extends ChangeNotifier {
   double get completionRate => totalTasks > 0 ? completedTasksCount / totalTasks : 0.0;
 
   // Productivity Metrics
-  int get totalPomodorosCompleted => _tasks.fold(0, (sum, task) => sum + task.completedPomodoros);
+  int get totalPomodorosCompleted => _tasks.fold(0, (sum, task) => sum + (task.completedPomodoros ?? 0));
   int get totalMinutesWorked => _tasks.fold(0, (sum, task) => sum + (task.actualMinutes ?? 0));
   double get averageTaskDuration => completedTasks.isNotEmpty 
       ? completedTasks.fold(0, (sum, task) => sum + (task.actualMinutes ?? 0)) / completedTasks.length 
@@ -43,16 +37,15 @@ class TaskProvider extends ChangeNotifier {
 
   // Priority-based getters
   List<Task> get highPriorityTasks => incompleteTasks.where((task) => 
-      task.priority == TaskPriority.high || task.priority == TaskPriority.critical).toList();
+      task.priority?.toLowerCase() == 'high' || task.priority?.toLowerCase() == 'critical').toList();
   List<Task> get todayTasks => incompleteTasks.where((task) => 
       task.createdAt.day == DateTime.now().day).toList();
 
-  /// Initialize the task provider
   Future<void> initialize() async {
     try {
       _setLoading(true);
-      await StorageService.initialize();
-      await _aiEngine.initialize();
+      await _storage.initialize();
+      await _mlService.initialize();
       await _loadTasks();
       _setError(null);
     } catch (e) {
@@ -63,19 +56,16 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
-  /// Load tasks from storage
   Future<void> _loadTasks() async {
     try {
-      final storedTasks = StorageService.tasks;
+      final storedTasks = await _storage.getTasks();
       _tasks.clear();
-      _enhancedTasks.clear();
       
-      for (final task in storedTasks) {
+      for (final taskData in storedTasks) {
+        final task = Task.fromMap(taskData);
         _tasks.add(task);
-        _enhancedTasks.add(task.toEnhancedTask());
       }
       
-      // Sort by priority and creation date
       _sortTasks();
       notifyListeners();
     } catch (e) {
@@ -83,46 +73,32 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
-  /// Add a new task with AI assistance
   Future<Task> addTask({
     required String title,
     String description = '',
-    TaskCategory? category,
-    TaskPriority? priority,
+    String? category,
+    String? priority,
     int? estimatedMinutes,
     List<String>? tags,
   }) async {
     try {
       _setLoading(true);
       
-      // Use AI to enhance task creation if parameters are not provided
-      TaskCategory finalCategory = category ?? TaskCategory.general;
-      TaskPriority finalPriority = priority ?? TaskPriority.medium;
+      String finalCategory = category ?? 'general';
+      String finalPriority = priority ?? 'medium';
       int finalEstimatedMinutes = estimatedMinutes ?? 25;
       List<String> finalTags = tags ?? [];
 
-      // AI-powered task analysis and enhancement
-      if (category == null || priority == null || estimatedMinutes == null) {
+      // Use ML service for basic categorization if available
+      if (category == null || priority == null) {
         try {
-          final categorization = await _aiEngine.categorizeTask(
-            title: title,
-            description: description,
-            metadata: {'userHistory': _getUserTaskHistory()},
-          );
-          
-          final estimation = await _aiEngine.estimateTaskDuration(
-            title: title,
-            description: description,
-            category: categorization.suggestedCategory,
-            priority: categorization.suggestedPriority,
-          );
-
-          finalCategory = category ?? categorization.suggestedCategory;
-          finalPriority = priority ?? categorization.suggestedPriority;
-          finalEstimatedMinutes = estimatedMinutes ?? estimation.estimatedMinutes;
-          finalTags = tags ?? categorization.smartTags;
-        } catch (aiError) {
-          debugPrint('AI enhancement failed, using defaults: $aiError');
+          final analysis = await _mlService.analyzeTaskText('$title $description');
+          if (analysis.isNotEmpty) {
+            finalCategory = category ?? analysis['category'] ?? 'general';
+            finalPriority = priority ?? analysis['priority'] ?? 'medium';
+          }
+        } catch (mlError) {
+          debugPrint('ML analysis failed, using defaults: $mlError');
         }
       }
 
@@ -135,17 +111,14 @@ class TaskProvider extends ChangeNotifier {
         estimatedMinutes: finalEstimatedMinutes,
         tags: finalTags,
         createdAt: DateTime.now(),
+        isCompleted: false,
       );
 
       _tasks.add(task);
-      _enhancedTasks.add(task.toEnhancedTask());
-      await StorageService.addTask(task);
+      await _storage.saveTask(task.toMap());
       
       _sortTasks();
       notifyListeners();
-
-      // Track analytics
-      await _analytics.trackTaskCreated(task.toEnhancedTask());
       
       return task;
     } catch (e) {
@@ -156,26 +129,21 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
-  /// Update an existing task
   Future<void> updateTask(Task updatedTask) async {
     try {
       final index = _tasks.indexWhere((task) => task.id == updatedTask.id);
       if (index != -1) {
         _tasks[index] = updatedTask;
-        _enhancedTasks[index] = updatedTask.toEnhancedTask();
-        await StorageService.updateTask(updatedTask);
+        await _storage.updateTask(updatedTask.id, updatedTask.toMap());
         
         _sortTasks();
         notifyListeners();
-        
-        await _analytics.trackTaskUpdated(updatedTask.toEnhancedTask());
       }
     } catch (e) {
       _setError('Failed to update task: $e');
     }
   }
 
-  /// Complete a task and record analytics
   Future<void> completeTask(String taskId) async {
     try {
       final task = getTaskById(taskId);
@@ -187,36 +155,25 @@ class TaskProvider extends ChangeNotifier {
         );
         
         await updateTask(completedTask);
-        await _analytics.trackTaskCompleted(completedTask.toEnhancedTask());
-        
-        // Learn from completion for AI improvement
-        await _aiEngine.recordTaskCompletion(completedTask.toEnhancedTask());
       }
     } catch (e) {
       _setError('Failed to complete task: $e');
     }
   }
 
-  /// Delete a task
   Future<void> deleteTask(String taskId) async {
     try {
       final index = _tasks.indexWhere((task) => task.id == taskId);
       if (index != -1) {
-        final task = _tasks[index];
         _tasks.removeAt(index);
-        _enhancedTasks.removeAt(index);
-        
-        await StorageService.deleteTask(taskId);
+        await _storage.deleteTask(taskId);
         notifyListeners();
-        
-        await _analytics.trackTaskDeleted(task.toEnhancedTask());
       }
     } catch (e) {
       _setError('Failed to delete task: $e');
     }
   }
 
-  /// Get task by ID
   Task? getTaskById(String id) {
     try {
       return _tasks.firstWhere((task) => task.id == id);
@@ -225,13 +182,11 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
-  /// Set current active task
   void setCurrentTask(String? taskId) {
     _currentTaskId = taskId;
     notifyListeners();
   }
 
-  /// Update task progress (for Pomodoro completion)
   Future<void> updateTaskProgress(String taskId, {
     int? completedPomodoros,
     int? actualMinutes,
@@ -240,7 +195,7 @@ class TaskProvider extends ChangeNotifier {
       final task = getTaskById(taskId);
       if (task != null) {
         final updatedTask = task.copyWith(
-          completedPomodoros: completedPomodoros ?? task.completedPomodoros,
+          completedPomodoros: completedPomodoros ?? (task.completedPomodoros ?? 0),
           actualMinutes: actualMinutes ?? task.actualMinutes,
         );
         await updateTask(updatedTask);
@@ -250,23 +205,19 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
-  /// Get tasks by category
-  List<Task> getTasksByCategory(TaskCategory category) {
+  List<Task> getTasksByCategory(String category) {
     return _tasks.where((task) => task.category == category).toList();
   }
 
-  /// Get tasks by priority
-  List<Task> getTasksByPriority(TaskPriority priority) {
+  List<Task> getTasksByPriority(String priority) {
     return _tasks.where((task) => task.priority == priority).toList();
   }
 
-  /// Get tasks by date range
   List<Task> getTasksByDateRange(DateTime start, DateTime end) {
     return _tasks.where((task) => 
         task.createdAt.isAfter(start) && task.createdAt.isBefore(end)).toList();
   }
 
-  /// Search tasks by title or description
   List<Task> searchTasks(String query) {
     if (query.isEmpty) return _tasks;
     
@@ -274,25 +225,19 @@ class TaskProvider extends ChangeNotifier {
     return _tasks.where((task) =>
         task.title.toLowerCase().contains(lowercaseQuery) ||
         task.description.toLowerCase().contains(lowercaseQuery) ||
-        task.tags.any((tag) => tag.toLowerCase().contains(lowercaseQuery))
+        (task.tags?.any((tag) => tag.toLowerCase().contains(lowercaseQuery)) ?? false)
     ).toList();
   }
 
-  /// Get AI-powered productivity insights
   Future<Map<String, dynamic>> getProductivityInsights() async {
     try {
-      final insights = await _analytics.generateProductivityReport(
-        startDate: DateTime.now().subtract(const Duration(days: 30)),
-        endDate: DateTime.now(),
-        userId: 'current_user',
-      );
-      
       return {
         'totalTasks': totalTasks,
         'completionRate': completionRate,
         'averageDuration': averageTaskDuration,
         'totalPomodoros': totalPomodorosCompleted,
-        'aiInsights': insights,
+        'categoryBreakdown': _getCategoryBreakdown(),
+        'priorityBreakdown': _getPriorityBreakdown(),
       };
     } catch (e) {
       debugPrint('Error generating insights: $e');
@@ -305,10 +250,9 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
-  /// Export tasks data
   Map<String, dynamic> exportData() {
     return {
-      'tasks': _tasks.map((task) => task.toJson()).toList(),
+      'tasks': _tasks.map((task) => task.toMap()).toList(),
       'metadata': {
         'exportDate': DateTime.now().toIso8601String(),
         'totalTasks': totalTasks,
@@ -318,18 +262,16 @@ class TaskProvider extends ChangeNotifier {
     };
   }
 
-  /// Import tasks data
   Future<void> importData(Map<String, dynamic> data) async {
     try {
       _setLoading(true);
       final tasksData = data['tasks'] as List;
       
       for (final taskData in tasksData) {
-        final task = Task.fromJson(taskData);
+        final task = Task.fromMap(taskData);
         if (!_tasks.any((existing) => existing.id == task.id)) {
           _tasks.add(task);
-          _enhancedTasks.add(task.toEnhancedTask());
-          await StorageService.addTask(task);
+          await _storage.saveTask(task.toMap());
         }
       }
       
@@ -342,20 +284,31 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
-  // Private helper methods
   void _sortTasks() {
     _tasks.sort((a, b) {
       // First by completion status
       if (a.isCompleted != b.isCompleted) {
         return a.isCompleted ? 1 : -1;
       }
-      // Then by priority
-      if (a.priority.index != b.priority.index) {
-        return b.priority.index.compareTo(a.priority.index);
+      // Then by priority (high, medium, low)
+      final aPriority = _getPriorityValue(a.priority);
+      final bPriority = _getPriorityValue(b.priority);
+      if (aPriority != bPriority) {
+        return bPriority.compareTo(aPriority);
       }
       // Finally by creation date
       return b.createdAt.compareTo(a.createdAt);
     });
+  }
+  
+  int _getPriorityValue(String? priority) {
+    switch (priority?.toLowerCase()) {
+      case 'critical': return 4;
+      case 'high': return 3;
+      case 'medium': return 2;
+      case 'low': return 1;
+      default: return 2;
+    }
   }
 
   void _setLoading(bool loading) {
@@ -368,28 +321,20 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Map<String, dynamic> _getUserTaskHistory() {
-    return {
-      'totalTasks': totalTasks,
-      'completionRate': completionRate,
-      'averageDuration': averageTaskDuration,
-      'categoryBreakdown': _getCategoryBreakdown(),
-      'priorityBreakdown': _getPriorityBreakdown(),
-    };
-  }
-
   Map<String, int> _getCategoryBreakdown() {
     final breakdown = <String, int>{};
-    for (final category in TaskCategory.values) {
-      breakdown[category.name] = getTasksByCategory(category).length;
+    for (final task in _tasks) {
+      final category = task.category ?? 'general';
+      breakdown[category] = (breakdown[category] ?? 0) + 1;
     }
     return breakdown;
   }
 
   Map<String, int> _getPriorityBreakdown() {
     final breakdown = <String, int>{};
-    for (final priority in TaskPriority.values) {
-      breakdown[priority.name] = getTasksByPriority(priority).length;
+    for (final task in _tasks) {
+      final priority = task.priority ?? 'medium';
+      breakdown[priority] = (breakdown[priority] ?? 0) + 1;
     }
     return breakdown;
   }
@@ -397,7 +342,6 @@ class TaskProvider extends ChangeNotifier {
   @override
   void dispose() {
     _tasks.clear();
-    _enhancedTasks.clear();
     super.dispose();
   }
 }
