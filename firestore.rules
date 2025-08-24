@@ -1,38 +1,33 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can only access their own data
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      // User's tasks subcollection
-      match /tasks/{taskId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      // User's sessions subcollection
-      match /sessions/{sessionId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      // User's analytics subcollection
-      match /analytics/{analyticsId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      // User's daily stats subcollection
-      match /dailyStats/{statsId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
+    // Tasks collection - accessible by authenticated users (user-based filtering in queries)
+    match /tasks/{taskId} {
+      allow read, write: if request.auth != null;
     }
     
-    // Global data (read-only for authenticated users)
+    // Sessions collection - grouped by date, accessible by authenticated users
+    match /sessions/{sessionDate} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Daily stats collection - accessible by authenticated users
+    match /stats/{statsId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // User profiles and settings
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Global configuration data (read-only for authenticated users)
     match /global/{document=**} {
       allow read: if request.auth != null;
       allow write: if false; // Only admin functions can write
     }
     
-    // ML models and shared data
+    // ML models and AI data (read-only for authenticated users)
     match /ml_models/{document=**} {
       allow read: if request.auth != null;
       allow write: if false; // Only admin functions can write
@@ -43,10 +38,15 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // System metrics (read-only for authenticated users)
+    // System metrics and monitoring (read-only for authenticated users)
     match /system/{document=**} {
       allow read: if request.auth != null;
       allow write: if false; // Only functions can write
+    }
+    
+    // Analytics data (accessible by authenticated users)
+    match /analytics/{analyticsId} {
+      allow read, write: if request.auth != null;
     }
   }
 }

@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "917853416260",
+    "project_id": "focus-flow-timer",
+    "storage_bucket": "focus-flow-timer.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:917853416260:android:6b0205feddc5c8539fc511",
+        "android_client_info": {
+          "package_name": "com.wicky.pomodoro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "917853416260-9n9b4v4tcr1sgp285o51dmsqoofkh593.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC6tSV3o9O_zmThTrYreZBsEY4g8WmwRSY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "917853416260-7jlooruubmltpvgn570e08utksdvnckj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "917853416260-d9mu41g0thf5opml7k2eun8p4b01p7k5.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.wicky.pomodoro"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
