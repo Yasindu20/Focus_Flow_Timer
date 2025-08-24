@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/enhanced_sound_selector.dart';
-import '../services/soundscape_download_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -52,53 +51,7 @@ class SettingsScreen extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Storage management
-          ChangeNotifierProvider(
-            create: (_) => SoundscapeDownloadService(),
-            child: Consumer<SoundscapeDownloadService>(
-              builder: (context, downloadService, child) {
-                return FutureBuilder<int>(
-                  future: downloadService.getTotalStorageUsed(),
-                  builder: (context, snapshot) {
-                    final storageUsed = snapshot.data ?? 0;
-                    
-                    return Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Storage Management',
-                              style: Theme.of(context).textTheme.headlineSmall,
-                            ),
-                            const SizedBox(height: 16),
-                            ListTile(
-                              leading: const Icon(Icons.storage),
-                              title: const Text('Downloaded Soundscapes'),
-                              subtitle: Text(
-                                'Using ${SoundscapeDownloadService.formatBytes(storageUsed)}',
-                              ),
-                              trailing: TextButton(
-                                onPressed: storageUsed > 0 
-                                    ? () => _showStorageManagement(context, downloadService)
-                                    : null,
-                                child: const Text('Manage'),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // About section
+          // App info section
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -111,23 +64,14 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   const ListTile(
-                    leading: Icon(Icons.info),
-                    title: Text('App Version'),
-                    subtitle: Text('1.0.0'),
+                    leading: Icon(Icons.info_outline),
+                    title: Text('Focus Flow Timer'),
+                    subtitle: Text('Free Version - Basic Pomodoro Timer'),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.description),
-                    title: const Text('Privacy Policy'),
-                    onTap: () {
-                      // Implement privacy policy navigation
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.gavel),
-                    title: const Text('Terms of Service'),
-                    onTap: () {
-                      // Implement terms of service navigation
-                    },
+                  const ListTile(
+                    leading: Icon(Icons.timer),
+                    title: Text('Features'),
+                    subtitle: Text('Timer, Tasks, Background Sounds, Analytics'),
                   ),
                 ],
               ),
@@ -136,7 +80,7 @@ class SettingsScreen extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Support section
+          // Help section
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -144,30 +88,20 @@ class SettingsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Support',
+                    'Help & Support',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 16),
                   ListTile(
-                    leading: const Icon(Icons.help),
-                    title: const Text('Help & FAQ'),
-                    onTap: () {
-                      // Implement help navigation
-                    },
+                    leading: const Icon(Icons.help_outline),
+                    title: const Text('How to Use'),
+                    subtitle: const Text('Learn about Focus Flow features'),
+                    onTap: () => _showHelpDialog(context),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.email),
-                    title: const Text('Contact Support'),
-                    onTap: () {
-                      // Implement contact support
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.star),
-                    title: const Text('Rate App'),
-                    onTap: () {
-                      // Implement app rating
-                    },
+                  const ListTile(
+                    leading: Icon(Icons.feedback),
+                    title: Text('Feedback'),
+                    subtitle: Text('Share your thoughts and suggestions'),
                   ),
                 ],
               ),
@@ -178,34 +112,40 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  void _showStorageManagement(BuildContext context, SoundscapeDownloadService downloadService) {
+  void _showHelpDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Storage Management'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Manage your downloaded soundscape files'),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.delete_sweep),
-              title: const Text('Clear All Downloads'),
-              subtitle: const Text('Free up storage space'),
-              onTap: () async {
-                await downloadService.deleteAllTracks();
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('All downloads cleared')),
-                );
-              },
-            ),
-          ],
+        title: const Text('How to Use Focus Flow'),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('🍅 Pomodoro Technique:'),
+              Text('• Work for 25 minutes'),
+              Text('• Take a 5-minute break'),
+              Text('• Repeat 4 times, then take a long break'),
+              SizedBox(height: 12),
+              Text('📝 Tasks:'),
+              Text('• Add tasks in the Tasks tab'),
+              Text('• Select a task before starting timer'),
+              Text('• Track your progress'),
+              SizedBox(height: 12),
+              Text('🎵 Sounds:'),
+              Text('• Choose background sounds for focus'),
+              Text('• Adjust volume as needed'),
+              SizedBox(height: 12),
+              Text('📊 Analytics:'),
+              Text('• View your productivity statistics'),
+              Text('• Track completion rates and time spent'),
+            ],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: const Text('Got it!'),
           ),
         ],
       ),

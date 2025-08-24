@@ -3,7 +3,7 @@ import 'dart:isolate';
 import 'package:workmanager/workmanager.dart';
 import '../models/timer_session.dart';
 import 'notification_manager.dart';
-import '../services/advanced_timer_service.dart';
+import '../core/enums/timer_enums.dart';
 import 'session_recovery_service.dart';
 
 class BackgroundTaskHandler {

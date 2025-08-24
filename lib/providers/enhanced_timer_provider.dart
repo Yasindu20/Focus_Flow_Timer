@@ -1,55 +1,51 @@
 import 'package:flutter/material.dart';
-import '../services/advanced_timer_service.dart';
-import '../services/audio_service.dart';
-import '../services/background_task_handler.dart';
-import '../services/session_recovery_service.dart';
-import '../services/storage_service.dart';
+import 'dart:async';
+import '../core/enums/timer_enums.dart';
+import '../services/optimized_storage_service.dart';
+import '../services/notification_manager.dart';
 import '../models/timer_session.dart';
-import '../models/timer_settings.dart';
 
 class EnhancedTimerProvider extends ChangeNotifier {
-  late final AdvancedTimerService _timerService;
-  late final AudioService _audioService;
-  late final BackgroundTaskHandler _backgroundHandler;
-  late final SessionRecoveryService _recoveryService;
-
-  // Current state
+  final OptimizedStorageService _storage = OptimizedStorageService();
+  final NotificationManager _notifications = NotificationManager();
+  
+  // Timer state
+  TimerState _state = TimerState.idle;
+  TimerType _currentType = TimerType.pomodoro;
+  Duration _remainingTime = const Duration(minutes: 25);
+  Duration _totalTime = const Duration(minutes: 25);
+  Timer? _timer;
+  DateTime? _startTime;
+  
+  // Session tracking
   String? _currentTaskId;
+  int _sessionCount = 0;
   bool _isInitialized = false;
-  bool _showRecoveryDialog = false;
-  TimerSession? _recoverySession;
-
+  
   // Error handling
   String? _lastError;
   DateTime? _lastErrorTime;
 
-  // Performance monitoring
-  Map<String, dynamic> _performanceMetrics = {};
-
   // Getters
-  AdvancedTimerService get timerService => _timerService;
-  AudioService get audioService => _audioService;
   String? get currentTaskId => _currentTaskId;
   bool get isInitialized => _isInitialized;
-  bool get showRecoveryDialog => _showRecoveryDialog;
-  TimerSession? get recoverySession => _recoverySession;
   String? get lastError => _lastError;
-  Map<String, dynamic> get performanceMetrics => _performanceMetrics;
-
-  // Timer state getters (delegated to service)
-  TimerState get state => _timerService.state;
-  TimerType get currentType => _timerService.currentType;
-  TimerSession? get currentSession => _timerService.currentSession;
-  TimerSettings get settings => _timerService.settings;
-  int get sessionCount => _timerService.sessionCount;
-  int get remainingMs => _timerService.remainingMs;
-  int get elapsedMs => _timerService.elapsedMs;
-  double get progress => _timerService.progress;
-  String get formattedTime => _timerService.formattedTime;
-  bool get isRunning => _timerService.isRunning;
-  bool get isPaused => _timerService.isPaused;
-  bool get canPause => _timerService.canPause;
-  bool get canResume => _timerService.canResume;
+  
+  // Timer state getters
+  TimerState get state => _state;
+  TimerType get currentType => _currentType;
+  int get sessionCount => _sessionCount;
+  Duration get remainingTime => _remainingTime;
+  Duration get totalTime => _totalTime;
+  double get progress => _totalTime.inMilliseconds > 0 
+      ? 1.0 - (_remainingTime.inMilliseconds / _totalTime.inMilliseconds)
+      : 0.0;
+  String get formattedTime => TimerPrecision.seconds.formatDuration(_remainingTime);
+  bool get isRunning => _state.isRunning;
+  bool get isPaused => _state.isPaused;
+  bool get canPause => _state.canPause;
+  bool get canStart => _state.canStart;
+  bool get canStop => _state.canStop;
 
   EnhancedTimerProvider() {
     _initializeServices();
@@ -57,142 +53,92 @@ class EnhancedTimerProvider extends ChangeNotifier {
 
   Future<void> _initializeServices() async {
     try {
-      _timerService = AdvancedTimerService();
-      _audioService = AudioService();
-      _backgroundHandler = BackgroundTaskHandler();
-      _recoveryService = SessionRecoveryService();
-
-      // Initialize all services
-      await _timerService.initialize();
-      await _backgroundHandler.initialize();
-      await _recoveryService.initialize();
-
-      // Set up callbacks
-      _setupTimerCallbacks();
-
-      // Check for session recovery
-      await _checkForRecovery();
-
+      await _storage.initialize();
+      await _notifications.initialize();
+      await _loadSettings();
+      
       _isInitialized = true;
       notifyListeners();
     } catch (e) {
       _handleError('Failed to initialize timer services', e);
     }
   }
-
-  void _setupTimerCallbacks() {
-    _timerService.onSessionStart = () {
-      _clearError();
-      _startBackgroundAudio();
-      notifyListeners();
-    };
-
-    _timerService.onSessionComplete = () {
-      _playCompletionSound();
-      _stopBackgroundAudio();
-      notifyListeners();
-    };
-
-    _timerService.onSessionPause = () {
-      _pauseBackgroundAudio();
-      notifyListeners();
-    };
-
-    _timerService.onSessionResume = () {
-      _resumeBackgroundAudio();
-      notifyListeners();
-    };
-
-    // Note: onTimerTick and onError callbacks would need to be implemented in AdvancedTimerService
-  }
-
-  // Enhanced audio management methods
-  Future<void> _startBackgroundAudio() async {
+  
+  Future<void> _loadSettings() async {
     try {
-      final selectedSound = StorageService.selectedSound;
-      if (selectedSound.isNotEmpty) {
-        await _audioService.playTrackByName(selectedSound);
+      final settings = await _storage.getCachedData('timer_settings');
+      if (settings != null) {
+        _currentType = TimerType.values.firstWhere(
+          (type) => type.toString() == settings['currentType'],
+          orElse: () => TimerType.pomodoro,
+        );
+        _totalTime = _currentType.defaultDuration;
+        _remainingTime = _totalTime;
       }
     } catch (e) {
-      // Non-critical error, don't break timer functionality
-      debugPrint('Error starting background audio: $e');
+      debugPrint('Error loading settings: $e');
     }
   }
 
-  Future<void> _pauseBackgroundAudio() async {
-    try {
-      if (_audioService.isPlaying) {
-        await _audioService.pauseTrack(withFadeOut: true);
-      }
-    } catch (e) {
-      debugPrint('Error pausing background audio: $e');
-    }
-  }
-
-  Future<void> _resumeBackgroundAudio() async {
-    try {
-      if (!_audioService.isPlaying) {
-        await _audioService.resumeTrack(withFadeIn: true);
-      }
-    } catch (e) {
-      debugPrint('Error resuming background audio: $e');
-    }
-  }
-
-  Future<void> _handleAudioOnSessionComplete() async {
-    try {
-      // Fade out background audio when session completes
-      if (_audioService.isPlaying) {
-        await _audioService.stopTrack(withFadeOut: true);
-      }
-    } catch (e) {
-      debugPrint('Error handling audio on session complete: $e');
-    }
-  }
-
-  Future<void> _playCompletionSound() async {
-    try {
-      await _audioService.playCompletionSound(_timerService.currentType);
-    } catch (e) {
-      debugPrint('Error playing completion sound: $e');
-    }
-  }
-
-  // Audio control methods for UI
-  Future<void> toggleBackgroundAudio() async {
-    try {
-      if (_audioService.isPlaying) {
-        await _audioService.stopTrack();
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingTime.inSeconds > 0) {
+        _remainingTime = Duration(seconds: _remainingTime.inSeconds - 1);
+        notifyListeners();
       } else {
-        await _startBackgroundAudio();
+        _completeSession();
       }
-      notifyListeners();
-    } catch (e) {
-      _handleError('Failed to toggle background audio', e);
-    }
+    });
   }
-
-  Future<void> setBackgroundTrack(String trackId) async {
+  
+  void _stopTimer() {
+    _timer?.cancel();
+    _timer = null;
+  }
+  
+  void _completeSession() {
+    _stopTimer();
+    _state = TimerState.completed;
+    _sessionCount++;
+    _showNotification();
+    _saveSession();
+    notifyListeners();
+  }
+  
+  Future<void> _showNotification() async {
     try {
-      if (_audioService.isPlaying) {
-        await _audioService.playTrack(trackId);
-      }
-      notifyListeners();
+      // Create a basic timer session for notification
+      final session = TimerSession(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        type: _currentType,
+        plannedDuration: _totalTime.inMilliseconds,
+        actualDuration: _totalTime.inMilliseconds,
+        startTime: _startTime ?? DateTime.now(),
+        endTime: DateTime.now(),
+        completed: true,
+      );
+      await _notifications.showSessionCompletedNotification(session);
     } catch (e) {
-      _handleError('Failed to set background track', e);
+      debugPrint('Error showing notification: $e');
     }
   }
-
-  Future<void> setAudioVolume(double volume) async {
+  
+  Future<void> _saveSession() async {
     try {
-      await _audioService.setVolume(volume);
-      notifyListeners();
+      final sessionId = DateTime.now().millisecondsSinceEpoch.toString();
+      final session = {
+        'id': sessionId,
+        'type': _currentType.toString(),
+        'duration': _totalTime.inMinutes,
+        'completedAt': DateTime.now().toIso8601String(),
+        'taskId': _currentTaskId,
+      };
+      await _storage.cacheData('timer_session_$sessionId', session);
     } catch (e) {
-      _handleError('Failed to set audio volume', e);
+      debugPrint('Error saving session: $e');
     }
   }
 
-  /// Start a new timer session
   Future<void> startTimer({
     TimerType? type,
     int? customDurationMinutes,
@@ -200,239 +146,146 @@ class EnhancedTimerProvider extends ChangeNotifier {
   }) async {
     try {
       _currentTaskId = taskId;
-      await _timerService.startTimer(
-        type: type,
-        customDurationMinutes: customDurationMinutes,
-        taskId: taskId,
-      );
-
-      // Schedule background task
-      if (_timerService.currentSession != null) {
-        final completionTime = DateTime.now().add(
-          Duration(milliseconds: _timerService.remainingMs),
-        );
-        await _backgroundHandler.scheduleTimerTask(
-          _timerService.currentSession!,
-          completionTime,
-        );
+      _currentType = type ?? TimerType.pomodoro;
+      
+      if (customDurationMinutes != null) {
+        _totalTime = Duration(minutes: customDurationMinutes);
+      } else {
+        _totalTime = _currentType.defaultDuration;
       }
+      
+      _remainingTime = _totalTime;
+      _state = TimerState.running;
+      _startTime = DateTime.now();
+      _startTimer();
+      _clearError();
+      
+      notifyListeners();
     } catch (e) {
       _handleError('Failed to start timer', e);
     }
   }
 
-  /// Pause the current timer
   Future<void> pauseTimer() async {
     try {
-      await _timerService.pauseTimer();
-
-      // Cancel background task
-      if (_timerService.currentSession != null) {
-        await _backgroundHandler
-            .cancelTimerTask(_timerService.currentSession!.id);
+      if (_state.canPause) {
+        _stopTimer();
+        _state = TimerState.paused;
+        notifyListeners();
       }
     } catch (e) {
       _handleError('Failed to pause timer', e);
     }
   }
 
-  /// Resume the paused timer
   Future<void> resumeTimer() async {
     try {
-      await _timerService.resumeTimer();
-
-      // Reschedule background task
-      if (_timerService.currentSession != null) {
-        final completionTime = DateTime.now().add(
-          Duration(milliseconds: _timerService.remainingMs),
-        );
-        await _backgroundHandler.scheduleTimerTask(
-          _timerService.currentSession!,
-          completionTime,
-        );
+      if (_state.isPaused) {
+        _state = TimerState.running;
+        _startTimer();
+        notifyListeners();
       }
     } catch (e) {
       _handleError('Failed to resume timer', e);
     }
   }
 
-  /// Stop the current timer
   Future<void> stopTimer() async {
     try {
-      await _timerService.stopTimer();
-      await _backgroundHandler.cancelAllTasks();
-      await _audioService.stopTrack();
+      _stopTimer();
+      _state = TimerState.idle;
+      _remainingTime = _totalTime;
       _currentTaskId = null;
+      notifyListeners();
     } catch (e) {
       _handleError('Failed to stop timer', e);
     }
   }
 
-  /// Complete the current session
   Future<void> completeSession() async {
     try {
-      await _timerService.completeSession();
-      await _backgroundHandler.cancelAllTasks();
+      _completeSession();
     } catch (e) {
       _handleError('Failed to complete session', e);
     }
   }
 
-  /// Skip the current session
   Future<void> skipSession() async {
     try {
-      await _timerService.skipSession();
+      _stopTimer();
+      _state = TimerState.cancelled;
+      _sessionCount++;
+      notifyListeners();
     } catch (e) {
       _handleError('Failed to skip session', e);
     }
   }
 
-  /// Set the current task for the timer
   void setCurrentTask(String? taskId) {
     _currentTaskId = taskId;
     notifyListeners();
   }
 
-  /// Update timer settings
-  Future<void> updateSettings(TimerSettings newSettings) async {
+  Future<void> updateTimerType(TimerType type) async {
     try {
-      await _timerService.updateSettings(newSettings);
-      notifyListeners();
-    } catch (e) {
-      _handleError('Failed to update settings', e);
-    }
-  }
-
-  /// Set timer precision
-  Future<void> setPrecision(TimerPrecision precision) async {
-    try {
-      _timerService.setPrecision(precision);
-      await _updatePerformanceMetrics();
-      notifyListeners();
-    } catch (e) {
-      _handleError('Failed to set precision', e);
-    }
-  }
-
-  /// Handle session recovery
-  Future<void> handleRecovery(bool shouldRecover) async {
-    try {
-      if (shouldRecover && _recoverySession != null) {
-        await _timerService.startTimer(resumeSession: true);
-      } else {
-        await _recoveryService.clearActiveSession();
+      if (_state.isIdle) {
+        _currentType = type;
+        _totalTime = type.defaultDuration;
+        _remainingTime = _totalTime;
+        await _saveSettings();
+        notifyListeners();
       }
-
-      _showRecoveryDialog = false;
-      _recoverySession = null;
-      notifyListeners();
     } catch (e) {
-      _handleError('Failed to handle recovery', e);
+      _handleError('Failed to update timer type', e);
+    }
+  }
+  
+  Future<void> _saveSettings() async {
+    try {
+      final settings = {
+        'currentType': _currentType.toString(),
+        'sessionCount': _sessionCount,
+      };
+      await _storage.cacheData('timer_settings', settings);
+    } catch (e) {
+      debugPrint('Error saving settings: $e');
     }
   }
 
-  /// Get comprehensive statistics
   Map<String, dynamic> getStatistics() {
-    final timerStats = _timerService.getStatistics();
-    final performanceStats = _performanceMetrics;
-
     return {
-      ...timerStats,
-      'performance': performanceStats,
+      'sessionCount': _sessionCount,
+      'currentType': _currentType.displayName,
+      'state': _state.toString(),
+      'totalTime': _totalTime.inMinutes,
+      'remainingTime': _remainingTime.inMinutes,
       'lastError': _lastError,
       'lastErrorTime': _lastErrorTime?.toIso8601String(),
     };
   }
 
-  /// Run diagnostics
   Future<Map<String, dynamic>> runDiagnostics() async {
-    final diagnostics = <String, dynamic>{};
-
     try {
-      // Test timer precision
-      diagnostics['timerPrecision'] = await _testTimerPrecision();
-
-      // Test notification delivery
-      diagnostics['notificationTest'] = await _testNotifications();
-
-      // Test background operation
-      diagnostics['backgroundTest'] = await _testBackgroundOperation();
-
-      // Test audio system
-      diagnostics['audioTest'] = await _testAudioSystem();
-
-      // System information
-      diagnostics['systemInfo'] = await _getSystemInfo();
-
-      return diagnostics;
+      return {
+        'timer': {
+          'state': _state.toString(),
+          'type': _currentType.displayName,
+          'isInitialized': _isInitialized,
+        },
+        'storage': {
+          'available': true,
+          'type': 'OptimizedStorageService',
+        },
+        'notifications': {
+          'available': true,
+          'type': 'NotificationManager',
+        },
+      };
     } catch (e) {
-      diagnostics['error'] = e.toString();
-      return diagnostics;
+      return {'error': e.toString()};
     }
   }
 
-  // Private methods
-
-  Future<void> _checkForRecovery() async {
-    try {
-      final pendingSession = await _recoveryService.getPendingSession();
-      if (pendingSession != null) {
-        _recoverySession = pendingSession;
-        _showRecoveryDialog = true;
-        notifyListeners();
-      }
-    } catch (e) {
-      _handleError('Failed to check for recovery', e);
-    }
-  }
-
-  void _handleInterruption(String reason) {
-    // Handle timer interruption (e.g., phone call, notification)
-    notifyListeners();
-  }
-
-
-  Future<void> _stopBackgroundAudio() async {
-    await _audioService.stopTrack();
-  }
-
-  Future<void> _updatePerformanceMetrics() async {
-    try {
-      _performanceMetrics = _timerService.getStatistics();
-      // Add additional performance metrics here
-    } catch (e) {
-      _handleError('Failed to update performance metrics', e);
-    }
-  }
-
-  Future<Map<String, dynamic>> _testTimerPrecision() async {
-    // Implementation for testing timer precision
-    return {'precision': 'high', 'accuracy': 99.9};
-  }
-
-  Future<Map<String, dynamic>> _testNotifications() async {
-    // Implementation for testing notification delivery
-    return {'delivery': 'reliable', 'latency': 50};
-  }
-
-  Future<Map<String, dynamic>> _testBackgroundOperation() async {
-    // Implementation for testing background operation
-    return {'backgroundSupport': true, 'reliability': 95.0};
-  }
-
-  Future<Map<String, dynamic>> _testAudioSystem() async {
-    // Implementation for testing audio system
-    return {'audioSupport': true, 'latency': 10};
-  }
-
-  Future<Map<String, dynamic>> _getSystemInfo() async {
-    // Implementation for getting system information
-    return {
-      'platform': 'flutter',
-      'version': '1.0.0',
-      'capabilities': ['notifications', 'background', 'audio'],
-    };
-  }
 
   void _handleError(String message, dynamic error) {
     _lastError = message;
@@ -448,9 +301,7 @@ class EnhancedTimerProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _timerService.dispose();
-    _audioService.dispose();
-    _backgroundHandler.dispose();
+    _timer?.cancel();
     super.dispose();
   }
 }

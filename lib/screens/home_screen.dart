@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/enhanced_timer_provider.dart';
-import '../providers/smart_task_provider.dart';
-import '../models/task.dart';
+import '../providers/task_provider.dart';
 import '../widgets/enhanced_timer_widget.dart';
 import '../widgets/sound_selector.dart';
 
@@ -45,11 +44,9 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 32),
 
               // Current task selection
-              Consumer<SmartTaskProvider>(
-                builder: (context, smartTaskProvider, child) {
-                  final incompleteTasks = smartTaskProvider.activeTasks
-                      .map((enhanced) => Task.fromEnhancedTask(enhanced))
-                      .toList();
+              Consumer<TaskProvider>(
+                builder: (context, taskProvider, child) {
+                  final incompleteTasks = taskProvider.incompleteTasks;
 
                   return Card(
                     child: Padding(
@@ -78,12 +75,6 @@ class HomeScreen extends StatelessWidget {
                               builder: (context, timerProvider, child) {
                                 final currentTaskId =
                                     timerProvider.currentTaskId;
-                                final enhancedTask = currentTaskId != null
-                                    ? smartTaskProvider.getTask(currentTaskId)
-                                    : null;
-                                final currentTask = enhancedTask != null 
-                                    ? Task.fromEnhancedTask(enhancedTask)
-                                    : null;
 
                                 return DropdownButtonFormField<String>(
                                   value: currentTaskId,

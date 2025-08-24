@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/timer_session.dart';
-import '../services/advanced_timer_service.dart'; // Added import for TimerType
+import '../core/enums/timer_enums.dart';
 
 class SessionRecoveryDialog extends StatelessWidget {
   final TimerSession session;
@@ -139,7 +139,7 @@ class SessionRecoveryDialog extends StatelessWidget {
   // Fixed: Added return statement for all cases
   String _getSessionTypeName(TimerType type) {
     switch (type) {
-      case TimerType.work:
+      case TimerType.pomodoro:
         return 'Focus Session';
       case TimerType.shortBreak:
         return 'Short Break';

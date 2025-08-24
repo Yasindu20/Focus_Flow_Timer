@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/enhanced_timer_provider.dart';
-import '../services/advanced_timer_service.dart';
+import '../core/enums/timer_enums.dart';
 import '../core/constants/colors.dart';
-import 'precision_circular_progress.dart';
 import 'timer_controls.dart';
-import 'session_recovery_dialog.dart';
 
 class EnhancedTimerWidget extends StatefulWidget {
   const EnhancedTimerWidget({super.key});
@@ -59,13 +57,6 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
   Widget build(BuildContext context) {
     return Consumer<EnhancedTimerProvider>(
       builder: (context, timerProvider, child) {
-        // Show recovery dialog if needed
-        if (timerProvider.showRecoveryDialog) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _showRecoveryDialog(context, timerProvider);
-          });
-        }
-
         // Control animations based on timer state
         _handleTimerStateAnimations(timerProvider.state);
 
@@ -93,8 +84,8 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
 
             const SizedBox(height: 24),
 
-            // Precision and performance info
-            _buildPerformanceInfo(timerProvider),
+            // Session info
+            _buildSessionInfo(timerProvider),
 
             // Error display
             if (timerProvider.lastError != null)
@@ -157,32 +148,22 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
 
   Widget _buildStateIndicator(TimerState state) {
     Color color;
-    IconData icon;
 
     switch (state) {
       case TimerState.idle:
         color = Colors.white60;
-        icon = Icons.timer_outlined;
         break;
       case TimerState.running:
         color = Colors.green;
-        icon = Icons.play_arrow;
         break;
       case TimerState.paused:
         color = Colors.orange;
-        icon = Icons.pause;
         break;
       case TimerState.completed:
         color = Colors.blue;
-        icon = Icons.check_circle;
         break;
-      case TimerState.interrupted:
+      case TimerState.cancelled:
         color = Colors.red;
-        icon = Icons.warning;
-        break;
-      case TimerState.recovering:
-        color = Colors.purple;
-        icon = Icons.restore;
         break;
     }
 
@@ -228,12 +209,17 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
                 // Progress indicator
                 Transform.scale(
                   scale: _pulseAnimation.value,
-                  child: PrecisionCircularProgress(
-                    progress: 1.0 - provider.progress,
-                    color: _getSessionColor(provider.currentType),
-                    backgroundColor: Colors.grey.withValues(alpha: 0.2),
-                    strokeWidth: 12,
-                    precision: provider.timerService.precision,
+                  child: SizedBox(
+                    width: 320,
+                    height: 320,
+                    child: CircularProgressIndicator(
+                      value: 1.0 - provider.progress,
+                      strokeWidth: 12,
+                      backgroundColor: Colors.grey.withValues(alpha: 0.2),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        _getSessionColor(provider.currentType),
+                      ),
+                    ),
                   ),
                 ),
 
@@ -265,26 +251,6 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
 
                     const SizedBox(height: 4),
 
-                    // Precision indicator
-                    if (provider.timerService.precision !=
-                        TimerPrecision.second)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: _getSessionColor(provider.currentType)
-                              .withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _getPrecisionText(provider.timerService.precision),
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: _getSessionColor(provider.currentType),
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ],
@@ -295,8 +261,8 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
     );
   }
 
-  Widget _buildPerformanceInfo(EnhancedTimerProvider provider) {
-    if (!provider.isInitialized || provider.performanceMetrics.isEmpty) {
+  Widget _buildSessionInfo(EnhancedTimerProvider provider) {
+    if (!provider.isInitialized) {
       return const SizedBox.shrink();
     }
 
@@ -312,19 +278,19 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildMetricItem(
-            'Accuracy',
-            '${(provider.performanceMetrics['accuracy'] ?? 0.0).toStringAsFixed(1)}%',
-            Icons.precision_manufacturing,
-          ),
-          _buildMetricItem(
             'Sessions',
             '${provider.sessionCount}',
             Icons.timer,
           ),
           _buildMetricItem(
-            'Focus Time',
-            _formatDuration(provider.performanceMetrics['totalFocusTime'] ?? 0),
-            Icons.psychology,
+            'Type',
+            provider.currentType.displayName,
+            Icons.category,
+          ),
+          _buildMetricItem(
+            'State',
+            _getStateText(provider.state),
+            Icons.info,
           ),
         ],
       ),
@@ -401,18 +367,6 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
     }
   }
 
-  void _showRecoveryDialog(
-      BuildContext context, EnhancedTimerProvider provider) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => SessionRecoveryDialog(
-        session: provider.recoverySession!,
-        onRecover: () => provider.handleRecovery(true),
-        onDiscard: () => provider.handleRecovery(false),
-      ),
-    );
-  }
 
   void _handleStart(EnhancedTimerProvider provider) {
     provider.startTimer(taskId: provider.currentTaskId);
@@ -436,7 +390,7 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
 
   Color _getSessionColor(TimerType type) {
     switch (type) {
-      case TimerType.work:
+      case TimerType.pomodoro:
         return AppColors.workColor;
       case TimerType.shortBreak:
       case TimerType.longBreak:
@@ -448,7 +402,7 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
 
   IconData _getSessionIcon(TimerType type) {
     switch (type) {
-      case TimerType.work:
+      case TimerType.pomodoro:
         return Icons.work;
       case TimerType.shortBreak:
         return Icons.coffee;
@@ -461,7 +415,7 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
 
   String _getSessionText(TimerType type) {
     switch (type) {
-      case TimerType.work:
+      case TimerType.pomodoro:
         return 'Focus Time';
       case TimerType.shortBreak:
         return 'Short Break';
@@ -472,29 +426,21 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
     }
   }
 
-  String _getPrecisionText(TimerPrecision precision) {
-    switch (precision) {
-      case TimerPrecision.second:
-        return 'SEC';
-      case TimerPrecision.decisecond:
-        return 'DSEC';
-      case TimerPrecision.centisecond:
-        return 'CSEC';
-      case TimerPrecision.millisecond:
-        return 'MSEC';
+  String _getStateText(TimerState state) {
+    switch (state) {
+      case TimerState.idle:
+        return 'Ready';
+      case TimerState.running:
+        return 'Running';
+      case TimerState.paused:
+        return 'Paused';
+      case TimerState.completed:
+        return 'Complete';
+      case TimerState.cancelled:
+        return 'Cancelled';
     }
   }
 
-  String _formatDuration(int milliseconds) {
-    final duration = Duration(milliseconds: milliseconds);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-
-    if (hours > 0) {
-      return '${hours}h ${minutes}m';
-    }
-    return '${minutes}m';
-  }
 
   @override
   void dispose() {

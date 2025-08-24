@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../services/advanced_timer_service.dart';
+import '../core/enums/timer_enums.dart';
 
 class TimerControls extends StatefulWidget {
   final VoidCallback onStart;
@@ -116,16 +116,10 @@ class _TimerControlsState extends State<TimerControls>
         onPressed = _handleMainAction;
         break;
       case TimerState.paused:
-      case TimerState.interrupted:
+      case TimerState.cancelled:
         icon = Icons.play_arrow;
         label = 'Resume';
         color = Colors.blue;
-        onPressed = _handleMainAction;
-        break;
-      case TimerState.recovering:
-        icon = Icons.restore;
-        label = 'Recover';
-        color = Colors.purple;
         onPressed = _handleMainAction;
         break;
     }
@@ -260,8 +254,7 @@ class _TimerControlsState extends State<TimerControls>
         widget.onPause();
         break;
       case TimerState.paused:
-      case TimerState.interrupted:
-      case TimerState.recovering:
+      case TimerState.cancelled:
         widget.onResume();
         break;
     }

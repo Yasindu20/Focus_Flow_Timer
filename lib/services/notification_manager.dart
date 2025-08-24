@@ -7,7 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 import '../models/timer_session.dart';
-import 'advanced_timer_service.dart';
+import '../core/enums/timer_enums.dart';
 
 class NotificationManager {
   static final NotificationManager _instance = NotificationManager._internal();
@@ -355,8 +355,8 @@ class NotificationManager {
 
   String _getSessionCompleteTitle(TimerType type) {
     switch (type) {
-      case TimerType.work:
-        return 'Work Session Complete! 🎉';
+      case TimerType.pomodoro:
+        return 'Pomodoro Complete! 🎉';
       case TimerType.shortBreak:
         return 'Short Break Complete! ⚡';
       case TimerType.longBreak:
@@ -368,7 +368,7 @@ class NotificationManager {
 
   String _getSessionCompleteBody(TimerType type) {
     switch (type) {
-      case TimerType.work:
+      case TimerType.pomodoro:
         return 'Great focus! Time for a well-deserved break.';
       case TimerType.shortBreak:
         return 'Refreshed and ready? Let\'s get back to work!';
@@ -381,8 +381,8 @@ class NotificationManager {
 
   String _getSessionStartTitle(TimerType type) {
     switch (type) {
-      case TimerType.work:
-        return 'Focus Time Started! 💪';
+      case TimerType.pomodoro:
+        return 'Pomodoro Started! 💪';
       case TimerType.shortBreak:
         return 'Short Break Started! 😌';
       case TimerType.longBreak:
@@ -394,7 +394,7 @@ class NotificationManager {
 
   String _getSessionStartBody(TimerType type) {
     switch (type) {
-      case TimerType.work:
+      case TimerType.pomodoro:
         return 'Stay focused and minimize distractions.';
       case TimerType.shortBreak:
         return 'Take a moment to relax and recharge.';
@@ -407,8 +407,8 @@ class NotificationManager {
 
   String _getTimerTypeName(TimerType type) {
     switch (type) {
-      case TimerType.work:
-        return 'work';
+      case TimerType.pomodoro:
+        return 'pomodoro';
       case TimerType.shortBreak:
         return 'short break';
       case TimerType.longBreak:

@@ -1,14 +1,8 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
-import '../core/constants/app_constants.dart';
-import 'advanced_timer_service.dart';
+import '../core/enums/timer_enums.dart';
 
-enum SoundscapeCategory {
-  nature,
-  ambient,
-  urban,
-  fireplace
-}
+enum SoundscapeCategory { nature, ambient, urban, fireplace }
 
 class SoundscapeTrack {
   final String id;
@@ -51,10 +45,10 @@ class AudioService extends ChangeNotifier {
   bool get isFading => _isFading;
   Duration get fadeInDuration => _fadeInDuration;
   Duration get fadeOutDuration => _fadeOutDuration;
-  
+
   List<SoundscapeTrack> get availableTracks => _soundscapeTracks;
-  SoundscapeTrack? get currentTrack => _currentTrackId != null 
-      ? _soundscapeTracks.firstWhere((t) => t.id == _currentTrackId, 
+  SoundscapeTrack? get currentTrack => _currentTrackId != null
+      ? _soundscapeTracks.firstWhere((t) => t.id == _currentTrackId,
           orElse: () => _soundscapeTracks.first)
       : null;
 
@@ -65,7 +59,8 @@ class AudioService extends ChangeNotifier {
       name: 'Forest Rain',
       path: 'assets/sounds/forest_rain.mp3',
       category: SoundscapeCategory.nature,
-      description: 'Gentle rain falling through forest leaves with distant bird calls',
+      description:
+          'Gentle rain falling through forest leaves with distant bird calls',
       durationSeconds: 1800,
     ),
     SoundscapeTrack(
@@ -89,7 +84,8 @@ class AudioService extends ChangeNotifier {
       name: 'Coffee Shop',
       path: 'assets/sounds/coffee_shop.mp3',
       category: SoundscapeCategory.urban,
-      description: 'Cozy coffee shop ambiance with gentle chatter and brewing sounds',
+      description:
+          'Cozy coffee shop ambiance with gentle chatter and brewing sounds',
       durationSeconds: 1800,
     ),
     SoundscapeTrack(
@@ -148,16 +144,16 @@ class AudioService extends ChangeNotifier {
         AssetSource(track.path.replaceFirst('assets/', '')),
       );
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-      
+
       _currentTrackId = trackId;
       _isPlaying = true;
-      
+
       if (withFadeIn) {
         await _fadeIn();
       } else {
         await _audioPlayer.setVolume(_volume);
       }
-      
+
       notifyListeners();
     } catch (e) {
       debugPrint('Error playing track: $e');
@@ -167,19 +163,19 @@ class AudioService extends ChangeNotifier {
   Future<void> _fadeIn() async {
     if (_isFading) return;
     _isFading = true;
-    
+
     const steps = 20;
     final stepDuration = _fadeInDuration.inMilliseconds ~/ steps;
     final volumeStep = _volume / steps;
-    
+
     await _audioPlayer.setVolume(0);
-    
+
     for (int i = 1; i <= steps; i++) {
       if (!_isPlaying) break;
       await Future.delayed(Duration(milliseconds: stepDuration));
       await _audioPlayer.setVolume(volumeStep * i);
     }
-    
+
     _isFading = false;
     notifyListeners();
   }
@@ -187,18 +183,18 @@ class AudioService extends ChangeNotifier {
   Future<void> _fadeOut() async {
     if (_isFading || !_isPlaying) return;
     _isFading = true;
-    
+
     const steps = 20;
     final stepDuration = _fadeOutDuration.inMilliseconds ~/ steps;
     final currentVolume = _volume;
     final volumeStep = currentVolume / steps;
-    
+
     for (int i = steps; i > 0; i--) {
       if (!_isPlaying) break;
       await Future.delayed(Duration(milliseconds: stepDuration));
       await _audioPlayer.setVolume(volumeStep * i);
     }
-    
+
     await _audioPlayer.stop();
     _isFading = false;
     notifyListeners();
@@ -238,11 +234,11 @@ class AudioService extends ChangeNotifier {
     try {
       await _audioPlayer.resume();
       _isPlaying = true;
-      
+
       if (withFadeIn) {
         await _fadeIn();
       }
-      
+
       notifyListeners();
     } catch (e) {
       debugPrint('Error resuming track: $e');
@@ -273,12 +269,15 @@ class AudioService extends ChangeNotifier {
 
   // Track filtering by category
   List<SoundscapeTrack> getTracksByCategory(SoundscapeCategory category) {
-    return _soundscapeTracks.where((track) => track.category == category).toList();
+    return _soundscapeTracks
+        .where((track) => track.category == category)
+        .toList();
   }
 
   // Legacy compatibility method
-  List<String> get availableTrackNames => _soundscapeTracks.map((t) => t.name).toList();
-  
+  List<String> get availableTrackNames =>
+      _soundscapeTracks.map((t) => t.name).toList();
+
   Future<void> playTrackByName(String trackName) async {
     final track = _soundscapeTracks.firstWhere(
       (t) => t.name == trackName,
@@ -292,7 +291,7 @@ class AudioService extends ChangeNotifier {
     try {
       String soundPath;
       switch (timerType) {
-        case TimerType.work:
+        case TimerType.pomodoro:
           soundPath = 'sounds/completion/work_complete.mp3';
           break;
         case TimerType.shortBreak:
@@ -307,7 +306,8 @@ class AudioService extends ChangeNotifier {
       }
 
       await _effectPlayer.play(AssetSource(soundPath));
-      await _effectPlayer.setVolume(0.8); // Slightly lower volume for completion sounds
+      await _effectPlayer
+          .setVolume(0.8); // Slightly lower volume for completion sounds
     } catch (e) {
       debugPrint('Error playing completion sound: $e');
     }
