@@ -1,6 +1,7 @@
 # focus_flow_timer
 
 A new Flutter project.
+A professional Pomodoro timer application optimized for **zero-budget development** using only free resources and APIs.
 
 ## Getting Started
 
