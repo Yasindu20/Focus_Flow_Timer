@@ -425,7 +425,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
           Container(
             width: 30,
             height: 30,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
             ),
@@ -685,9 +685,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                   color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(
+                child: const Text(
                   '🏆',
-                  style: const TextStyle(fontSize: 12),
+                  style: TextStyle(fontSize: 12),
                 ),
               );
             }).toList(),

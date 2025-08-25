@@ -438,14 +438,14 @@ class _AchievementsScreenState extends State<AchievementsScreen>
                     color: Colors.green,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.check_circle, color: Colors.white, size: 16),
-                      const SizedBox(width: 4),
+                      Icon(Icons.check_circle, color: Colors.white, size: 16),
+                      SizedBox(width: 4),
                       Text(
                         'Unlocked',
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                        style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ],
                   ),
@@ -562,7 +562,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
                   '${_getRarityIcon(rarity)} ${_getRarityName(rarity)}',
                   '$unlockedCount/${rarityAchievements.length}',
                 );
-              }).toList(),
+              }),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,

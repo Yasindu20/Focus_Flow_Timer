@@ -315,7 +315,7 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
           children: [
             Row(
               children: [
-                Icon(Icons.lightbulb, color: Colors.amber),
+                const Icon(Icons.lightbulb, color: Colors.amber),
                 const SizedBox(width: 8),
                 Text(
                   'Insights',
@@ -803,17 +803,17 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
               },
             ),
           ),
-          leftTitles: AxisTitles(
+          leftTitles: const AxisTitles(
             sideTitles: SideTitles(showTitles: false),
           ),
-          topTitles: AxisTitles(
+          topTitles: const AxisTitles(
             sideTitles: SideTitles(showTitles: false),
           ),
-          rightTitles: AxisTitles(
+          rightTitles: const AxisTitles(
             sideTitles: SideTitles(showTitles: false),
           ),
         ),
-        gridData: FlGridData(show: false),
+        gridData: const FlGridData(show: false),
         borderData: FlBorderData(show: false),
         barGroups: weeklyScores.asMap().entries.map((entry) {
           return BarChartGroupData(
@@ -841,8 +841,8 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
 
     return LineChart(
       LineChartData(
-        gridData: FlGridData(show: true),
-        titlesData: FlTitlesData(show: false),
+        gridData: const FlGridData(show: true),
+        titlesData: const FlTitlesData(show: false),
         borderData: FlBorderData(show: false),
         lineBarsData: [
           LineChartBarData(
@@ -852,7 +852,7 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
             isCurved: true,
             color: Theme.of(context).primaryColor,
             barWidth: 3,
-            dotData: FlDotData(show: true),
+            dotData: const FlDotData(show: true),
           ),
         ],
       ),
@@ -941,7 +941,7 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
+              const Icon(
                 Icons.lightbulb,
                 color: Colors.amber,
                 size: 48,

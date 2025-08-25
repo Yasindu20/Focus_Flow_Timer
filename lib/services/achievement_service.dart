@@ -277,8 +277,27 @@ class AchievementService extends ChangeNotifier {
     // This would trigger notifications or achievement popups
     for (final achievement in newAchievements) {
       debugPrint('🏆 Achievement Unlocked: ${achievement.name}');
-      // TODO: Implement achievement notification UI
+      _showAchievementNotification(achievement);
     }
+  }
+
+  void _showAchievementNotification(Achievement achievement) {
+    // Show platform-specific achievement notification
+    try {
+      // For mobile platforms, could show a toast or system notification
+      // For now, using a simple notification approach
+      _showAchievementSnackBar(achievement);
+    } catch (e) {
+      debugPrint('Error showing achievement notification: $e');
+    }
+  }
+
+  void _showAchievementSnackBar(Achievement achievement) {
+    // This method can be called from UI context to show snackbar
+    // Implementation would require BuildContext, so this serves as a placeholder
+    // for the actual UI notification implementation
+    debugPrint('🎉 Achievement notification would appear: ${achievement.name}');
+    debugPrint('📝 ${achievement.description}');
   }
 
   Future<void> _saveAchievements() async {
