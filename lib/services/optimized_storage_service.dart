@@ -7,6 +7,24 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/enhanced_task.dart';
 import '../models/pomodoro_session.dart';
 import '../models/daily_stats.dart';
+import '../models/task_analytics.dart';
+
+// Duration adapter for Hive
+class DurationAdapter extends TypeAdapter<Duration> {
+  @override
+  final int typeId = 100; // Use a high typeId to avoid conflicts
+
+  @override
+  Duration read(BinaryReader reader) {
+    final microseconds = reader.readInt();
+    return Duration(microseconds: microseconds);
+  }
+
+  @override
+  void write(BinaryWriter writer, Duration obj) {
+    writer.writeInt(obj.inMicroseconds);
+  }
+}
 
 class OptimizedStorageService {
   static final OptimizedStorageService _instance = OptimizedStorageService._internal();
@@ -415,6 +433,41 @@ class OptimizedStorageService {
     }
     if (!Hive.isAdapterRegistered(24)) {
       Hive.registerAdapter(RecurrenceTypeAdapter());
+    }
+    
+    // Task Analytics adapters (based on actual generated adapters)
+    if (!Hive.isAdapterRegistered(56)) {
+      Hive.registerAdapter(TaskCompletionDataAdapter());
+    }
+    if (!Hive.isAdapterRegistered(57)) {
+      Hive.registerAdapter(UserAnalyticsAdapter());
+    }
+    if (!Hive.isAdapterRegistered(58)) {
+      Hive.registerAdapter(CategoryPerformanceAdapter());
+    }
+    if (!Hive.isAdapterRegistered(59)) {
+      Hive.registerAdapter(ProductivityPatternAdapter());
+    }
+    // Enums from task_analytics
+    if (!Hive.isAdapterRegistered(61)) {
+      Hive.registerAdapter(RecommendationTypeAdapter());
+    }
+    if (!Hive.isAdapterRegistered(62)) {
+      Hive.registerAdapter(RecommendationImpactAdapter());
+    }
+    if (!Hive.isAdapterRegistered(63)) {
+      Hive.registerAdapter(RecommendationEffortAdapter());
+    }
+    if (!Hive.isAdapterRegistered(64)) {
+      Hive.registerAdapter(ComparisonTypeAdapter());
+    }
+    if (!Hive.isAdapterRegistered(65)) {
+      Hive.registerAdapter(PatternTypeAdapter());
+    }
+    
+    // Duration adapter
+    if (!Hive.isAdapterRegistered(100)) {
+      Hive.registerAdapter(DurationAdapter());
     }
 
     // Open boxes
