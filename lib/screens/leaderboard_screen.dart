@@ -54,18 +54,27 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               ),
             ],
           ),
-          body: Column(
-            children: [
-              _buildUserRankCard(leaderboardService),
-              _buildLeaderboardTypeSelector(),
-              Expanded(
-                child: _buildLeaderboardContent(leaderboardService),
-              ),
-            ],
+          body: SafeArea(
+            child: Column(
+              children: [
+                Flexible(
+                  flex: 0,
+                  child: _buildUserRankCard(leaderboardService),
+                ),
+                Flexible(
+                  flex: 0,
+                  child: _buildLeaderboardTypeSelector(),
+                ),
+                Expanded(
+                  child: _buildLeaderboardContent(leaderboardService),
+                ),
+              ],
+            ),
           ),
           floatingActionButton: leaderboardService.isOnline
               ? null
               : FloatingActionButton.extended(
+                  heroTag: "leaderboard_fab",
                   onPressed: () => _showOfflineMessage(context),
                   icon: const Icon(Icons.cloud_off),
                   label: const Text('Offline'),

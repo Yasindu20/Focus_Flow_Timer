@@ -136,6 +136,7 @@ class _TimerControlsState extends State<TimerControls>
         ],
       ),
       child: FloatingActionButton.extended(
+        heroTag: "timer_controls_fab",
         onPressed: onPressed,
         backgroundColor: color,
         foregroundColor: Colors.white,
@@ -148,7 +149,6 @@ class _TimerControlsState extends State<TimerControls>
             fontWeight: FontWeight.bold,
           ),
         ),
-        heroTag: 'main_timer_button',
       ),
     );
   }

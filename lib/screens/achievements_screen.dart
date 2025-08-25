@@ -46,21 +46,29 @@ class _AchievementsScreenState extends State<AchievementsScreen>
               ),
             ],
           ),
-          body: Column(
-            children: [
-              _buildStatsHeader(achievementProvider),
-              _buildTabBar(),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildAllAchievementsTab(achievementProvider),
-                    _buildUnlockedAchievementsTab(achievementProvider),
-                    _buildInProgressTab(achievementProvider),
-                  ],
+          body: SafeArea(
+            child: Column(
+              children: [
+                Flexible(
+                  flex: 0,
+                  child: _buildStatsHeader(achievementProvider),
                 ),
-              ),
-            ],
+                Flexible(
+                  flex: 0,
+                  child: _buildTabBar(),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildAllAchievementsTab(achievementProvider),
+                      _buildUnlockedAchievementsTab(achievementProvider),
+                      _buildInProgressTab(achievementProvider),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
