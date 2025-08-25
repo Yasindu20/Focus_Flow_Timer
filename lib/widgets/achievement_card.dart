@@ -73,21 +73,21 @@ class _AchievementCardState extends State<AchievementCard>
                   end: Alignment.bottomRight,
                   colors: isUnlocked
                       ? [
-                          rarityColor.withOpacity(0.2),
-                          rarityColor.withOpacity(0.1),
+                          rarityColor.withValues(alpha: 0.2),
+                          rarityColor.withValues(alpha: 0.1),
                         ]
                       : [
-                          Colors.grey.withOpacity(0.1),
-                          Colors.grey.withOpacity(0.05),
+                          Colors.grey.withValues(alpha: 0.1),
+                          Colors.grey.withValues(alpha: 0.05),
                         ],
                 ),
                 border: Border.all(
-                  color: isUnlocked ? rarityColor.withOpacity(0.5) : Colors.grey.withOpacity(0.3),
+                  color: isUnlocked ? rarityColor.withValues(alpha: 0.5) : Colors.grey.withValues(alpha: 0.3),
                   width: 2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: (isUnlocked ? rarityColor : Colors.grey).withOpacity(0.1),
+                    color: (isUnlocked ? rarityColor : Colors.grey).withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -102,7 +102,7 @@ class _AchievementCardState extends State<AchievementCard>
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: rarityColor.withOpacity(0.9),
+                        color: rarityColor.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Icon(
@@ -119,7 +119,7 @@ class _AchievementCardState extends State<AchievementCard>
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(14),
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                         ),
                         child: const Center(
                           child: Icon(
@@ -142,7 +142,7 @@ class _AchievementCardState extends State<AchievementCard>
                           width: 60,
                           height: 60,
                           decoration: BoxDecoration(
-                            color: (isUnlocked ? rarityColor : Colors.grey).withOpacity(0.2),
+                            color: (isUnlocked ? rarityColor : Colors.grey).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: Center(
@@ -252,9 +252,9 @@ class _AchievementCardState extends State<AchievementCard>
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              Colors.white.withOpacity(0.1),
+                              Colors.white.withValues(alpha: 0.1),
                               Colors.transparent,
-                              Colors.white.withOpacity(0.05),
+                              Colors.white.withValues(alpha: 0.05),
                             ],
                             stops: const [0.0, 0.5, 1.0],
                           ),
@@ -395,14 +395,14 @@ class _AchievementNotificationState extends State<AchievementNotification>
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                rarityColor.withOpacity(0.9),
-                rarityColor.withOpacity(0.7),
+                rarityColor.withValues(alpha: 0.9),
+                rarityColor.withValues(alpha: 0.7),
               ],
             ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: rarityColor.withOpacity(0.3),
+                color: rarityColor.withValues(alpha: 0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -414,7 +414,7 @@ class _AchievementNotificationState extends State<AchievementNotification>
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: Center(
@@ -453,7 +453,7 @@ class _AchievementNotificationState extends State<AchievementNotification>
                     Text(
                       '+${widget.achievement.points} points',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 12,
                       ),
                     ),

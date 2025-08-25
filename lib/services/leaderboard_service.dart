@@ -7,7 +7,6 @@ import '../models/leaderboard.dart';
 import '../models/productivity_score.dart';
 import 'optimized_storage_service.dart';
 import 'achievement_service.dart';
-import 'productivity_score_service.dart';
 
 class LeaderboardService extends ChangeNotifier {
   static final LeaderboardService _instance = LeaderboardService._internal();
@@ -17,7 +16,7 @@ class LeaderboardService extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final OptimizedStorageService _storage = OptimizedStorageService();
 
-  Map<LeaderboardType, Leaderboard> _leaderboards = {};
+  final Map<LeaderboardType, Leaderboard> _leaderboards = {};
   LeaderboardEntry? _userEntry;
   bool _isInitialized = false;
   bool _isOnline = false;
@@ -223,12 +222,6 @@ class LeaderboardService extends ChangeNotifier {
           .map((a) => a.id)
           .toList();
 
-      // Calculate consistency score
-      double consistencyScore = LeaderboardCalculator.calculateConsistencyScore(
-        weeklyMinutes: productivityScore.metrics.totalFocusMinutes,
-        sessionsCompleted: sessionsCompleted,
-        daysActive: streakDays.clamp(0, 7),
-      );
 
       final leaderboardStats = LeaderboardStats(
         weeklyScore: productivityScore.weeklyScore,

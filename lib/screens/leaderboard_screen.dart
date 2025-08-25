@@ -115,7 +115,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                   Text(
                     'Complete focus sessions to join the leaderboard',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 14,
                     ),
                   ),
@@ -142,7 +142,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -154,7 +154,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
             backgroundImage: userEntry.avatar != null
                 ? NetworkImage(userEntry.avatar!)
                 : null,
-            backgroundColor: Colors.white.withOpacity(0.9),
+            backgroundColor: Colors.white.withValues(alpha: 0.9),
             child: userEntry.avatar == null
                 ? Text(
                     userEntry.displayName.isNotEmpty
@@ -183,7 +183,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                 Text(
                   'Rank #$userRank of $totalParticipants',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 14,
                   ),
                 ),
@@ -204,7 +204,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               Text(
                 _getDisplayUnit(_selectedType),
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 12,
                 ),
               ),
@@ -240,7 +240,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               decoration: BoxDecoration(
                 color: isSelected
                     ? Theme.of(context).primaryColor
-                    : Colors.grey.withOpacity(0.1),
+                    : Colors.grey.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isSelected
@@ -367,8 +367,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            color.withOpacity(0.8),
-            color.withOpacity(0.6),
+            color.withValues(alpha: 0.8),
+            color.withValues(alpha: 0.6),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -466,7 +466,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
           Icon(
             Icons.leaderboard_outlined,
             size: 80,
-            color: Colors.grey.withOpacity(0.5),
+            color: Colors.grey.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 24),
           Text(
@@ -511,7 +511,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                 backgroundImage: entry.avatar != null
                     ? NetworkImage(entry.avatar!)
                     : null,
-                backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                 child: entry.avatar == null
                     ? Text(
                         entry.displayName.isNotEmpty
@@ -676,7 +676,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.2),
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(

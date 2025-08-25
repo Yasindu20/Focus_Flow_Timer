@@ -68,8 +68,8 @@ class _LeaderboardCardState extends State<LeaderboardCard>
                 gradient: widget.isCurrentUser
                     ? LinearGradient(
                         colors: [
-                          Theme.of(context).primaryColor.withOpacity(0.1),
-                          Theme.of(context).primaryColor.withOpacity(0.05),
+                          Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                          Theme.of(context).primaryColor.withValues(alpha: 0.05),
                         ],
                       )
                     : null,
@@ -79,15 +79,15 @@ class _LeaderboardCardState extends State<LeaderboardCard>
                   color: widget.isCurrentUser
                       ? Theme.of(context).primaryColor
                       : isTopRank
-                          ? _getRankColor(widget.entry.rank).withOpacity(0.3)
-                          : Colors.grey.withOpacity(0.2),
+                          ? _getRankColor(widget.entry.rank).withValues(alpha: 0.3)
+                          : Colors.grey.withValues(alpha: 0.2),
                   width: widget.isCurrentUser ? 2 : 1,
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: widget.isCurrentUser
-                        ? Theme.of(context).primaryColor.withOpacity(0.1)
-                        : Colors.black.withOpacity(0.05),
+                        ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+                        : Colors.black.withValues(alpha: 0.05),
                     blurRadius: widget.isCurrentUser ? 8 : 4,
                     offset: const Offset(0, 2),
                   ),
@@ -105,7 +105,7 @@ class _LeaderboardCardState extends State<LeaderboardCard>
                     backgroundImage: widget.entry.avatar != null
                         ? NetworkImage(widget.entry.avatar!)
                         : null,
-                    backgroundColor: _getRankColor(widget.entry.rank).withOpacity(0.2),
+                    backgroundColor: _getRankColor(widget.entry.rank).withValues(alpha: 0.2),
                     child: widget.entry.avatar == null
                         ? Text(
                             widget.entry.displayName.isNotEmpty
@@ -218,8 +218,8 @@ class _LeaderboardCardState extends State<LeaderboardCard>
         gradient: isTopRank
             ? LinearGradient(
                 colors: [
-                  rankColor.withOpacity(0.8),
-                  rankColor.withOpacity(0.6),
+                  rankColor.withValues(alpha: 0.8),
+                  rankColor.withValues(alpha: 0.6),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -301,7 +301,7 @@ class _LeaderboardCardState extends State<LeaderboardCard>
         Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: Colors.amber.withOpacity(0.2),
+            color: Colors.amber.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(8),
           ),
           child: const Icon(
@@ -457,9 +457,9 @@ class RankChangeIndicator extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

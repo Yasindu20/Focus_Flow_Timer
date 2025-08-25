@@ -174,7 +174,7 @@ class ProductivityScoreService extends ChangeNotifier {
     int completedSessions = sessions.where((s) => s.completed).length;
     int totalFocusMinutes = sessions
         .where((s) => s.completed)
-        .fold(0, (sum, s) => sum + (s.duration ~/ 60000));
+        .fold(0, (total, s) => total + (s.duration ~/ 60000));
     
     int perfectSessions = sessions
         .where((s) => s.completed && s.interruptions == 0)
@@ -186,7 +186,7 @@ class ProductivityScoreService extends ChangeNotifier {
               .reduce((a, b) => a + b) / completedSessions
         : 0.0;
 
-    int interruptionCount = sessions.fold(0, (sum, s) => sum + s.interruptions);
+    int interruptionCount = sessions.fold<int>(0, (total, s) => total + s.interruptions);
 
     // Calculate consistency score (based on regular usage patterns)
     double consistencyScore = _calculateConsistencyScore(sessions);
@@ -230,7 +230,7 @@ class ProductivityScoreService extends ChangeNotifier {
 
     int totalSessions = sessions.length;
     int completedSessions = sessions.where((s) => s.completed).length;
-    int totalInterruptions = sessions.fold(0, (sum, s) => sum + s.interruptions);
+    int totalInterruptions = sessions.fold<int>(0, (total, s) => total + s.interruptions);
 
     double completionRate = completedSessions / totalSessions;
     double interruptionRate = totalInterruptions / totalSessions;
@@ -256,7 +256,7 @@ class ProductivityScoreService extends ChangeNotifier {
       // Category score based on completion rate and total time
       int totalMinutes = sessions
           .where((s) => s.completed)
-          .fold(0, (sum, s) => sum + (s.duration ~/ 60000));
+          .fold(0, (total, s) => total + (s.duration ~/ 60000));
       
       double timeScore = (totalMinutes / 120.0).clamp(0.0, 1.0); // Max 2 hours per category
       double finalScore = (completionRate * 0.7 + timeScore * 0.3) * 100;

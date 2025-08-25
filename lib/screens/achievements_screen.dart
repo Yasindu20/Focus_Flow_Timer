@@ -77,8 +77,8 @@ class _AchievementsScreenState extends State<AchievementsScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).primaryColor.withOpacity(0.8),
-            Theme.of(context).primaryColor.withOpacity(0.6),
+            Theme.of(context).primaryColor.withValues(alpha: 0.8),
+            Theme.of(context).primaryColor.withValues(alpha: 0.6),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -86,7 +86,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -139,7 +139,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
             fontSize: 12,
           ),
         ),
@@ -234,7 +234,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
               decoration: BoxDecoration(
                 color: isSelected
                     ? Theme.of(context).primaryColor
-                    : Colors.grey.withOpacity(0.2),
+                    : Colors.grey.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(25),
                 border: Border.all(
                   color: isSelected
@@ -306,7 +306,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           Icon(
             icon,
             size: 80,
-            color: Colors.grey.withOpacity(0.5),
+            color: Colors.grey.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 24),
           Text(
@@ -369,7 +369,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: _getRarityColor(achievement.rarity).withOpacity(0.2),
+                  color: _getRarityColor(achievement.rarity).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(40),
                 ),
                 child: Center(

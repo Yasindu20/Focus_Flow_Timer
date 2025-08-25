@@ -100,7 +100,7 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -139,7 +139,7 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
             currentScore?.scoreDescription ?? 'Complete sessions to get your score',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
             ),
             textAlign: TextAlign.center,
           ),
@@ -174,7 +174,7 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
       children: [
         Icon(
           icon,
-          color: Colors.white.withOpacity(0.9),
+          color: Colors.white.withValues(alpha: 0.9),
           size: 24,
         ),
         const SizedBox(height: 8),
@@ -190,7 +190,7 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
           ),
         ),
       ],
@@ -562,7 +562,7 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(icon, color: color, size: 16),
@@ -870,7 +870,7 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
           Icon(
             icon,
             size: 80,
-            color: Colors.grey.withOpacity(0.5),
+            color: Colors.grey.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 24),
           Text(

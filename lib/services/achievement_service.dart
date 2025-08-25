@@ -26,7 +26,7 @@ class AchievementService extends ChangeNotifier {
   List<Achievement> get lockedAchievements =>
       _userAchievements.where((a) => !a.isUnlocked).toList();
 
-  int get totalPoints => unlockedAchievements.fold(0, (sum, a) => sum + a.points);
+  int get totalPoints => unlockedAchievements.fold(0, (total, a) => total + a.points);
   int get unlockedCount => unlockedAchievements.length;
   double get completionPercentage =>
       _achievements.isEmpty ? 0 : (unlockedCount / _achievements.length) * 100;
@@ -235,18 +235,16 @@ class AchievementService extends ChangeNotifier {
         return additionalData?['consistencyDays'] ?? achievement.currentValue;
 
       case AchievementType.special:
-        return _calculateSpecialAchievement(achievement, session, additionalData);
-
-      default:
-        return achievement.currentValue;
+        return _calculateSpecialAchievement(achievement, session, additionalData, completedTask);
     }
   }
 
   int _calculateSpecialAchievement(
     Achievement achievement,
     PomodoroSession session,
-    Map<String, dynamic>? additionalData,
-  ) {
+    Map<String, dynamic>? additionalData, [
+    Task? completedTask,
+  ]) {
     switch (achievement.id) {
       case 'first_week':
         return additionalData?['consecutiveDays'] ?? 0;
