@@ -3,6 +3,7 @@ import 'dart:async';
 import '../core/enums/timer_enums.dart';
 import '../services/optimized_storage_service.dart';
 import '../services/notification_manager.dart';
+import '../services/session_integration_service.dart';
 import '../models/timer_session.dart';
 
 class EnhancedTimerProvider extends ChangeNotifier {
@@ -102,6 +103,7 @@ class EnhancedTimerProvider extends ChangeNotifier {
     _sessionCount++;
     _showNotification();
     _saveSession();
+    _recordCompletedSessionAnalytics();
     notifyListeners();
   }
   
@@ -136,6 +138,47 @@ class EnhancedTimerProvider extends ChangeNotifier {
       await _storage.cacheData('timer_session_$sessionId', session);
     } catch (e) {
       debugPrint('Error saving session: $e');
+    }
+  }
+
+  // Record completed session to Firestore analytics
+  Future<void> _recordCompletedSessionAnalytics() async {
+    try {
+      if (_startTime != null && _currentType == TimerType.pomodoro) {
+        // Only record focus/work sessions, not breaks
+        await SessionIntegrationService.instance.recordCompletedSession(
+          startTime: _startTime!,
+          endTime: DateTime.now(),
+          durationMinutes: _totalTime.inMinutes,
+          taskId: _currentTaskId,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error recording completed session analytics: $e');
+    }
+  }
+
+  // Record interrupted session to Firestore analytics
+  Future<void> _recordInterruptedSessionAnalytics() async {
+    try {
+      if (_startTime != null && _currentType == TimerType.pomodoro) {
+        // Only record focus/work sessions, not breaks
+        final now = DateTime.now();
+        final elapsedDuration = now.difference(_startTime!);
+        final actualMinutes = elapsedDuration.inMinutes;
+        
+        if (actualMinutes > 0) { // Only record if some time has passed
+          await SessionIntegrationService.instance.recordInterruptedSession(
+            startTime: _startTime!,
+            interruptedTime: now,
+            actualMinutes: actualMinutes,
+            plannedMinutes: _totalTime.inMinutes,
+            taskId: _currentTaskId,
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error recording interrupted session analytics: $e');
     }
   }
 
@@ -192,6 +235,11 @@ class EnhancedTimerProvider extends ChangeNotifier {
 
   Future<void> stopTimer() async {
     try {
+      // Record as interrupted session if timer was running
+      if (_state.isRunning && _startTime != null) {
+        await _recordInterruptedSessionAnalytics();
+      }
+      
       _stopTimer();
       _state = TimerState.idle;
       _remainingTime = _totalTime;
