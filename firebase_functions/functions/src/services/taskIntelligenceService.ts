@@ -3,7 +3,6 @@
  * Handles AI-powered task processing and enhancement
  */
 
-import { aiService } from './aiService';
 
 interface TaskInput {
   title: string;
@@ -43,8 +42,8 @@ export class TaskIntelligenceService {
       // Start processing timestamp
       const startTime = Date.now();
 
-      // Use AI service to process the task
-      const aiResult = await aiService.processTask(taskInput);
+      // Process task using local intelligence (without external AI)
+      const aiResult = this.processTaskLocally(taskInput);
 
       // Calculate confidence based on available data
       const confidence = this.calculateConfidence(taskInput, aiResult);
@@ -111,6 +110,99 @@ export class TaskIntelligenceService {
     if (taskInput.priority !== 'medium') confidence += 0.05;
 
     return Math.min(confidence, 0.95); // Cap at 95%
+  }
+
+  /**
+   * Process task locally without external AI services
+   */
+  private processTaskLocally(taskInput: TaskInput): any {
+    const text = (taskInput.title + ' ' + taskInput.description).toLowerCase();
+    
+    // Extract basic keywords
+    const words = text.split(/\s+/).filter(word => word.length > 3);
+    const keywords = [...new Set(words)].slice(0, 5);
+
+    // Estimate duration based on category and complexity
+    const categoryDurations: { [key: string]: number } = {
+      'planning': 30,
+      'coding': 60,
+      'testing': 45,
+      'documentation': 35,
+      'meeting': 30,
+      'research': 90,
+      'design': 75,
+      'review': 20,
+      'general': 25
+    };
+
+    // Calculate complexity score
+    const complexKeywords = [
+      'integrate', 'implement', 'develop', 'design', 'architecture', 'algorithm',
+      'optimize', 'performance', 'security', 'database', 'api', 'framework',
+      'analysis', 'research', 'investigate', 'troubleshoot', 'debug'
+    ];
+    const complexityIndicators = complexKeywords.filter(keyword => text.includes(keyword)).length;
+    const complexityScore = Math.min(complexityIndicators * 0.2 + 0.3, 1.0);
+
+    // Map priority to urgency
+    const priorityUrgencyMap: { [key: string]: string } = {
+      'low': 'low',
+      'medium': 'medium',
+      'high': 'high',
+      'critical': 'critical',
+    };
+
+    // Generate basic recommendations
+    const timeSlots = this.getTimeSlotRecommendations(taskInput.category);
+    const tips = this.getOptimizationTips(taskInput.category);
+
+    return {
+      estimatedDuration: categoryDurations[taskInput.category] || 25,
+      complexityScore,
+      tags: [taskInput.category, taskInput.priority, ...keywords],
+      suggestedTimeSlots: timeSlots,
+      optimizationTips: tips,
+      relatedTasks: [],
+      urgency: priorityUrgencyMap[taskInput.priority] || 'medium',
+      cognitiveLoad: complexityScore,
+      prerequisites: []
+    };
+  }
+
+  /**
+   * Get time slot recommendations based on category
+   */
+  private getTimeSlotRecommendations(category: string): string[] {
+    const timeSlotMap: { [key: string]: string[] } = {
+      'planning': ['morning'],
+      'coding': ['morning', 'afternoon'],
+      'testing': ['afternoon'],
+      'documentation': ['afternoon', 'evening'],
+      'meeting': ['morning', 'afternoon'],
+      'research': ['morning'],
+      'design': ['morning', 'afternoon'],
+      'review': ['afternoon', 'evening'],
+      'general': ['morning']
+    };
+    return timeSlotMap[category] || ['morning'];
+  }
+
+  /**
+   * Get optimization tips based on category
+   */
+  private getOptimizationTips(category: string): string[] {
+    const tipsMap: { [key: string]: string[] } = {
+      'planning': ['Create clear objectives', 'Break into phases', 'Set measurable outcomes'],
+      'coding': ['Use focus blocks', 'Test incrementally', 'Write clean, readable code'],
+      'testing': ['Prepare test cases', 'Document findings', 'Test edge cases'],
+      'documentation': ['Outline first', 'Use templates', 'Keep it concise'],
+      'meeting': ['Prepare agenda', 'Take notes', 'Follow up on action items'],
+      'research': ['Define scope', 'Use multiple sources', 'Take organized notes'],
+      'design': ['Start with wireframes', 'Iterate frequently', 'Get early feedback'],
+      'review': ['Use checklists', 'Focus on key areas', 'Provide constructive feedback'],
+      'general': ['Break into smaller chunks', 'Use the Pomodoro technique']
+    };
+    return tipsMap[category] || ['Break into smaller chunks', 'Focus on the task'];
   }
 
   /**
@@ -213,7 +305,7 @@ export class TaskIntelligenceService {
     
     // Process tasks in parallel batches to avoid overwhelming the AI service
     const batchSize = 5;
-    const batches = [];
+    const batches: TaskInput[][] = [];
     
     for (let i = 0; i < tasks.length; i += batchSize) {
       batches.push(tasks.slice(i, i + batchSize));

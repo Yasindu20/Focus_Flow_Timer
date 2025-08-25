@@ -4,7 +4,6 @@
  */
 
 import * as admin from 'firebase-admin';
-import { aiService } from './aiService';
 
 const db = admin.firestore();
 
