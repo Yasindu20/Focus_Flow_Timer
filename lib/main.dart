@@ -17,6 +17,7 @@ import 'providers/enhanced_timer_provider.dart';
 import 'providers/task_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/analytics_provider.dart';
+import 'providers/analytics_dashboard_provider.dart';
 import 'providers/auth_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth_screen.dart';
@@ -100,6 +101,7 @@ class FocusFlowApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => EnhancedTimerProvider()),
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
+        ChangeNotifierProvider(create: (_) => AnalyticsDashboardProvider()),
       ],
       child: Consumer2<ThemeProvider, AuthProvider>(
         builder: (context, themeProvider, authProvider, child) {
