@@ -179,7 +179,6 @@ class WeeklyProgressChart extends StatelessWidget {
                 getTitlesWidget: (value, meta) {
                   final weeks = weeklyData.keys.toList();
                   if (value.toInt() >= 0 && value.toInt() < weeks.length) {
-                    final week = weeks[value.toInt()];
                     return Text('Week ${value.toInt() + 1}', style: const TextStyle(fontSize: 10));
                   }
                   return const Text('');

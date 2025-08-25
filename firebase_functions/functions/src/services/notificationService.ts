@@ -47,7 +47,7 @@ export class NotificationService {
 
   constructor() {
     // Initialize email transporter
-    this.emailTransporter = nodemailer.createTransporter({
+    this.emailTransporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
@@ -97,7 +97,10 @@ export class NotificationService {
             return;
           }
 
-          const tasks = tasksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          const tasks = tasksSnapshot.docs.map(doc => ({ 
+            id: doc.id, 
+            ...doc.data() 
+          } as { id: string; title: string; dueDate: any; [key: string]: any }));
           
           // Send notifications based on preferences
           const notifications: NotificationTemplate[] = tasks.map(task => ({

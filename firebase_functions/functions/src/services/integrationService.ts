@@ -126,7 +126,7 @@ export class IntegrationService {
       await this.testConnection({ provider, ...config } as IntegrationConfig);
       await integrationRef.update({ connectionStatus: 'active', lastTested: admin.firestore.FieldValue.serverTimestamp() });
     } catch (error) {
-      await integrationRef.update({ connectionStatus: 'failed', lastError: error.message });
+      await integrationRef.update({ connectionStatus: 'failed', lastError: (error as Error).message });
       throw error;
     }
   }
@@ -299,7 +299,7 @@ export class IntegrationService {
       await db.collection('users').doc(userId).collection('webhook_logs').add({
         provider,
         event: payload.event || payload.webhookEvent,
-        error: error.message,
+        error: (error as Error).message,
         processedAt: admin.firestore.FieldValue.serverTimestamp(),
         success: false
       });
