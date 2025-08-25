@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/achievement.dart';
-import '../services/achievement_service.dart';
+import '../providers/achievement_provider.dart';
 import '../widgets/achievement_card.dart';
 
 class AchievementsScreen extends StatefulWidget {
@@ -20,9 +20,6 @@ class _AchievementsScreenState extends State<AchievementsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<AchievementService>(context, listen: false).initialize();
-    });
   }
 
   @override
@@ -33,8 +30,8 @@ class _AchievementsScreenState extends State<AchievementsScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AchievementService>(
-      builder: (context, achievementService, child) {
+    return Consumer<AchievementProvider>(
+      builder: (context, achievementProvider, child) {
         return Scaffold(
           appBar: AppBar(
             title: const Text('Achievements'),
@@ -43,7 +40,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
             backgroundColor: Colors.transparent,
             actions: [
               IconButton(
-                onPressed: () => _showAchievementStats(context, achievementService),
+                onPressed: () => _showAchievementStats(context, achievementProvider),
                 icon: const Icon(Icons.bar_chart),
                 tooltip: 'Statistics',
               ),
@@ -51,15 +48,15 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           ),
           body: Column(
             children: [
-              _buildStatsHeader(achievementService),
+              _buildStatsHeader(achievementProvider),
               _buildTabBar(),
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildAllAchievementsTab(achievementService),
-                    _buildUnlockedAchievementsTab(achievementService),
-                    _buildInProgressTab(achievementService),
+                    _buildAllAchievementsTab(achievementProvider),
+                    _buildUnlockedAchievementsTab(achievementProvider),
+                    _buildInProgressTab(achievementProvider),
                   ],
                 ),
               ),
@@ -70,7 +67,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
     );
   }
 
-  Widget _buildStatsHeader(AchievementService service) {
+  Widget _buildStatsHeader(AchievementProvider provider) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -98,17 +95,17 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           _buildStatItem(
             icon: Icons.emoji_events,
             label: 'Unlocked',
-            value: '${service.unlockedCount}/${service.achievements.length}',
+            value: '${provider.unlockedCount}/${provider.achievements.length}',
           ),
           _buildStatItem(
             icon: Icons.star,
             label: 'Total Points',
-            value: service.totalPoints.toString(),
+            value: provider.totalPoints.toString(),
           ),
           _buildStatItem(
             icon: Icons.trending_up,
             label: 'Progress',
-            value: '${service.completionPercentage.toInt()}%',
+            value: '${provider.completionPercentage.toInt()}%',
           ),
         ],
       ),
@@ -168,21 +165,21 @@ class _AchievementsScreenState extends State<AchievementsScreen>
     );
   }
 
-  Widget _buildAllAchievementsTab(AchievementService service) {
+  Widget _buildAllAchievementsTab(AchievementProvider provider) {
     return Column(
       children: [
         _buildRarityFilter(),
         Expanded(
           child: _buildAchievementGrid(
-            _filterByRarity(service.userAchievements),
+            _filterByRarity(provider.userAchievements),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildUnlockedAchievementsTab(AchievementService service) {
-    final unlockedAchievements = service.unlockedAchievements;
+  Widget _buildUnlockedAchievementsTab(AchievementProvider provider) {
+    final unlockedAchievements = provider.unlockedAchievements;
     
     if (unlockedAchievements.isEmpty) {
       return _buildEmptyState(
@@ -195,8 +192,8 @@ class _AchievementsScreenState extends State<AchievementsScreen>
     return _buildAchievementGrid(unlockedAchievements);
   }
 
-  Widget _buildInProgressTab(AchievementService service) {
-    final inProgressAchievements = service.lockedAchievements
+  Widget _buildInProgressTab(AchievementProvider provider) {
+    final inProgressAchievements = provider.lockedAchievements
         .where((a) => a.currentValue > 0)
         .toList();
     
@@ -496,7 +493,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
     );
   }
 
-  void _showAchievementStats(BuildContext context, AchievementService service) {
+  void _showAchievementStats(BuildContext context, AchievementProvider provider) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -513,11 +510,11 @@ class _AchievementsScreenState extends State<AchievementsScreen>
                     ),
               ),
               const SizedBox(height: 20),
-              _buildStatRow('Total Achievements', '${service.achievements.length}'),
-              _buildStatRow('Unlocked', '${service.unlockedCount}'),
-              _buildStatRow('In Progress', '${service.lockedAchievements.where((a) => a.currentValue > 0).length}'),
-              _buildStatRow('Total Points', '${service.totalPoints}'),
-              _buildStatRow('Completion', '${service.completionPercentage.toInt()}%'),
+              _buildStatRow('Total Achievements', '${provider.achievements.length}'),
+              _buildStatRow('Unlocked', '${provider.unlockedCount}'),
+              _buildStatRow('In Progress', '${provider.lockedAchievements.where((a) => a.currentValue > 0).length}'),
+              _buildStatRow('Total Points', '${provider.totalPoints}'),
+              _buildStatRow('Completion', '${provider.completionPercentage.toInt()}%'),
               const SizedBox(height: 16),
               const Divider(),
               const SizedBox(height: 16),
@@ -529,7 +526,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
               ),
               const SizedBox(height: 12),
               ...AchievementRarity.values.map((rarity) {
-                final rarityAchievements = service.userAchievements
+                final rarityAchievements = provider.userAchievements
                     .where((a) => a.rarity == rarity)
                     .toList();
                 final unlockedCount = rarityAchievements

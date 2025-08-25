@@ -22,6 +22,8 @@ import 'providers/auth_provider.dart';
 import 'providers/achievement_provider.dart';
 import 'providers/productivity_score_provider.dart';
 import 'providers/leaderboard_provider.dart';
+import 'services/productivity_score_service.dart';
+import 'services/leaderboard_service.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
@@ -104,13 +106,29 @@ class FocusFlowApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => EnhancedTimerProvider()),
+        ChangeNotifierProvider(create: (context) {
+          final provider = EnhancedTimerProvider();
+          // Initialize provider after widget tree is built
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            provider.initialize();
+          });
+          return provider;
+        }),
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
         ChangeNotifierProvider(create: (_) => AnalyticsDashboardProvider()),
-        ChangeNotifierProvider(create: (_) => AchievementProvider()),
+        ChangeNotifierProvider(create: (context) {
+          final provider = AchievementProvider();
+          // Initialize provider after widget tree is built
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            provider.initialize();
+          });
+          return provider;
+        }),
         ChangeNotifierProvider(create: (_) => ProductivityScoreProvider()),
         ChangeNotifierProvider(create: (_) => LeaderboardProvider()),
+        ChangeNotifierProvider(create: (_) => ProductivityScoreService()),
+        ChangeNotifierProvider(create: (_) => LeaderboardService()),
       ],
       child: Consumer2<ThemeProvider, AuthProvider>(
         builder: (context, themeProvider, authProvider, child) {
@@ -176,13 +194,19 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
   void initState() {
     super.initState();
 
-    // Set up global error handler
+    // Set up global error handler - use post frame callback to avoid setState during build
     FlutterError.onError = (FlutterErrorDetails details) {
-      setState(() {
-        _hasError = true;
-        _errorMessage = details.exception.toString();
-      });
       debugPrint('Flutter Error: ${details.exception}');
+      
+      // Use post frame callback to safely call setState
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _hasError = true;
+            _errorMessage = details.exception.toString();
+          });
+        }
+      });
     };
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import '../core/enums/timer_enums.dart';
 import '../services/optimized_storage_service.dart';
@@ -48,14 +49,28 @@ class EnhancedTimerProvider extends ChangeNotifier {
   bool get canStart => _state.canStart;
   bool get canStop => _state.canStop;
 
-  EnhancedTimerProvider() {
-    _initializeServices();
+  EnhancedTimerProvider();
+
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+    await _initializeServices();
   }
 
   Future<void> _initializeServices() async {
     try {
       await _storage.initialize();
-      await _notifications.initialize();
+      
+      // Initialize notifications with error handling for web
+      try {
+        await _notifications.initialize();
+      } catch (e) {
+        if (kIsWeb) {
+          debugPrint('Notification initialization skipped for web: $e');
+        } else {
+          rethrow;
+        }
+      }
+      
       await _loadSettings();
       
       _isInitialized = true;
@@ -109,6 +124,12 @@ class EnhancedTimerProvider extends ChangeNotifier {
   
   Future<void> _showNotification() async {
     try {
+      if (kIsWeb) {
+        // Skip notifications on web or use alternative notification method
+        debugPrint('Session completed: ${_currentType.name}');
+        return;
+      }
+      
       // Create a basic timer session for notification
       final session = TimerSession(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
