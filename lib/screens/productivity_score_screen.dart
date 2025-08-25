@@ -64,21 +64,29 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
               ),
             ],
           ),
-          body: Column(
-            children: [
-              _buildScoreHeader(scoreService),
-              _buildTabBar(),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildOverviewTab(scoreService),
-                    _buildTrendTab(scoreService),
-                    _buildBreakdownTab(scoreService),
-                  ],
+          body: SafeArea(
+            child: Column(
+              children: [
+                Flexible(
+                  flex: 0,
+                  child: _buildScoreHeader(scoreService),
                 ),
-              ),
-            ],
+                Flexible(
+                  flex: 0,
+                  child: _buildTabBar(),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildOverviewTab(scoreService),
+                      _buildTrendTab(scoreService),
+                      _buildBreakdownTab(scoreService),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -144,25 +152,33 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildScoreMetric(
-                'Weekly Avg',
-                service.averageWeeklyScore.toInt().toString(),
-                Icons.calendar_view_week,
-              ),
-              _buildScoreMetric(
-                'Trend',
-                _getTrendIcon(currentScore?.trend ?? ProductivityTrend.stable),
-                _getTrendIconData(currentScore?.trend ?? ProductivityTrend.stable),
-              ),
-              _buildScoreMetric(
-                'Monthly Avg',
-                service.averageMonthlyScore.toInt().toString(),
-                Icons.calendar_month,
-              ),
-            ],
+          IntrinsicHeight(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Flexible(
+                  child: _buildScoreMetric(
+                    'Weekly Avg',
+                    service.averageWeeklyScore.toInt().toString(),
+                    Icons.calendar_view_week,
+                  ),
+                ),
+                Flexible(
+                  child: _buildScoreMetric(
+                    'Trend',
+                    _getTrendIcon(currentScore?.trend ?? ProductivityTrend.stable),
+                    _getTrendIconData(currentScore?.trend ?? ProductivityTrend.stable),
+                  ),
+                ),
+                Flexible(
+                  child: _buildScoreMetric(
+                    'Monthly Avg',
+                    service.averageMonthlyScore.toInt().toString(),
+                    Icons.calendar_month,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -171,6 +187,7 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
 
   Widget _buildScoreMetric(String label, String value, IconData icon) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
           icon,
@@ -185,6 +202,7 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
+          overflow: TextOverflow.ellipsis,
         ),
         Text(
           label,
@@ -192,6 +210,8 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
             fontSize: 12,
             color: Colors.white.withValues(alpha: 0.8),
           ),
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -453,8 +473,11 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
                   ),
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              height: 200,
+            ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: 150,
+                maxHeight: 200,
+              ),
               child: _buildWeeklyBarChart(service),
             ),
           ],
@@ -478,8 +501,11 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
                   ),
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              height: 250,
+            ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: 200,
+                maxHeight: 250,
+              ),
               child: _buildLineChart(service.weeklyTrend, 'Weekly'),
             ),
           ],
@@ -503,8 +529,11 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
                   ),
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              height: 250,
+            ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: 200,
+                maxHeight: 250,
+              ),
               child: _buildLineChart(service.monthlyTrend, 'Monthly'),
             ),
           ],

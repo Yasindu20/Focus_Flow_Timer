@@ -89,25 +89,33 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStatItem(
-            icon: Icons.emoji_events,
-            label: 'Unlocked',
-            value: '${provider.unlockedCount}/${provider.achievements.length}',
-          ),
-          _buildStatItem(
-            icon: Icons.star,
-            label: 'Total Points',
-            value: provider.totalPoints.toString(),
-          ),
-          _buildStatItem(
-            icon: Icons.trending_up,
-            label: 'Progress',
-            value: '${provider.completionPercentage.toInt()}%',
-          ),
-        ],
+      child: IntrinsicHeight(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Flexible(
+              child: _buildStatItem(
+                icon: Icons.emoji_events,
+                label: 'Unlocked',
+                value: '${provider.unlockedCount}/${provider.achievements.length}',
+              ),
+            ),
+            Flexible(
+              child: _buildStatItem(
+                icon: Icons.star,
+                label: 'Total Points',
+                value: provider.totalPoints.toString(),
+              ),
+            ),
+            Flexible(
+              child: _buildStatItem(
+                icon: Icons.trending_up,
+                label: 'Progress',
+                value: '${provider.completionPercentage.toInt()}%',
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -118,6 +126,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
     required String value,
   }) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
           icon,
@@ -132,6 +141,8 @@ class _AchievementsScreenState extends State<AchievementsScreen>
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
         ),
         Text(
           label,
@@ -139,6 +150,8 @@ class _AchievementsScreenState extends State<AchievementsScreen>
             color: Colors.white.withValues(alpha: 0.8),
             fontSize: 12,
           ),
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
         ),
       ],
     );
