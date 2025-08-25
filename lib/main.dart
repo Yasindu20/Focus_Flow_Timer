@@ -118,6 +118,7 @@ class FocusFlowApp extends StatelessWidget {
               '/auth': (context) => const ErrorBoundary(child: AuthScreen()),
               '/splash': (context) =>
                   const ErrorBoundary(child: SplashScreen()),
+              '/main': (context) => const ErrorBoundary(child: MainScreen()),
               '/tasks': (context) => const ErrorBoundary(child: TasksScreen()),
               '/analytics': (context) =>
                   const ErrorBoundary(child: AnalyticsScreen()),

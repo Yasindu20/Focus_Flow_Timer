@@ -37,16 +37,36 @@ class AnalyticsFirestoreService {
   }) async {
     if (_userId == null) return [];
 
-    final snapshot = await _sessionsCollection
-        .where('userId', isEqualTo: _userId)
-        .where('startTime', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
-        .where('startTime', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
-        .orderBy('startTime', descending: true)
-        .get();
+    try {
+      // Try the optimized query with compound index first
+      final snapshot = await _sessionsCollection
+          .where('userId', isEqualTo: _userId)
+          .where('startTime', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('startTime', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
+          .orderBy('startTime', descending: true)
+          .get();
 
-    return snapshot.docs
-        .map((doc) => SessionAnalytics.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
-        .toList();
+      return snapshot.docs
+          .map((doc) => SessionAnalytics.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
+          .toList();
+    } catch (e) {
+      // Fallback to simpler query without orderBy if index is not available
+      print('Using fallback query due to missing index: $e');
+      
+      final snapshot = await _sessionsCollection
+          .where('userId', isEqualTo: _userId)
+          .where('startTime', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('startTime', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
+          .get();
+
+      final sessions = snapshot.docs
+          .map((doc) => SessionAnalytics.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
+          .toList();
+      
+      // Sort manually in memory
+      sessions.sort((a, b) => b.startTime.compareTo(a.startTime));
+      return sessions;
+    }
   }
 
   // Get Daily Sessions
