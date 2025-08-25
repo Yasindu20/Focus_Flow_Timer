@@ -766,6 +766,72 @@ class OptimizedStorageService {
   }
 
   /// Dispose resources
+  // ACHIEVEMENT STORAGE
+  Future<List<Map<String, dynamic>>> getAchievements() async {
+    final data = await getCachedData('achievements');
+    return data != null ? List<Map<String, dynamic>>.from(data['achievements'] ?? []) : [];
+  }
+
+  Future<void> setAchievements(List<Map<String, dynamic>> achievements) async {
+    await cacheData('achievements', {'achievements': achievements});
+  }
+
+  // PRODUCTIVITY SCORE STORAGE
+  Future<Map<String, dynamic>?> getCurrentProductivityScore() async {
+    return await getCachedData('current_productivity_score');
+  }
+
+  Future<void> setCurrentProductivityScore(Map<String, dynamic> score) async {
+    await cacheData('current_productivity_score', score);
+  }
+
+  Future<List<Map<String, dynamic>>> getWeeklyProductivityScores() async {
+    final data = await getCachedData('weekly_productivity_scores');
+    return data != null ? List<Map<String, dynamic>>.from(data['scores'] ?? []) : [];
+  }
+
+  Future<void> setWeeklyProductivityScores(List<Map<String, dynamic>> scores) async {
+    await cacheData('weekly_productivity_scores', {'scores': scores});
+  }
+
+  Future<List<Map<String, dynamic>>> getMonthlyProductivityScores() async {
+    final data = await getCachedData('monthly_productivity_scores');
+    return data != null ? List<Map<String, dynamic>>.from(data['scores'] ?? []) : [];
+  }
+
+  Future<void> setMonthlyProductivityScores(List<Map<String, dynamic>> scores) async {
+    await cacheData('monthly_productivity_scores', {'scores': scores});
+  }
+
+  Future<void> clearProductivityScores() async {
+    await cacheData('current_productivity_score', {});
+    await cacheData('weekly_productivity_scores', {'scores': []});
+    await cacheData('monthly_productivity_scores', {'scores': []});
+  }
+
+  // LEADERBOARD STORAGE
+  Future<Map<String, Map<String, dynamic>>> getLeaderboards() async {
+    final data = await getCachedData('leaderboards');
+    return data != null ? Map<String, Map<String, dynamic>>.from(data['leaderboards'] ?? {}) : {};
+  }
+
+  Future<void> setLeaderboards(Map<String, Map<String, dynamic>> leaderboards) async {
+    await cacheData('leaderboards', {'leaderboards': leaderboards});
+  }
+
+  Future<Map<String, dynamic>?> getUserLeaderboardEntry() async {
+    return await getCachedData('user_leaderboard_entry');
+  }
+
+  Future<void> setUserLeaderboardEntry(Map<String, dynamic> entry) async {
+    await cacheData('user_leaderboard_entry', entry);
+  }
+
+  Future<void> clearUserLeaderboardEntry() async {
+    await cacheData('user_leaderboard_entry', {});
+  }
+
+  /// Dispose resources
   Future<void> dispose() async {
     await _syncStatusController.close();
     await _tasksBox?.close();
