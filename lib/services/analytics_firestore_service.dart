@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import '../models/session_analytics.dart';
 import '../models/user_goals.dart';
 
@@ -51,7 +52,7 @@ class AnalyticsFirestoreService {
           .toList();
     } catch (e) {
       // Fallback to simpler query without orderBy if index is not available
-      print('Using fallback query due to missing index: $e');
+      debugPrint('Using fallback query due to missing index: $e');
       
       final snapshot = await _sessionsCollection
           .where('userId', isEqualTo: _userId)
