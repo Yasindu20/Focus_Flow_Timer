@@ -359,8 +359,9 @@ class OptimizedStorageService {
   Future<void> _initializeHive() async {
     await Hive.initFlutter();
     
-    // Register adapters if not already registered
-    if (!Hive.isAdapterRegistered(0)) {
+    // Register all adapters if not already registered
+    // Main models
+    if (!Hive.isAdapterRegistered(10)) {
       Hive.registerAdapter(EnhancedTaskAdapter());
     }
     if (!Hive.isAdapterRegistered(1)) {
@@ -368,6 +369,52 @@ class OptimizedStorageService {
     }
     if (!Hive.isAdapterRegistered(2)) {
       Hive.registerAdapter(DailyStatsAdapter());
+    }
+    
+    // Supporting classes from enhanced_task.dart
+    if (!Hive.isAdapterRegistered(11)) {
+      Hive.registerAdapter(TaskSubtaskAdapter());
+    }
+    if (!Hive.isAdapterRegistered(12)) {
+      Hive.registerAdapter(TaskProgressAdapter());
+    }
+    if (!Hive.isAdapterRegistered(13)) {
+      Hive.registerAdapter(ProgressCheckpointAdapter());
+    }
+    if (!Hive.isAdapterRegistered(14)) {
+      Hive.registerAdapter(TaskCommentAdapter());
+    }
+    if (!Hive.isAdapterRegistered(15)) {
+      Hive.registerAdapter(TaskAttachmentAdapter());
+    }
+    if (!Hive.isAdapterRegistered(16)) {
+      Hive.registerAdapter(TaskRecurrenceAdapter());
+    }
+    if (!Hive.isAdapterRegistered(17)) {
+      Hive.registerAdapter(TaskAIDataAdapter());
+    }
+    if (!Hive.isAdapterRegistered(18)) {
+      Hive.registerAdapter(TaskMetricsAdapter());
+    }
+    if (!Hive.isAdapterRegistered(19)) {
+      Hive.registerAdapter(TaskTimeEntryAdapter());
+    }
+    
+    // Enums
+    if (!Hive.isAdapterRegistered(20)) {
+      Hive.registerAdapter(TaskCategoryAdapter());
+    }
+    if (!Hive.isAdapterRegistered(21)) {
+      Hive.registerAdapter(TaskPriorityAdapter());
+    }
+    if (!Hive.isAdapterRegistered(22)) {
+      Hive.registerAdapter(TaskStatusAdapter());
+    }
+    if (!Hive.isAdapterRegistered(23)) {
+      Hive.registerAdapter(TaskUrgencyAdapter());
+    }
+    if (!Hive.isAdapterRegistered(24)) {
+      Hive.registerAdapter(RecurrenceTypeAdapter());
     }
 
     // Open boxes
