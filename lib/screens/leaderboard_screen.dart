@@ -57,14 +57,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
           body: SafeArea(
             child: Column(
               children: [
-                Flexible(
-                  flex: 0,
-                  child: _buildUserRankCard(leaderboardService),
-                ),
-                Flexible(
-                  flex: 0,
-                  child: _buildLeaderboardTypeSelector(),
-                ),
+                _buildUserRankCard(leaderboardService),
+                _buildLeaderboardTypeSelector(),
                 Expanded(
                   child: _buildLeaderboardContent(leaderboardService),
                 ),
@@ -308,7 +302,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
     if (topThree.length < 3) return const SizedBox.shrink();
 
     return Container(
-      height: 200,
+      constraints: const BoxConstraints(
+        minHeight: 150,
+        maxHeight: 180,
+      ),
       margin: const EdgeInsets.all(16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,

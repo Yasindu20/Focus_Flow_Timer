@@ -76,13 +76,17 @@ class _ProductivityScoreScreenState extends State<ProductivityScoreScreen>
                   child: _buildTabBar(),
                 ),
                 Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildOverviewTab(scoreService),
-                      _buildTrendTab(scoreService),
-                      _buildBreakdownTab(scoreService),
-                    ],
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildOverviewTab(scoreService),
+                          _buildTrendTab(scoreService),
+                          _buildBreakdownTab(scoreService),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ],

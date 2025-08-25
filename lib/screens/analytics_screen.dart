@@ -48,12 +48,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildQuickStatsTab(),
-          const AnalyticsDashboardContent(),
-        ],
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return TabBarView(
+            controller: _tabController,
+            children: [
+              _buildQuickStatsTab(),
+              const AnalyticsDashboardContent(),
+            ],
+          );
+        },
       ),
     );
   }

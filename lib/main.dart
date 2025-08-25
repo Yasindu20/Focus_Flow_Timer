@@ -312,9 +312,22 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Add constraint-based layout handling for dev tools
+            return ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: 0,
+                maxHeight: constraints.maxHeight,
+              ),
+              child: IndexedStack(
+                index: _currentIndex,
+                children: _screens,
+              ),
+            );
+          },
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,

@@ -58,13 +58,17 @@ class _AchievementsScreenState extends State<AchievementsScreen>
                   child: _buildTabBar(),
                 ),
                 Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildAllAchievementsTab(achievementProvider),
-                      _buildUnlockedAchievementsTab(achievementProvider),
-                      _buildInProgressTab(achievementProvider),
-                    ],
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildAllAchievementsTab(achievementProvider),
+                          _buildUnlockedAchievementsTab(achievementProvider),
+                          _buildInProgressTab(achievementProvider),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ],
