@@ -37,9 +37,22 @@ extension TimerTypeExtension on TimerType {
   String get displayName {
     switch (this) {
       case TimerType.pomodoro:
-        return 'Pomodoro';
+        return 'Focus Session';
       case TimerType.shortBreak:
         return 'Short Break';
+      case TimerType.longBreak:
+        return 'Long Break';
+      case TimerType.custom:
+        return 'Custom Session';
+    }
+  }
+
+  String get shortName {
+    switch (this) {
+      case TimerType.pomodoro:
+        return 'Focus';
+      case TimerType.shortBreak:
+        return 'Break';
       case TimerType.longBreak:
         return 'Long Break';
       case TimerType.custom:
@@ -62,6 +75,37 @@ extension TimerTypeExtension on TimerType {
 
   bool get isBreak {
     return this == TimerType.shortBreak || this == TimerType.longBreak;
+  }
+
+  bool get isFocusSession {
+    return this == TimerType.pomodoro || this == TimerType.custom;
+  }
+
+  // Recommended duration ranges for UX validation
+  (int min, int max) get recommendedRange {
+    switch (this) {
+      case TimerType.pomodoro:
+        return (5, 120); // 5 minutes to 2 hours
+      case TimerType.shortBreak:
+        return (1, 30);  // 1 to 30 minutes
+      case TimerType.longBreak:
+        return (5, 60);  // 5 to 60 minutes
+      case TimerType.custom:
+        return (1, 240); // 1 minute to 4 hours
+    }
+  }
+
+  String get description {
+    switch (this) {
+      case TimerType.pomodoro:
+        return 'Deep focus work session';
+      case TimerType.shortBreak:
+        return 'Quick rest and recharge';
+      case TimerType.longBreak:
+        return 'Extended break time';
+      case TimerType.custom:
+        return 'Flexible session duration';
+    }
   }
 }
 

@@ -91,8 +91,8 @@ class _SoundSelectorState extends State<SoundSelector> {
     return Consumer<EnhancedTimerProvider>(
       builder: (context, timerProvider, child) {
         return Container(
-          margin: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20),
-          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          margin: EdgeInsets.symmetric(horizontal: isMobile ? (screenWidth < 400 ? 0 : 4) : 8),
+          padding: EdgeInsets.all(isMobile ? (screenWidth < 400 ? 12 : 16) : 20),
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
@@ -154,31 +154,38 @@ class _SoundSelectorState extends State<SoundSelector> {
   }
   
   Widget _buildSoundGrid(bool isMobile, bool isSmallScreen) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isMobile ? 3 : 3,
-        crossAxisSpacing: isMobile ? 8 : 12,
-        mainAxisSpacing: isMobile ? 8 : 12,
-        childAspectRatio: isMobile ? 0.95 : 1.1,
-      ),
-      itemCount: _availableSounds.length,
-      itemBuilder: (context, index) {
-        final sound = _availableSounds[index];
-        final isSelected = _selectedSound == sound['name'];
-        
-        return _buildSoundCard(
-          name: sound['name'],
-          icon: sound['icon'],
-          description: sound['description'],
-          color: sound['color'],
-          isSelected: isSelected,
-          onTap: () {
-            setState(() {
-              _selectedSound = sound['name'];
-            });
-            _saveSoundSettings();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final crossAxisCount = isMobile && screenWidth < 400 ? 2 : 3;
+    
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: isMobile ? 6 : 8,
+            mainAxisSpacing: isMobile ? 6 : 8,
+            childAspectRatio: isMobile && screenWidth < 400 ? 1.15 : (isMobile ? 0.95 : 1.1),
+          ),
+          itemCount: _availableSounds.length,
+          itemBuilder: (context, index) {
+            final sound = _availableSounds[index];
+            final isSelected = _selectedSound == sound['name'];
+            
+            return _buildSoundCard(
+              name: sound['name'],
+              icon: sound['icon'],
+              description: sound['description'],
+              color: sound['color'],
+              isSelected: isSelected,
+              onTap: () {
+                setState(() {
+                  _selectedSound = sound['name'];
+                });
+                _saveSoundSettings();
+              },
+            );
           },
         );
       },
@@ -371,13 +378,6 @@ class _SoundSelectorState extends State<SoundSelector> {
           ),
         ],
       ),
-    );
-  }
-  
-  Map<String, dynamic> _getSoundByName(String name) {
-    return _availableSounds.firstWhere(
-      (sound) => sound['name'] == name,
-      orElse: () => _availableSounds.first,
     );
   }
 }

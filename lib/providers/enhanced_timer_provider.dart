@@ -5,10 +5,12 @@ import '../services/optimized_storage_service.dart';
 import '../services/notification_manager.dart';
 import '../services/session_integration_service.dart';
 import '../models/timer_session.dart';
+import 'timer_settings_provider.dart';
 
 class EnhancedTimerProvider extends ChangeNotifier {
   final OptimizedStorageService _storage = OptimizedStorageService();
   final NotificationManager _notifications = NotificationManager();
+  TimerSettingsProvider? _settingsProvider;
   
   // Timer state
   TimerState _state = TimerState.idle;
@@ -48,7 +50,9 @@ class EnhancedTimerProvider extends ChangeNotifier {
   bool get canStart => _state.canStart;
   bool get canStop => _state.canStop;
 
-  EnhancedTimerProvider();
+  EnhancedTimerProvider([TimerSettingsProvider? settingsProvider]) {
+    _settingsProvider = settingsProvider;
+  }
 
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -87,7 +91,7 @@ class EnhancedTimerProvider extends ChangeNotifier {
           (type) => type.toString() == settings['currentType'],
           orElse: () => TimerType.pomodoro,
         );
-        _totalTime = _currentType.defaultDuration;
+        _totalTime = _getCustomDurationForType(_currentType);
         _remainingTime = _totalTime;
       }
     } catch (e) {
@@ -214,7 +218,7 @@ class EnhancedTimerProvider extends ChangeNotifier {
       if (customDurationMinutes != null) {
         _totalTime = Duration(minutes: customDurationMinutes);
       } else {
-        _totalTime = _currentType.defaultDuration;
+        _totalTime = _getCustomDurationForType(_currentType);
       }
       
       _remainingTime = _totalTime;
@@ -298,7 +302,7 @@ class EnhancedTimerProvider extends ChangeNotifier {
     try {
       if (_state.isIdle) {
         _currentType = type;
-        _totalTime = type.defaultDuration;
+        _totalTime = _getCustomDurationForType(type);
         _remainingTime = _totalTime;
         await _saveSettings();
         notifyListeners();
@@ -365,6 +369,59 @@ class EnhancedTimerProvider extends ChangeNotifier {
   void _clearError() {
     _lastError = null;
     _lastErrorTime = null;
+  }
+
+  // Get custom duration for timer type
+  Duration _getCustomDurationForType(TimerType type) {
+    if (_settingsProvider != null) {
+      final minutes = _settingsProvider!.getDurationForType(type);
+      return Duration(minutes: minutes);
+    }
+    return type.defaultDuration;
+  }
+
+  // Update custom duration for current timer type
+  Future<void> updateCustomDuration(int minutes) async {
+    try {
+      if (_state.isIdle && _settingsProvider != null) {
+        await _settingsProvider!.setDurationForType(_currentType, minutes);
+        _totalTime = Duration(minutes: minutes);
+        _remainingTime = _totalTime;
+        notifyListeners();
+      }
+    } catch (e) {
+      _handleError('Failed to update custom duration', e);
+    }
+  }
+
+  // Get current custom duration in minutes
+  int getCurrentCustomDuration() {
+    if (_settingsProvider != null) {
+      return _settingsProvider!.getDurationForType(_currentType);
+    }
+    return _currentType.defaultDuration.inMinutes;
+  }
+
+  // Set settings provider reference
+  void setSettingsProvider(TimerSettingsProvider provider) {
+    _settingsProvider = provider;
+  }
+
+  // Check if should show long break based on session count
+  bool shouldShowLongBreak() {
+    if (_settingsProvider != null) {
+      return _sessionCount > 0 && 
+             _sessionCount % _settingsProvider!.settings.longBreakInterval == 0;
+    }
+    return _sessionCount > 0 && _sessionCount % 4 == 0;
+  }
+
+  // Get next recommended timer type
+  TimerType getNextRecommendedType() {
+    if (_currentType == TimerType.pomodoro) {
+      return shouldShowLongBreak() ? TimerType.longBreak : TimerType.shortBreak;
+    }
+    return TimerType.pomodoro;
   }
 
   @override

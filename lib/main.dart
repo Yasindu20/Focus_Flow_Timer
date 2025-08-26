@@ -14,6 +14,7 @@ import 'services/free_api_integration_service.dart';
 import 'services/offline_pwa_service.dart';
 import 'services/notification_manager.dart';
 import 'providers/enhanced_timer_provider.dart';
+import 'providers/timer_settings_provider.dart';
 import 'providers/task_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/analytics_provider.dart';
@@ -107,13 +108,36 @@ class FocusFlowApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (context) {
-          final provider = EnhancedTimerProvider();
+          final provider = TimerSettingsProvider();
           // Initialize provider after widget tree is built
           WidgetsBinding.instance.addPostFrameCallback((_) {
             provider.initialize();
           });
           return provider;
         }),
+        ChangeNotifierProxyProvider<TimerSettingsProvider, EnhancedTimerProvider>(
+          create: (context) {
+            final settingsProvider = Provider.of<TimerSettingsProvider>(context, listen: false);
+            final provider = EnhancedTimerProvider(settingsProvider);
+            // Initialize provider after widget tree is built
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              provider.initialize();
+            });
+            return provider;
+          },
+          update: (context, settingsProvider, previousProvider) {
+            if (previousProvider != null) {
+              previousProvider.setSettingsProvider(settingsProvider);
+              return previousProvider;
+            } else {
+              final provider = EnhancedTimerProvider(settingsProvider);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                provider.initialize();
+              });
+              return provider;
+            }
+          },
+        ),
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
         ChangeNotifierProvider(create: (_) => AnalyticsDashboardProvider()),
