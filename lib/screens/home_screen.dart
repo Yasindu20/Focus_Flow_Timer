@@ -41,7 +41,6 @@ class HomeScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      flex: 1,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -70,23 +69,6 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                    SizedBox(width: isMobile ? (ResponsiveUtils.isSmallMobile(context) ? 4 : 6) : 8),
-                    Container(
-                      constraints: BoxConstraints(
-                        maxWidth: isMobile ? (ResponsiveUtils.isSmallMobile(context) ? 40 : 44) : 48,
-                        maxHeight: isMobile ? (ResponsiveUtils.isSmallMobile(context) ? 40 : 44) : 48,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceLight,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.tune_rounded),
-                        iconSize: isMobile ? (ResponsiveUtils.isSmallMobile(context) ? 16 : 18) : 20,
-                        color: AppColors.textSecondary,
-                        onPressed: () => Navigator.pushNamed(context, '/settings'),
                       ),
                     ),
                   ],

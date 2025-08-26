@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/analytics_provider.dart';
 import '../providers/analytics_dashboard_provider.dart';
 import 'analytics_dashboard_screen.dart';
+import '../widgets/simple_productivity_score_tab.dart';
+import '../widgets/simple_leaderboard_tab.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -17,7 +19,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -42,9 +44,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
         ],
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: true,
           tabs: const [
-            Tab(icon: Icon(Icons.today), text: 'Quick Stats'),
+            Tab(icon: Icon(Icons.today), text: 'Stats'),
             Tab(icon: Icon(Icons.analytics), text: 'Dashboard'),
+            Tab(icon: Icon(Icons.trending_up), text: 'Score'),
+            Tab(icon: Icon(Icons.leaderboard), text: 'Rankings'),
           ],
         ),
       ),
@@ -55,6 +60,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
             children: [
               _buildQuickStatsTab(),
               const AnalyticsDashboardContent(),
+              const SimpleProductivityScoreTab(),
+              const SimpleLeaderboardTab(),
             ],
           );
         },
