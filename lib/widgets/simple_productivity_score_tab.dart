@@ -170,7 +170,7 @@ class _SimpleProductivityScoreTabState extends State<SimpleProductivityScoreTab>
           const SizedBox(height: 12),
           _buildMetricCard('Sessions Done', '${service.currentScore?.metrics.completedSessions ?? 0}', Icons.play_circle),
           const SizedBox(height: 12),
-          _buildMetricCard('Weekly Average', '${service.averageWeeklyScore.toStringAsFixed(1)}', Icons.trending_up),
+          _buildMetricCard('Weekly Average', service.averageWeeklyScore.toStringAsFixed(1), Icons.trending_up),
         ],
       ),
     );
@@ -192,7 +192,7 @@ class _SimpleProductivityScoreTabState extends State<SimpleProductivityScoreTab>
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 16),
-                  Container(
+                  SizedBox(
                     height: 200,
                     child: service.weeklyTrend.isNotEmpty
                         ? _buildTrendChart(service.weeklyTrend)
@@ -214,7 +214,7 @@ class _SimpleProductivityScoreTabState extends State<SimpleProductivityScoreTab>
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 16),
-                  Container(
+                  SizedBox(
                     height: 200,
                     child: service.monthlyTrend.isNotEmpty
                         ? _buildTrendChart(service.monthlyTrend)

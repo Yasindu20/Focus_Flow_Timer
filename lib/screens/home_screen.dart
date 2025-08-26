@@ -20,7 +20,7 @@ class HomeScreen extends StatelessWidget {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            return Container(
+            return SizedBox(
               width: constraints.maxWidth,
               child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(
@@ -100,7 +100,7 @@ class HomeScreen extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.task_alt_rounded,
                               size: 20,
                               color: AppColors.primaryBlue,
@@ -124,14 +124,14 @@ class HomeScreen extends StatelessWidget {
                               color: AppColors.surfaceLight,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Column(
+                            child: const Column(
                               children: [
                                 Icon(
                                   Icons.assignment_outlined,
                                   size: 32,
                                   color: AppColors.textTertiary,
                                 ),
-                                const SizedBox(height: 8),
+                                SizedBox(height: 8),
                                 Text(
                                   'No tasks yet',
                                   style: TextStyle(
@@ -139,7 +139,7 @@ class HomeScreen extends StatelessWidget {
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
+                                SizedBox(height: 4),
                                 Text(
                                   'Add your first task to get started',
                                   style: TextStyle(
@@ -184,12 +184,12 @@ class HomeScreen extends StatelessWidget {
                                     child: DropdownButtonHideUnderline(
                                       child: DropdownButton<String>(
                                         value: currentTaskId,
-                                        hint: Text(
+                                        hint: const Text(
                                           'Choose your focus task',
                                           style: TextStyle(color: AppColors.textTertiary),
                                         ),
                                         isExpanded: true,
-                                        icon: Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textSecondary),
+                                        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textSecondary),
                                         items: [
                                           const DropdownMenuItem(
                                             value: null,
@@ -219,7 +219,7 @@ class HomeScreen extends StatelessWidget {
                                           Flexible(
                                             child: TextButton.icon(
                                               onPressed: () => Navigator.pushNamed(context, '/tasks'),
-                                              icon: Icon(Icons.edit_rounded, size: 16),
+                                              icon: const Icon(Icons.edit_rounded, size: 16),
                                               label: const Text('Manage Tasks'),
                                               style: TextButton.styleFrom(
                                                 foregroundColor: AppColors.primaryBlue,

@@ -337,7 +337,7 @@ class _DurationSelectorState extends State<DurationSelector>
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Enter minutes',
                 hintStyle: TextStyle(
                   color: AppColors.textTertiary,
@@ -406,7 +406,7 @@ class _DurationSelectorState extends State<DurationSelector>
     HapticFeedback.heavyImpact();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
+        content: const Text(
           'Please enter a duration between 1 and 999 minutes',
           style: TextStyle(color: Colors.white),
         ),

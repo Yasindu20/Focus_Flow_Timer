@@ -15,7 +15,6 @@ class SimpleLeaderboardTab extends StatefulWidget {
 class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  LeaderboardType _selectedType = LeaderboardType.productivity;
 
   @override
   void initState() {
@@ -47,9 +46,7 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
                 unselectedLabelColor: Colors.white70,
                 indicatorColor: Colors.white,
                 onTap: (index) {
-                  setState(() {
-                    _selectedType = LeaderboardType.values[index];
-                  });
+                  // Tab selection is handled by TabController automatically
                 },
                 tabs: LeaderboardType.values.map((type) {
                   return Tab(

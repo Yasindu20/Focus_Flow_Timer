@@ -105,13 +105,13 @@ class ResponsiveText extends StatelessWidget {
 
   const ResponsiveText(
     this.text, {
-    Key? key,
+    super.key,
     this.style,
     this.maxLines,
     this.overflow = TextOverflow.ellipsis,
     this.textAlign,
     this.scaleFactor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -150,14 +150,14 @@ class ResponsiveContainer extends StatelessWidget {
   final double? height;
 
   const ResponsiveContainer({
-    Key? key,
+    super.key,
     required this.child,
     this.padding,
     this.margin,
     this.decoration,
     this.width,
     this.height,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
