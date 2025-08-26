@@ -231,7 +231,7 @@ class _TimerConfigPanelState extends State<TimerConfigPanel>
           Container(
             height: 1,
             margin: EdgeInsets.only(bottom: isMobile ? 16 : 20),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   Colors.transparent,

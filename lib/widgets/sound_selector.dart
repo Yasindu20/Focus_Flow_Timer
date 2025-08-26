@@ -265,7 +265,7 @@ class _SoundSelectorState extends State<SoundSelector> {
                   flex: 1,
                   child: Text(
                     description,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.textTertiary,
                       fontSize: 8,
                       fontWeight: FontWeight.w400,
