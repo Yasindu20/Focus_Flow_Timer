@@ -4,6 +4,7 @@ import '../providers/enhanced_timer_provider.dart';
 import '../providers/task_provider.dart';
 import '../widgets/enhanced_timer_widget.dart';
 import '../widgets/sound_selector.dart';
+import '../widgets/timer_config_panel.dart';
 import '../core/constants/colors.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -234,7 +235,12 @@ class HomeScreen extends StatelessWidget {
                 },
               ),
 
-              SizedBox(height: isSmallScreen ? 20 : 32),
+              SizedBox(height: isSmallScreen ? 16 : 24),
+
+              // Timer configuration panel
+              const TimerConfigPanel(),
+
+              SizedBox(height: isSmallScreen ? 16 : 24),
 
               // Timer widget
               const EnhancedTimerWidget(),

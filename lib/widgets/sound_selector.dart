@@ -373,11 +373,4 @@ class _SoundSelectorState extends State<SoundSelector> {
       ),
     );
   }
-  
-  Map<String, dynamic> _getSoundByName(String name) {
-    return _availableSounds.firstWhere(
-      (sound) => sound['name'] == name,
-      orElse: () => _availableSounds.first,
-    );
-  }
 }
