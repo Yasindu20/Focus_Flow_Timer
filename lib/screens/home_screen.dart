@@ -6,70 +6,85 @@ import '../widgets/enhanced_timer_widget.dart';
 import '../widgets/sound_selector.dart';
 import '../widgets/timer_config_panel.dart';
 import '../core/constants/colors.dart';
+import '../core/utils/responsive_utils.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key}); // Fixed: Using super parameter
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenHeight < 700;
-    final isMobile = screenWidth < 600;
+    final isSmallScreen = ResponsiveUtils.isSmallScreen(context);
+    final isMobile = ResponsiveUtils.isMobile(context);
     
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 16 : 20,
-                vertical: isSmallScreen ? 8 : 16,
-              ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
+            return Container(
+              width: constraints.maxWidth,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? (ResponsiveUtils.isSmallMobile(context) ? 8 : 12) : 16,
+                  vertical: isSmallScreen ? 6 : 12,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-              // Enhanced Header
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                // Enhanced Header
               Container(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
+                      flex: 1,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Focus Flow',
-                            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                              fontWeight: FontWeight.w300,
-                              letterSpacing: -0.5,
-                              color: AppColors.textPrimary,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Focus Flow',
+                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                fontWeight: FontWeight.w300,
+                                letterSpacing: -0.5,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 2),
-                          Text(
-                            'Stay focused, achieve more',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w400,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Stay focused, achieve more',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w400,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
+                    SizedBox(width: isMobile ? (ResponsiveUtils.isSmallMobile(context) ? 4 : 6) : 8),
                     Container(
+                      constraints: BoxConstraints(
+                        maxWidth: isMobile ? (ResponsiveUtils.isSmallMobile(context) ? 40 : 44) : 48,
+                        maxHeight: isMobile ? (ResponsiveUtils.isSmallMobile(context) ? 40 : 44) : 48,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.surfaceLight,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: IconButton(
                         icon: const Icon(Icons.tune_rounded),
-                        iconSize: 20,
+                        iconSize: isMobile ? (ResponsiveUtils.isSmallMobile(context) ? 16 : 18) : 20,
                         color: AppColors.textSecondary,
                         onPressed: () => Navigator.pushNamed(context, '/settings'),
                       ),
@@ -86,7 +101,7 @@ class HomeScreen extends StatelessWidget {
                   final incompleteTasks = taskProvider.incompleteTasks;
 
                   return Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: EdgeInsets.all(isMobile ? (ResponsiveUtils.isSmallMobile(context) ? 12 : 16) : 20),
                     decoration: BoxDecoration(
                       color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(16),
@@ -108,7 +123,7 @@ class HomeScreen extends StatelessWidget {
                               size: 20,
                               color: AppColors.primaryBlue,
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: isMobile ? (ResponsiveUtils.isSmallMobile(context) ? 4 : 6) : 8),
                             Text(
                               'Current Focus',
                               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -122,7 +137,7 @@ class HomeScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         if (incompleteTasks.isEmpty) ...[
                           Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: EdgeInsets.all(isMobile ? 12 : 16),
                             decoration: BoxDecoration(
                               color: AppColors.surfaceLight,
                               borderRadius: BorderRadius.circular(12),
@@ -176,7 +191,10 @@ class HomeScreen extends StatelessWidget {
                               return Column(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: isMobile ? (ResponsiveUtils.isSmallMobile(context) ? 8 : 12) : 16, 
+                                      vertical: 4
+                                    ),
                                     decoration: BoxDecoration(
                                       border: Border.all(color: AppColors.progressTrack),
                                       borderRadius: BorderRadius.circular(12),
@@ -211,16 +229,26 @@ class HomeScreen extends StatelessWidget {
                                   const SizedBox(height: 12),
                                   Align(
                                     alignment: Alignment.centerRight,
-                                    child: TextButton.icon(
-                                      onPressed: () => Navigator.pushNamed(context, '/tasks'),
-                                      icon: Icon(Icons.edit_rounded, size: 16),
-                                      label: const Text('Manage Tasks'),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: AppColors.primaryBlue,
-                                        textStyle: const TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 13,
-                                        ),
+                                    child: SizedBox(
+                                      width: double.infinity,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          Flexible(
+                                            child: TextButton.icon(
+                                              onPressed: () => Navigator.pushNamed(context, '/tasks'),
+                                              icon: Icon(Icons.edit_rounded, size: 16),
+                                              label: const Text('Manage Tasks'),
+                                              style: TextButton.styleFrom(
+                                                foregroundColor: AppColors.primaryBlue,
+                                                textStyle: const TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 13,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
@@ -252,7 +280,8 @@ class HomeScreen extends StatelessWidget {
               
               // Add bottom padding for mobile
               SizedBox(height: isMobile ? 20 : 0),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );

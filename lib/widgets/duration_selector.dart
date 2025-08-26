@@ -192,29 +192,39 @@ class _DurationSelectorState extends State<DurationSelector>
 
   Widget _buildPresetGrid(bool isMobile) {
     final presets = _presets[widget.timerType] ?? [];
+    final screenWidth = MediaQuery.of(context).size.width;
     
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isMobile ? 4 : 5,
-        crossAxisSpacing: isMobile ? 8 : 12,
-        mainAxisSpacing: isMobile ? 8 : 12,
-        childAspectRatio: isMobile ? 1.2 : 1.3,
-      ),
-      itemCount: presets.length,
-      itemBuilder: (context, index) {
-        final duration = presets[index];
-        final isSelected = duration == widget.currentDuration;
-        
-        return _buildPresetButton(
-          duration: duration,
-          isSelected: isSelected,
-          isMobile: isMobile,
-          onTap: () {
-            widget.onDurationChanged(duration);
-            _textController.text = duration.toString();
-            _animateSelection();
+    // Adjust grid based on screen size for better responsiveness
+    final crossAxisCount = screenWidth < 400 
+        ? 3 
+        : (isMobile ? 4 : 5);
+    
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: screenWidth < 400 ? 6 : (isMobile ? 8 : 12),
+            mainAxisSpacing: screenWidth < 400 ? 6 : (isMobile ? 8 : 12),
+            childAspectRatio: screenWidth < 400 ? 1.0 : (isMobile ? 1.2 : 1.3),
+          ),
+          itemCount: presets.length,
+          itemBuilder: (context, index) {
+            final duration = presets[index];
+            final isSelected = duration == widget.currentDuration;
+            
+            return _buildPresetButton(
+              duration: duration,
+              isSelected: isSelected,
+              isMobile: isMobile,
+              onTap: () {
+                widget.onDurationChanged(duration);
+                _textController.text = duration.toString();
+                _animateSelection();
+              },
+            );
           },
         );
       },

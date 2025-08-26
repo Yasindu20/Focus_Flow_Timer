@@ -45,7 +45,9 @@ class _TimerConfigPanelState extends State<TimerConfigPanel>
     return Consumer2<EnhancedTimerProvider, TimerSettingsProvider>(
       builder: (context, timerProvider, settingsProvider, child) {
         return Container(
-          margin: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20),
+          margin: EdgeInsets.symmetric(
+            horizontal: isMobile ? (screenWidth < 400 ? 0 : 4) : 8,
+          ),
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
@@ -305,41 +307,51 @@ class _TimerConfigPanelState extends State<TimerConfigPanel>
     final longBreakDuration = settingsProvider.longBreakDuration;
     final longBreakInterval = settingsProvider.settings.longBreakInterval;
 
-    return Wrap(
-      spacing: isMobile ? 4 : 6,
-      runSpacing: isMobile ? 4 : 6,
-      children: [
-        for (int i = 1; i <= longBreakInterval; i++) ...[
-          _buildFlowChip(
-            'Work $i',
-            '${workDuration}m',
-            AppColors.workColor,
-            isMobile,
-          ),
-          if (i < longBreakInterval)
-            _buildFlowChip(
-              'Break',
-              '${shortBreakDuration}m',
-              AppColors.breakColor,
-              isMobile,
-            )
-          else
-            _buildFlowChip(
-              'Long Break',
-              '${longBreakDuration}m',
-              AppColors.breakColor,
-              isMobile,
-            ),
-        ],
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Wrap(
+          spacing: isMobile ? 3 : 4,
+          runSpacing: isMobile ? 3 : 4,
+          alignment: WrapAlignment.start,
+          runAlignment: WrapAlignment.start,
+          children: [
+            for (int i = 1; i <= longBreakInterval; i++) ...[
+              _buildFlowChip(
+                'Work $i',
+                '${workDuration}m',
+                AppColors.workColor,
+                isMobile,
+              ),
+              if (i < longBreakInterval)
+                _buildFlowChip(
+                  'Break',
+                  '${shortBreakDuration}m',
+                  AppColors.breakColor,
+                  isMobile,
+                )
+              else
+                _buildFlowChip(
+                  'Long Break',
+                  '${longBreakDuration}m',
+                  AppColors.breakColor,
+                  isMobile,
+                ),
+            ],
+          ],
+        );
+      },
     );
   }
 
   Widget _buildFlowChip(String label, String duration, Color color, bool isMobile) {
     return Container(
+      constraints: const BoxConstraints(
+        minWidth: 60,
+        maxWidth: 120,
+      ),
       padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 8 : 10,
-        vertical: isMobile ? 4 : 6,
+        horizontal: isMobile ? 6 : 8,
+        vertical: isMobile ? 3 : 4,
       ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
@@ -351,20 +363,25 @@ class _TimerConfigPanelState extends State<TimerConfigPanel>
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: isMobile ? 10 : 11,
-              fontWeight: FontWeight.w500,
-              color: color,
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: isMobile ? 9 : 10,
+                fontWeight: FontWeight.w500,
+                color: color,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
-          SizedBox(width: isMobile ? 4 : 6),
+          SizedBox(width: isMobile ? 3 : 4),
           Text(
             duration,
             style: TextStyle(
-              fontSize: isMobile ? 9 : 10,
+              fontSize: isMobile ? 8 : 9,
               fontWeight: FontWeight.w400,
               color: color.withValues(alpha: 0.8),
             ),
