@@ -99,21 +99,26 @@ class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
                 const SizedBox(height: 16),
                 
                 // Sound Grid
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 2.5,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  itemCount: _availableSounds.length,
-                  itemBuilder: (context, index) {
-                    final sound = _availableSounds[index];
-                    final isSelected = _selectedSound == sound['name'];
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isMobile = MediaQuery.of(context).size.width < 600;
+                    final isSmallMobile = MediaQuery.of(context).size.width < 400;
                     
-                    return GestureDetector(
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: isSmallMobile ? 1 : 2,
+                        childAspectRatio: isSmallMobile ? 3.0 : (isMobile ? 2.2 : 2.5),
+                        crossAxisSpacing: isSmallMobile ? 6 : 12,
+                        mainAxisSpacing: isSmallMobile ? 6 : 12,
+                      ),
+                      itemCount: _availableSounds.length,
+                      itemBuilder: (context, index) {
+                        final sound = _availableSounds[index];
+                        final isSelected = _selectedSound == sound['name'];
+                        
+                        return GestureDetector(
                       onTap: () {
                         setState(() {
                           _selectedSound = sound['name'];
@@ -175,6 +180,8 @@ class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
                           ],
                         ),
                       ),
+                        );
+                      },
                     );
                   },
                 ),
