@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/enhanced_timer_provider.dart';
@@ -239,34 +240,18 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Progress track (background)
-                SizedBox(
-                  width: progressSize,
-                  height: progressSize,
-                  child: CircularProgressIndicator(
-                    value: 1.0,
-                    strokeWidth: isMobile ? 6 : 8,
-                    backgroundColor: AppColors.progressTrack,
-                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.transparent),
-                  ),
-                ),
-
-                // Main progress indicator - CLOCKWISE
+                // Custom circular progress that starts from top
                 Transform.scale(
                   scale: _pulseAnimation.value,
-                  child: Transform.rotate(
-                    angle: -1.5708, // -π/2 radians (start from top)
-                    child: SizedBox(
-                      width: progressSize,
-                      height: progressSize,
-                      child: CircularProgressIndicator(
-                        value: provider.progress, // Changed from 1.0 - provider.progress
-                        strokeWidth: isMobile ? 6 : 8,
-                        backgroundColor: Colors.transparent,
-                        strokeCap: StrokeCap.round,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          _getSessionColor(provider.currentType),
-                        ),
+                  child: SizedBox(
+                    width: progressSize,
+                    height: progressSize,
+                    child: CustomPaint(
+                      painter: CircularProgressPainter(
+                        progress: provider.progress,
+                        progressColor: _getSessionColor(provider.currentType),
+                        backgroundColor: AppColors.progressTrack,
+                        strokeWidth: isMobile ? 6.0 : 8.0,
                       ),
                     ),
                   ),
@@ -654,5 +639,65 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
     _pulseController.dispose();
     _scaleController.dispose();
     super.dispose();
+  }
+}
+
+// Custom painter for circular progress that starts from the top
+class CircularProgressPainter extends CustomPainter {
+  final double progress;
+  final Color progressColor;
+  final Color backgroundColor;
+  final double strokeWidth;
+
+  CircularProgressPainter({
+    required this.progress,
+    required this.progressColor,
+    required this.backgroundColor,
+    required this.strokeWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - strokeWidth) / 2;
+
+    // Paint for background circle
+    final backgroundPaint = Paint()
+      ..color = backgroundColor
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    // Paint for progress arc
+    final progressPaint = Paint()
+      ..color = progressColor
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    // Draw background circle
+    canvas.drawCircle(center, radius, backgroundPaint);
+
+    // Draw progress arc starting from top (12 o'clock position)
+    if (progress > 0) {
+      const startAngle = -math.pi / 2; // Start from top (12 o'clock)
+      final sweepAngle = 2 * math.pi * progress; // Clockwise sweep
+
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        sweepAngle,
+        false,
+        progressPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(CircularProgressPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+           oldDelegate.progressColor != progressColor ||
+           oldDelegate.backgroundColor != backgroundColor ||
+           oldDelegate.strokeWidth != strokeWidth;
   }
 }
