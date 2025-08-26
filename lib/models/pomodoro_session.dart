@@ -25,6 +25,9 @@ class PomodoroSession extends HiveObject {
   @HiveField(6)
   final String? taskId;
 
+  @HiveField(7)
+  final int interruptions;
+
   PomodoroSession({
     required this.id,
     required this.startTime,
@@ -33,6 +36,7 @@ class PomodoroSession extends HiveObject {
     required this.type,
     required this.completed,
     this.taskId,
+    this.interruptions = 0,
   });
 
   Map<String, dynamic> toJson() => {
@@ -43,6 +47,7 @@ class PomodoroSession extends HiveObject {
     'type': type.name,
     'completed': completed,
     'taskId': taskId,
+    'interruptions': interruptions,
   };
 
   factory PomodoroSession.fromJson(Map<String, dynamic> json) {
@@ -54,6 +59,7 @@ class PomodoroSession extends HiveObject {
       type: SessionType.values.firstWhere((e) => e.name == json['type']),
       completed: json['completed'],
       taskId: json['taskId'],
+      interruptions: json['interruptions'] ?? 0,
     );
   }
 }

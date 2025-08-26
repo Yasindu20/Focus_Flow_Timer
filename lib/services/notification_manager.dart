@@ -1,7 +1,6 @@
 import 'dart:math';
-import 'dart:typed_data';
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -59,25 +58,35 @@ class NotificationManager {
   }
 
   Future<void> _requestPermissions() async {
-    // Request exact alarm permission for Android 12+
-    if (await Permission.scheduleExactAlarm.isDenied) {
-      await Permission.scheduleExactAlarm.request();
-    }
+    try {
+      // Skip permission requests on web platform
+      if (kIsWeb) {
+        debugPrint('Notification permissions skipped for web platform');
+        return;
+      }
 
-    // Request notification permissions
-    if (await Permission.notification.isDenied) {
-      await Permission.notification.request();
-    }
+      // Request exact alarm permission for Android 12+
+      if (await Permission.scheduleExactAlarm.isDenied) {
+        await Permission.scheduleExactAlarm.request();
+      }
 
-    // Request critical alert permission for iOS - Fixed: Use proper method
-    await _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
+      // Request notification permissions
+      if (await Permission.notification.isDenied) {
+        await Permission.notification.request();
+      }
+
+      // Request critical alert permission for iOS
+      await _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
+    } catch (e) {
+      debugPrint('Permission request error (expected on web): $e');
+    }
   }
 
   /// Schedule session completion notification

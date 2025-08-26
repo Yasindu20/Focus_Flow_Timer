@@ -43,25 +43,30 @@ class _TasksScreenState extends State<TasksScreen>
       ),
       body: Consumer<TaskProvider>(
         builder: (context, taskProvider, child) {
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              // Active tasks
-              _buildTaskList(
-                tasks: taskProvider.incompleteTasks,
-                emptyMessage: 'No active tasks. Add your first task!',
-              ),
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              return TabBarView(
+                controller: _tabController,
+                children: [
+                  // Active tasks
+                  _buildTaskList(
+                    tasks: taskProvider.incompleteTasks,
+                    emptyMessage: 'No active tasks. Add your first task!',
+                  ),
 
-              // Completed tasks
-              _buildTaskList(
-                tasks: taskProvider.completedTasks,
-                emptyMessage: 'No completed tasks yet.',
-              ),
-            ],
+                  // Completed tasks
+                  _buildTaskList(
+                    tasks: taskProvider.completedTasks,
+                    emptyMessage: 'No completed tasks yet.',
+                  ),
+                ],
+              );
+            },
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: "tasks_fab",
         onPressed: () => _showAddTaskDialog(context),
         child: const Icon(Icons.add),
       ),

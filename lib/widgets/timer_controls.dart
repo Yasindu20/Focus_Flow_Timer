@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/enums/timer_enums.dart';
+import '../core/constants/colors.dart';
 
 class TimerControls extends StatefulWidget {
   final VoidCallback onStart;
@@ -104,94 +105,148 @@ class _TimerControlsState extends State<TimerControls>
     switch (widget.state) {
       case TimerState.idle:
       case TimerState.completed:
-        icon = Icons.play_arrow;
+        icon = Icons.play_arrow_rounded;
         label = 'Start';
-        color = Colors.green;
+        color = AppColors.success;
         onPressed = _handleMainAction;
         break;
       case TimerState.running:
-        icon = Icons.pause;
+        icon = Icons.pause_rounded;
         label = 'Pause';
-        color = Colors.orange;
+        color = AppColors.warning;
         onPressed = _handleMainAction;
         break;
       case TimerState.paused:
       case TimerState.cancelled:
-        icon = Icons.play_arrow;
+        icon = Icons.play_arrow_rounded;
         label = 'Resume';
-        color = Colors.blue;
+        color = AppColors.primaryBlue;
         onPressed = _handleMainAction;
         break;
     }
 
     return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      child: Material(
+        elevation: 8,
+        borderRadius: BorderRadius.circular(30),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            gradient: LinearGradient(
+              colors: [
+                color,
+                color.withValues(alpha: 0.8),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 6),
+                spreadRadius: -2,
+              ),
+            ],
           ),
-        ],
-      ),
-      child: FloatingActionButton.extended(
-        onPressed: onPressed,
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        icon: Icon(icon, size: 28),
-        label: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+          child: Semantics(
+            button: true,
+            label: '$label timer',
+            hint: 'Tap to $label the focus session',
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(30),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(30),
+                onTap: onPressed,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        icon,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
-        heroTag: 'main_timer_button',
       ),
     );
   }
 
   Widget _buildSecondaryControls() {
-    return AnimatedBuilder(
-      animation: _secondaryButtonScale,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _secondaryButtonScale.value,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              // Reset/Stop button
-              _buildSecondaryButton(
-                icon: Icons.stop,
-                label: 'Stop',
-                color: Colors.red,
-                onPressed: widget.state != TimerState.idle ? _handleStop : null,
-              ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      child: AnimatedBuilder(
+        animation: _secondaryButtonScale,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _secondaryButtonScale.value,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // Reset/Stop button
+                Expanded(
+                  child: _buildSecondaryButton(
+                    icon: Icons.stop_rounded,
+                    label: 'Stop',
+                    color: AppColors.error,
+                    onPressed: widget.state != TimerState.idle ? _handleStop : null,
+                  ),
+                ),
 
-              // Skip button
-              _buildSecondaryButton(
-                icon: Icons.skip_next,
-                label: 'Skip',
-                color: Colors.grey[600]!,
-                onPressed: (widget.state == TimerState.running ||
-                        widget.state == TimerState.paused)
-                    ? _handleSkip
-                    : null,
-              ),
+                const SizedBox(width: 12),
 
-              // Settings button
-              _buildSecondaryButton(
-                icon: Icons.settings,
-                label: 'Settings',
-                color: Colors.grey[600]!,
-                onPressed: _handleSettings,
-              ),
-            ],
-          ),
-        );
-      },
+                // Skip button
+                Expanded(
+                  child: _buildSecondaryButton(
+                    icon: Icons.skip_next_rounded,
+                    label: 'Skip',
+                    color: AppColors.textSecondary,
+                    onPressed: (widget.state == TimerState.running ||
+                            widget.state == TimerState.paused)
+                        ? _handleSkip
+                        : null,
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // Settings button
+                Expanded(
+                  child: _buildSecondaryButton(
+                    icon: Icons.tune_rounded,
+                    label: 'Settings',
+                    color: AppColors.textSecondary,
+                    onPressed: _handleSettings,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -203,39 +258,64 @@ class _TimerControlsState extends State<TimerControls>
   }) {
     final isEnabled = onPressed != null;
 
-    return GestureDetector(
-      onTapDown: isEnabled ? (_) => _animateSecondaryButton() : null,
+    return Semantics(
+      button: true,
+      enabled: isEnabled,
+      label: '$label button',
+      hint: isEnabled ? 'Tap to $label' : '$label is not available right now',
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        height: 60,
         decoration: BoxDecoration(
           color: isEnabled
-              ? color.withValues(alpha: 0.1)
-              : Colors.grey.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(25),
+              ? color.withValues(alpha: 0.08)
+              : AppColors.progressTrack,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isEnabled
-                ? color.withValues(alpha: 0.3)
-                : Colors.grey.withValues(alpha: 0.2),
+                ? color.withValues(alpha: 0.15)
+                : AppColors.progressTrack,
+            width: 1,
           ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isEnabled ? color : Colors.grey.withValues(alpha: 0.5),
-              size: 24,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isEnabled ? color : Colors.grey.withValues(alpha: 0.5),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            onTap: isEnabled ? onPressed : null,
+            onTapDown: isEnabled ? (_) => _animateSecondaryButton() : null,
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      icon,
+                      key: ValueKey(icon),
+                      color: isEnabled ? color : AppColors.textTertiary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        color: isEnabled ? color : AppColors.textTertiary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

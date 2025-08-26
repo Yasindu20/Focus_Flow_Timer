@@ -83,7 +83,7 @@ export class SecurityService {
 
     } catch (error) {
       console.error('Permission validation error:', error);
-      await this.logSecurityEvent(userId, action, resource, false, { error: error.message });
+      await this.logSecurityEvent(userId, action, resource, false, { error: (error as Error).message });
       return false;
     }
   }
@@ -403,10 +403,20 @@ export class SecurityService {
         .limit(limit)
         .get();
 
-      return logsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as SecurityLog[];
+      return logsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          userId: data.userId,
+          action: data.action,
+          resource: data.resource,
+          timestamp: data.timestamp,
+          ip: data.ip,
+          userAgent: data.userAgent,
+          success: data.success,
+          details: data.details
+        } as SecurityLog;
+      });
 
     } catch (error) {
       console.error('Get security logs error:', error);

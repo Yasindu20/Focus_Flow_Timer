@@ -17,13 +17,22 @@ import 'providers/enhanced_timer_provider.dart';
 import 'providers/task_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/analytics_provider.dart';
+import 'providers/analytics_dashboard_provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/achievement_provider.dart';
+import 'providers/productivity_score_provider.dart';
+import 'providers/leaderboard_provider.dart';
+import 'services/productivity_score_service.dart';
+import 'services/leaderboard_service.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/tasks_screen.dart';
 import 'screens/analytics_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/achievements_screen.dart';
+import 'screens/productivity_score_screen.dart';
+import 'screens/leaderboard_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -97,9 +106,29 @@ class FocusFlowApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => EnhancedTimerProvider()),
+        ChangeNotifierProvider(create: (context) {
+          final provider = EnhancedTimerProvider();
+          // Initialize provider after widget tree is built
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            provider.initialize();
+          });
+          return provider;
+        }),
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
+        ChangeNotifierProvider(create: (_) => AnalyticsDashboardProvider()),
+        ChangeNotifierProvider(create: (context) {
+          final provider = AchievementProvider();
+          // Initialize provider after widget tree is built
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            provider.initialize();
+          });
+          return provider;
+        }),
+        ChangeNotifierProvider(create: (_) => ProductivityScoreProvider()),
+        ChangeNotifierProvider(create: (_) => LeaderboardProvider()),
+        ChangeNotifierProvider(create: (_) => ProductivityScoreService()),
+        ChangeNotifierProvider(create: (_) => LeaderboardService()),
       ],
       child: Consumer2<ThemeProvider, AuthProvider>(
         builder: (context, themeProvider, authProvider, child) {
@@ -116,11 +145,18 @@ class FocusFlowApp extends StatelessWidget {
               '/auth': (context) => const ErrorBoundary(child: AuthScreen()),
               '/splash': (context) =>
                   const ErrorBoundary(child: SplashScreen()),
+              '/main': (context) => const ErrorBoundary(child: MainScreen()),
               '/tasks': (context) => const ErrorBoundary(child: TasksScreen()),
               '/analytics': (context) =>
                   const ErrorBoundary(child: AnalyticsScreen()),
               '/settings': (context) =>
                   const ErrorBoundary(child: SettingsScreen()),
+              '/achievements': (context) =>
+                  const ErrorBoundary(child: AchievementsScreen()),
+              '/productivity': (context) =>
+                  const ErrorBoundary(child: ProductivityScoreScreen()),
+              '/leaderboard': (context) =>
+                  const ErrorBoundary(child: LeaderboardScreen()),
             },
           );
         },
@@ -158,13 +194,19 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
   void initState() {
     super.initState();
 
-    // Set up global error handler
+    // Set up global error handler - use post frame callback to avoid setState during build
     FlutterError.onError = (FlutterErrorDetails details) {
-      setState(() {
-        _hasError = true;
-        _errorMessage = details.exception.toString();
-      });
       debugPrint('Flutter Error: ${details.exception}');
+      
+      // Use post frame callback to safely call setState
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _hasError = true;
+            _errorMessage = details.exception.toString();
+          });
+        }
+      });
     };
   }
 
@@ -262,14 +304,30 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const TasksScreen(),
     const AnalyticsScreen(),
+    const AchievementsScreen(),
+    const ProductivityScoreScreen(),
+    const LeaderboardScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Add constraint-based layout handling for dev tools
+            return ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: 0,
+                maxHeight: constraints.maxHeight,
+              ),
+              child: IndexedStack(
+                index: _currentIndex,
+                children: _screens,
+              ),
+            );
+          },
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -279,6 +337,8 @@ class _MainScreenState extends State<MainScreen> {
           });
         },
         type: BottomNavigationBarType.fixed,
+        selectedFontSize: 12,
+        unselectedFontSize: 10,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.timer),
@@ -291,6 +351,18 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.analytics),
             label: 'Analytics',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.emoji_events),
+            label: 'Awards',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.trending_up),
+            label: 'Score',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.leaderboard),
+            label: 'Rankings',
           ),
         ],
       ),

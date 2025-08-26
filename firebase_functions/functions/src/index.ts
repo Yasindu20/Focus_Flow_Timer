@@ -8,7 +8,6 @@ import * as admin from 'firebase-admin';
 import { taskIntelligenceService } from './services/taskIntelligenceService';
 import { analyticsService } from './services/analyticsService';
 import { integrationService } from './services/integrationService';
-import { aiService } from './services/aiService';
 import { notificationService } from './services/notificationService';
 import { securityService } from './services/securityService';
 import { Request, Response } from 'express';
@@ -110,8 +109,14 @@ export const getTaskRecommendations = functions
 
       const userAnalytics = analyticsDoc.data();
 
-      // Generate recommendations
-      const recommendations = await aiService.generateTaskRecommendations(tasks, userAnalytics);
+      // Generate recommendations (simplified without AI)
+      const recommendations = tasks
+        .slice(0, 5)
+        .map(task => ({
+          ...task,
+          recommendationScore: calculateRecommendationScore(task)
+        }))
+        .sort((a, b) => b.recommendationScore - a.recommendationScore);
 
       return recommendations;
 
@@ -409,6 +414,27 @@ export const validateUserPermissions = functions.https.onCall(async (data, conte
     throw new functions.https.HttpsError('internal', 'Permission validation failed');
   }
 });
+
+// Helper function to calculate recommendation score
+function calculateRecommendationScore(task: any): number {
+  let score = 0;
+
+  // Priority weight
+  const priorityWeights = { low: 1, medium: 2, high: 3, critical: 4 };
+  score += (priorityWeights[task.priority as keyof typeof priorityWeights] || 2) * 0.4;
+
+  // Recency weight (newer tasks get preference)
+  const ageInDays = (Date.now() - new Date(task.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+  score += Math.max(0, 1 - ageInDays / 7) * 0.3; // Decay over a week
+
+  // Due date proximity
+  if (task.dueDate) {
+    const daysUntilDue = (new Date(task.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+    if (daysUntilDue <= 3) score += 0.3; // Urgent if due within 3 days
+  }
+
+  return score;
+}
 
 // Helper function to get user context
 async function getUserContext(userId: string) {

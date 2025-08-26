@@ -7,6 +7,24 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/enhanced_task.dart';
 import '../models/pomodoro_session.dart';
 import '../models/daily_stats.dart';
+import '../models/task_analytics.dart';
+
+// Duration adapter for Hive
+class DurationAdapter extends TypeAdapter<Duration> {
+  @override
+  final int typeId = 100; // Use a high typeId to avoid conflicts
+
+  @override
+  Duration read(BinaryReader reader) {
+    final microseconds = reader.readInt();
+    return Duration(microseconds: microseconds);
+  }
+
+  @override
+  void write(BinaryWriter writer, Duration obj) {
+    writer.writeInt(obj.inMicroseconds);
+  }
+}
 
 class OptimizedStorageService {
   static final OptimizedStorageService _instance = OptimizedStorageService._internal();
@@ -359,8 +377,9 @@ class OptimizedStorageService {
   Future<void> _initializeHive() async {
     await Hive.initFlutter();
     
-    // Register adapters if not already registered
-    if (!Hive.isAdapterRegistered(0)) {
+    // Register all adapters if not already registered
+    // Main models
+    if (!Hive.isAdapterRegistered(10)) {
       Hive.registerAdapter(EnhancedTaskAdapter());
     }
     if (!Hive.isAdapterRegistered(1)) {
@@ -368,6 +387,87 @@ class OptimizedStorageService {
     }
     if (!Hive.isAdapterRegistered(2)) {
       Hive.registerAdapter(DailyStatsAdapter());
+    }
+    
+    // Supporting classes from enhanced_task.dart
+    if (!Hive.isAdapterRegistered(11)) {
+      Hive.registerAdapter(TaskSubtaskAdapter());
+    }
+    if (!Hive.isAdapterRegistered(12)) {
+      Hive.registerAdapter(TaskProgressAdapter());
+    }
+    if (!Hive.isAdapterRegistered(13)) {
+      Hive.registerAdapter(ProgressCheckpointAdapter());
+    }
+    if (!Hive.isAdapterRegistered(14)) {
+      Hive.registerAdapter(TaskCommentAdapter());
+    }
+    if (!Hive.isAdapterRegistered(15)) {
+      Hive.registerAdapter(TaskAttachmentAdapter());
+    }
+    if (!Hive.isAdapterRegistered(16)) {
+      Hive.registerAdapter(TaskRecurrenceAdapter());
+    }
+    if (!Hive.isAdapterRegistered(17)) {
+      Hive.registerAdapter(TaskAIDataAdapter());
+    }
+    if (!Hive.isAdapterRegistered(18)) {
+      Hive.registerAdapter(TaskMetricsAdapter());
+    }
+    if (!Hive.isAdapterRegistered(19)) {
+      Hive.registerAdapter(TaskTimeEntryAdapter());
+    }
+    
+    // Enums
+    if (!Hive.isAdapterRegistered(20)) {
+      Hive.registerAdapter(TaskCategoryAdapter());
+    }
+    if (!Hive.isAdapterRegistered(21)) {
+      Hive.registerAdapter(TaskPriorityAdapter());
+    }
+    if (!Hive.isAdapterRegistered(22)) {
+      Hive.registerAdapter(TaskStatusAdapter());
+    }
+    if (!Hive.isAdapterRegistered(23)) {
+      Hive.registerAdapter(TaskUrgencyAdapter());
+    }
+    if (!Hive.isAdapterRegistered(24)) {
+      Hive.registerAdapter(RecurrenceTypeAdapter());
+    }
+    
+    // Task Analytics adapters (based on actual generated adapters)
+    if (!Hive.isAdapterRegistered(56)) {
+      Hive.registerAdapter(TaskCompletionDataAdapter());
+    }
+    if (!Hive.isAdapterRegistered(57)) {
+      Hive.registerAdapter(UserAnalyticsAdapter());
+    }
+    if (!Hive.isAdapterRegistered(58)) {
+      Hive.registerAdapter(CategoryPerformanceAdapter());
+    }
+    if (!Hive.isAdapterRegistered(59)) {
+      Hive.registerAdapter(ProductivityPatternAdapter());
+    }
+    // Enums from task_analytics
+    if (!Hive.isAdapterRegistered(61)) {
+      Hive.registerAdapter(RecommendationTypeAdapter());
+    }
+    if (!Hive.isAdapterRegistered(62)) {
+      Hive.registerAdapter(RecommendationImpactAdapter());
+    }
+    if (!Hive.isAdapterRegistered(63)) {
+      Hive.registerAdapter(RecommendationEffortAdapter());
+    }
+    if (!Hive.isAdapterRegistered(64)) {
+      Hive.registerAdapter(ComparisonTypeAdapter());
+    }
+    if (!Hive.isAdapterRegistered(65)) {
+      Hive.registerAdapter(PatternTypeAdapter());
+    }
+    
+    // Duration adapter
+    if (!Hive.isAdapterRegistered(100)) {
+      Hive.registerAdapter(DurationAdapter());
     }
 
     // Open boxes
@@ -381,13 +481,17 @@ class OptimizedStorageService {
     try {
       _firestore = FirebaseFirestore.instance;
       
-      // Configure for offline persistence
-      _firestore!.settings = const Settings(
-        persistenceEnabled: true,
-        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-      );
-      
-      debugPrint('Firestore initialized with offline persistence');
+      // Configure for offline persistence (web-safe)
+      if (!kIsWeb) {
+        _firestore!.settings = const Settings(
+          persistenceEnabled: true,
+          cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+        );
+        debugPrint('Firestore initialized with offline persistence');
+      } else {
+        // Web doesn't support all settings, use basic configuration
+        debugPrint('Firestore initialized for web');
+      }
     } catch (e) {
       debugPrint('Failed to initialize Firestore: $e');
       _isOnline = false;
@@ -763,6 +867,72 @@ class OptimizedStorageService {
     await _sessionsBox?.compact();
     await _statsBox?.compact();
     await _cacheBox?.compact();
+  }
+
+  /// Dispose resources
+  // ACHIEVEMENT STORAGE
+  Future<List<Map<String, dynamic>>> getAchievements() async {
+    final data = await getCachedData('achievements');
+    return data != null ? List<Map<String, dynamic>>.from(data['achievements'] ?? []) : [];
+  }
+
+  Future<void> setAchievements(List<Map<String, dynamic>> achievements) async {
+    await cacheData('achievements', {'achievements': achievements});
+  }
+
+  // PRODUCTIVITY SCORE STORAGE
+  Future<Map<String, dynamic>?> getCurrentProductivityScore() async {
+    return await getCachedData('current_productivity_score');
+  }
+
+  Future<void> setCurrentProductivityScore(Map<String, dynamic> score) async {
+    await cacheData('current_productivity_score', score);
+  }
+
+  Future<List<Map<String, dynamic>>> getWeeklyProductivityScores() async {
+    final data = await getCachedData('weekly_productivity_scores');
+    return data != null ? List<Map<String, dynamic>>.from(data['scores'] ?? []) : [];
+  }
+
+  Future<void> setWeeklyProductivityScores(List<Map<String, dynamic>> scores) async {
+    await cacheData('weekly_productivity_scores', {'scores': scores});
+  }
+
+  Future<List<Map<String, dynamic>>> getMonthlyProductivityScores() async {
+    final data = await getCachedData('monthly_productivity_scores');
+    return data != null ? List<Map<String, dynamic>>.from(data['scores'] ?? []) : [];
+  }
+
+  Future<void> setMonthlyProductivityScores(List<Map<String, dynamic>> scores) async {
+    await cacheData('monthly_productivity_scores', {'scores': scores});
+  }
+
+  Future<void> clearProductivityScores() async {
+    await cacheData('current_productivity_score', {});
+    await cacheData('weekly_productivity_scores', {'scores': []});
+    await cacheData('monthly_productivity_scores', {'scores': []});
+  }
+
+  // LEADERBOARD STORAGE
+  Future<Map<String, Map<String, dynamic>>> getLeaderboards() async {
+    final data = await getCachedData('leaderboards');
+    return data != null ? Map<String, Map<String, dynamic>>.from(data['leaderboards'] ?? {}) : {};
+  }
+
+  Future<void> setLeaderboards(Map<String, Map<String, dynamic>> leaderboards) async {
+    await cacheData('leaderboards', {'leaderboards': leaderboards});
+  }
+
+  Future<Map<String, dynamic>?> getUserLeaderboardEntry() async {
+    return await getCachedData('user_leaderboard_entry');
+  }
+
+  Future<void> setUserLeaderboardEntry(Map<String, dynamic> entry) async {
+    await cacheData('user_leaderboard_entry', entry);
+  }
+
+  Future<void> clearUserLeaderboardEntry() async {
+    await cacheData('user_leaderboard_entry', {});
   }
 
   /// Dispose resources

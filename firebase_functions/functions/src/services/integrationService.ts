@@ -5,7 +5,6 @@
 
 import * as admin from 'firebase-admin';
 import axios from 'axios';
-import { aiService } from './aiService';
 
 const db = admin.firestore();
 
@@ -62,7 +61,7 @@ export class IntegrationService {
         tasksImported = await this.importTasks(userId, externalTasks, provider);
       } catch (error) {
         console.error(`Import error for ${provider}:`, error);
-        errors.push(`Import failed: ${error.message}`);
+        errors.push(`Import failed: ${(error as Error).message}`);
       }
 
       // Export tasks to external provider (if bidirectional)
@@ -72,7 +71,7 @@ export class IntegrationService {
           tasksExported = await this.exportTasks(config, localTasks);
         } catch (error) {
           console.error(`Export error for ${provider}:`, error);
-          errors.push(`Export failed: ${error.message}`);
+          errors.push(`Export failed: ${(error as Error).message}`);
         }
       }
 
@@ -100,10 +99,10 @@ export class IntegrationService {
       console.error(`Sync failed for ${provider}:`, error);
       return {
         success: false,
-        message: `Sync failed: ${error.message}`,
+        message: `Sync failed: ${(error as Error).message}`,
         tasksImported: 0,
         tasksExported: 0,
-        errors: [error.message],
+        errors: [(error as Error).message],
         timestamp: new Date()
       };
     }
@@ -127,7 +126,7 @@ export class IntegrationService {
       await this.testConnection({ provider, ...config } as IntegrationConfig);
       await integrationRef.update({ connectionStatus: 'active', lastTested: admin.firestore.FieldValue.serverTimestamp() });
     } catch (error) {
-      await integrationRef.update({ connectionStatus: 'failed', lastError: error.message });
+      await integrationRef.update({ connectionStatus: 'failed', lastError: (error as Error).message });
       throw error;
     }
   }
@@ -300,7 +299,7 @@ export class IntegrationService {
       await db.collection('users').doc(userId).collection('webhook_logs').add({
         provider,
         event: payload.event || payload.webhookEvent,
-        error: error.message,
+        error: (error as Error).message,
         processedAt: admin.firestore.FieldValue.serverTimestamp(),
         success: false
       });
@@ -553,18 +552,7 @@ export class IntegrationService {
             }
           };
 
-          // Enhance with AI if possible
-          try {
-            const aiData = await aiService.processTask({
-              title: taskData.title,
-              description: taskData.description,
-              category: taskData.category,
-              priority: taskData.priority
-            });
-            taskData['aiData'] = aiData;
-          } catch (aiError) {
-            console.warn('AI processing failed for imported task:', aiError);
-          }
+          // Note: AI processing removed to use free resources only
 
           await db.collection('users').doc(userId).collection('tasks').add(taskData);
           imported++;
