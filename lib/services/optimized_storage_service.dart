@@ -481,13 +481,17 @@ class OptimizedStorageService {
     try {
       _firestore = FirebaseFirestore.instance;
       
-      // Configure for offline persistence
-      _firestore!.settings = const Settings(
-        persistenceEnabled: true,
-        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-      );
-      
-      debugPrint('Firestore initialized with offline persistence');
+      // Configure for offline persistence (web-safe)
+      if (!kIsWeb) {
+        _firestore!.settings = const Settings(
+          persistenceEnabled: true,
+          cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+        );
+        debugPrint('Firestore initialized with offline persistence');
+      } else {
+        // Web doesn't support all settings, use basic configuration
+        debugPrint('Firestore initialized for web');
+      }
     } catch (e) {
       debugPrint('Failed to initialize Firestore: $e');
       _isOnline = false;

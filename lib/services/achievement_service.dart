@@ -10,9 +10,28 @@ import 'optimized_storage_service.dart';
 class AchievementService extends ChangeNotifier {
   static final AchievementService _instance = AchievementService._internal();
   factory AchievementService() => _instance;
-  AchievementService._internal();
+  AchievementService._internal() {
+    _initializeFirestore();
+  }
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  void _initializeFirestore() {
+    // Don't initialize Firestore during construction to avoid web errors
+    _firestore = null;
+  }
+
+  FirebaseFirestore? get _safeFirestore {
+    if (_firestore == null) {
+      try {
+        _firestore = FirebaseFirestore.instance;
+      } catch (e) {
+        debugPrint('Firestore initialization failed: $e');
+        return null;
+      }
+    }
+    return _firestore;
+  }
+
+  FirebaseFirestore? _firestore;
   final OptimizedStorageService _storage = OptimizedStorageService();
 
   List<Achievement> _achievements = [];
@@ -59,7 +78,13 @@ class AchievementService extends ChangeNotifier {
 
       // Try to load from Firestore
       try {
-        final doc = await _firestore
+        final firestore = _safeFirestore;
+        if (firestore == null) {
+          await _loadFromLocal();
+          return;
+        }
+        
+        final doc = await firestore
             .collection('user_achievements')
             .doc(user.uid)
             .get();
@@ -312,7 +337,10 @@ class AchievementService extends ChangeNotifier {
       // Save to Firestore if user is logged in
       if (user != null) {
         try {
-          await _firestore
+          final firestore = _safeFirestore;
+          if (firestore == null) return;
+          
+          await firestore
               .collection('user_achievements')
               .doc(user.uid)
               .set({

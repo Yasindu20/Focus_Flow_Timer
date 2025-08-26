@@ -11,9 +11,28 @@ import 'achievement_service.dart';
 class LeaderboardService extends ChangeNotifier {
   static final LeaderboardService _instance = LeaderboardService._internal();
   factory LeaderboardService() => _instance;
-  LeaderboardService._internal();
+  LeaderboardService._internal() {
+    _initializeFirestore();
+  }
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  void _initializeFirestore() {
+    // Don't initialize Firestore during construction to avoid web errors
+    _firestore = null;
+  }
+
+  FirebaseFirestore? get _safeFirestore {
+    if (_firestore == null) {
+      try {
+        _firestore = FirebaseFirestore.instance;
+      } catch (e) {
+        debugPrint('Firestore initialization failed: $e');
+        return null;
+      }
+    }
+    return _firestore;
+  }
+
+  FirebaseFirestore? _firestore;
   final OptimizedStorageService _storage = OptimizedStorageService();
 
   final Map<LeaderboardType, Leaderboard> _leaderboards = {};
@@ -44,7 +63,12 @@ class LeaderboardService extends ChangeNotifier {
   Future<void> _checkConnectivity() async {
     try {
       // Simple connectivity check by trying to access Firestore
-      await _firestore.collection('test').limit(1).get();
+      final firestore = _safeFirestore;
+      if (firestore == null) {
+        _isOnline = false;
+        return;
+      }
+      await firestore.collection('test').limit(1).get();
       _isOnline = true;
     } catch (e) {
       _isOnline = false;
@@ -77,7 +101,10 @@ class LeaderboardService extends ChangeNotifier {
 
   Future<void> _loadLeaderboardByType(LeaderboardType type) async {
     try {
-      final query = await _firestore
+      final firestore = _safeFirestore;
+      if (firestore == null) return;
+      
+      final query = await firestore
           .collection('leaderboards')
           .doc(type.toString())
           .collection('entries')
@@ -145,7 +172,10 @@ class LeaderboardService extends ChangeNotifier {
     if (user == null) return;
 
     try {
-      final userDoc = await _firestore
+      final firestore = _safeFirestore;
+      if (firestore == null) return;
+      
+      final userDoc = await firestore
           .collection('leaderboard_users')
           .doc(user.uid)
           .get();
@@ -276,17 +306,20 @@ class LeaderboardService extends ChangeNotifier {
 
   Future<void> _uploadUserStats(LeaderboardEntry userEntry) async {
     try {
-      final batch = _firestore.batch();
+      final firestore = _safeFirestore;
+      if (firestore == null) return;
+      
+      final batch = firestore.batch();
 
       // Update user in main leaderboard collection
-      final userRef = _firestore
+      final userRef = firestore
           .collection('leaderboard_users')
           .doc(userEntry.userId);
       batch.set(userRef, userEntry.toJson());
 
       // Update user in each leaderboard type collection
       for (final type in LeaderboardType.values) {
-        final leaderboardRef = _firestore
+        final leaderboardRef = firestore
             .collection('leaderboards')
             .doc(type.toString())
             .collection('entries')

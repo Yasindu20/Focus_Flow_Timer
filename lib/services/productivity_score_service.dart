@@ -10,9 +10,28 @@ import 'optimized_storage_service.dart';
 class ProductivityScoreService extends ChangeNotifier {
   static final ProductivityScoreService _instance = ProductivityScoreService._internal();
   factory ProductivityScoreService() => _instance;
-  ProductivityScoreService._internal();
+  ProductivityScoreService._internal() {
+    _initializeFirestore();
+  }
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  void _initializeFirestore() {
+    // Don't initialize Firestore during construction to avoid web errors
+    _firestore = null;
+  }
+
+  FirebaseFirestore? get _safeFirestore {
+    if (_firestore == null) {
+      try {
+        _firestore = FirebaseFirestore.instance;
+      } catch (e) {
+        debugPrint('Firestore initialization failed: $e');
+        return null;
+      }
+    }
+    return _firestore;
+  }
+
+  FirebaseFirestore? _firestore;
   final OptimizedStorageService _storage = OptimizedStorageService();
 
   ProductivityScore? _currentScore;
@@ -55,8 +74,14 @@ class ProductivityScoreService extends ChangeNotifier {
       }
 
       try {
+        final firestore = _safeFirestore;
+        if (firestore == null) {
+          await _loadFromLocal();
+          return;
+        }
+
         // Load current score
-        final currentDoc = await _firestore
+        final currentDoc = await firestore
             .collection('user_productivity_scores')
             .doc(user.uid)
             .collection('scores')
@@ -68,7 +93,7 @@ class ProductivityScoreService extends ChangeNotifier {
         }
 
         // Load weekly history
-        final weeklyQuery = await _firestore
+        final weeklyQuery = await firestore
             .collection('user_productivity_scores')
             .doc(user.uid)
             .collection('scores')
@@ -82,7 +107,7 @@ class ProductivityScoreService extends ChangeNotifier {
             .toList();
 
         // Load monthly history
-        final monthlyQuery = await _firestore
+        final monthlyQuery = await firestore
             .collection('user_productivity_scores')
             .doc(user.uid)
             .collection('scores')
@@ -299,10 +324,13 @@ class ProductivityScoreService extends ChangeNotifier {
       // Save to Firestore if user is logged in
       if (user != null && _currentScore != null) {
         try {
-          final batch = _firestore.batch();
+          final firestore = _safeFirestore;
+          if (firestore == null) return;
+
+          final batch = firestore.batch();
 
           // Save current score
-          final currentRef = _firestore
+          final currentRef = firestore
               .collection('user_productivity_scores')
               .doc(user.uid)
               .collection('scores')
@@ -311,7 +339,7 @@ class ProductivityScoreService extends ChangeNotifier {
 
           // Save daily score with date as document ID
           final dateKey = DateTime.now().toIso8601String().split('T')[0];
-          final dailyRef = _firestore
+          final dailyRef = firestore
               .collection('user_productivity_scores')
               .doc(user.uid)
               .collection('scores')
