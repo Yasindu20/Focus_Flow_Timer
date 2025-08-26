@@ -2,9 +2,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/enhanced_timer_provider.dart';
+import '../providers/task_provider.dart';
 import '../core/enums/timer_enums.dart';
 import '../core/constants/colors.dart';
-import 'timer_controls.dart';
+import 'improved_timer_controls.dart';
 
 class EnhancedTimerWidget extends StatefulWidget {
   const EnhancedTimerWidget({super.key});
@@ -56,10 +57,16 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<EnhancedTimerProvider>(
-      builder: (context, timerProvider, child) {
+    return Consumer2<EnhancedTimerProvider, TaskProvider>(
+      builder: (context, timerProvider, taskProvider, child) {
         // Control animations based on timer state
         _handleTimerStateAnimations(timerProvider.state);
+        
+        // Get current task name
+        final currentTask = timerProvider.currentTaskId != null
+            ? taskProvider.getTaskById(timerProvider.currentTaskId!)
+            : null;
+        final currentTaskName = currentTask?.title;
 
         return Column(
           children: [
@@ -74,13 +81,15 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
             const SizedBox(height: 48),
 
             // Timer controls
-            TimerControls(
+            ImprovedTimerControls(
               onStart: () => _handleStart(timerProvider),
               onPause: () => _handlePause(timerProvider),
               onResume: () => _handleResume(timerProvider),
               onStop: () => _handleStop(timerProvider),
               onSkip: () => _handleSkip(timerProvider),
               state: timerProvider.state,
+              currentTaskName: currentTaskName,
+              sessionCount: timerProvider.sessionCount,
             ),
 
             const SizedBox(height: 24),
