@@ -329,8 +329,7 @@ class _MainScreenState extends State<MainScreen> {
     const TasksScreen(),
     const AnalyticsScreen(),
     const AchievementsScreen(),
-    const ProductivityScoreScreen(),
-    const LeaderboardScreen(),
+    const SettingsScreen(),
   ];
 
   @override
@@ -381,12 +380,8 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Awards',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.trending_up),
-            label: 'Score',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.leaderboard),
-            label: 'Rankings',
+            icon: Icon(Icons.settings),
+            label: 'Settings',
           ),
         ],
       ),
