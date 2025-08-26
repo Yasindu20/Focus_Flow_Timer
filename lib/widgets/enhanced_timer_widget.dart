@@ -196,14 +196,19 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
   }
 
   Widget _buildTimerDisplay(EnhancedTimerProvider provider) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final timerSize = isMobile ? (screenWidth * 0.8).clamp(280.0, 320.0) : 340.0;
+    final progressSize = timerSize - 40;
+    
     return AnimatedBuilder(
       animation: Listenable.merge([_pulseAnimation, _scaleAnimation]),
       builder: (context, child) {
         return Transform.scale(
           scale: _scaleAnimation.value,
           child: Container(
-            width: 340,
-            height: 340,
+            width: timerSize,
+            height: timerSize,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: RadialGradient(
@@ -216,17 +221,17 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
                 stops: const [0.0, 1.0],
               ),
               boxShadow: [
-                // Primary shadow for depth
+                // Primary shadow for depth - reduced on mobile
                 BoxShadow(
                   color: AppColors.timerShadow,
-                  blurRadius: 30,
-                  offset: const Offset(0, 15),
-                  spreadRadius: -5,
+                  blurRadius: isMobile ? 20 : 30,
+                  offset: Offset(0, isMobile ? 10 : 15),
+                  spreadRadius: isMobile ? -3 : -5,
                 ),
                 // Secondary shadow for softer glow
                 BoxShadow(
                   color: _getSessionColor(provider.currentType).withValues(alpha: 0.1),
-                  blurRadius: 40,
+                  blurRadius: isMobile ? 25 : 40,
                   offset: const Offset(0, 5),
                 ),
               ],
@@ -236,11 +241,11 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
               children: [
                 // Progress track (background)
                 SizedBox(
-                  width: 300,
-                  height: 300,
+                  width: progressSize,
+                  height: progressSize,
                   child: CircularProgressIndicator(
                     value: 1.0,
-                    strokeWidth: 8,
+                    strokeWidth: isMobile ? 6 : 8,
                     backgroundColor: AppColors.progressTrack,
                     valueColor: const AlwaysStoppedAnimation<Color>(Colors.transparent),
                   ),
@@ -252,11 +257,11 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
                   child: Transform.rotate(
                     angle: -1.5708, // -π/2 radians (start from top)
                     child: SizedBox(
-                      width: 300,
-                      height: 300,
+                      width: progressSize,
+                      height: progressSize,
                       child: CircularProgressIndicator(
                         value: provider.progress, // Changed from 1.0 - provider.progress
-                        strokeWidth: 8,
+                        strokeWidth: isMobile ? 6 : 8,
                         backgroundColor: Colors.transparent,
                         strokeCap: StrokeCap.round,
                         valueColor: AlwaysStoppedAnimation<Color>(
@@ -267,83 +272,99 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
                   ),
                 ),
 
-                // Timer content with enhanced design
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Progress percentage indicator with accessibility
-                    Semantics(
-                      label: 'Progress: ${(provider.progress * 100).toInt()} percent complete',
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _getSessionColor(provider.currentType).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${(provider.progress * 100).toInt()}%',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: _getSessionColor(provider.currentType),
-                            letterSpacing: 0.5,
+                // Timer content with enhanced design - responsive
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 16 : 24,
+                    vertical: isMobile ? 8 : 16,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Progress percentage indicator with accessibility
+                      Semantics(
+                        label: 'Progress: ${(provider.progress * 100).toInt()} percent complete',
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 8 : 12,
+                            vertical: isMobile ? 2 : 4,
                           ),
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-
-                    // Main time display with accessibility
-                    Semantics(
-                      label: 'Timer: ${provider.formattedTime.replaceAll(':', ' minutes, ')} seconds remaining',
-                      hint: 'Current ${_getSessionText(provider.currentType).toLowerCase()} session time',
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Text(
-                          provider.formattedTime,
-                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            fontSize: 52,
-                            fontWeight: FontWeight.w300,
-                            color: AppColors.textPrimary,
-                            fontFeatures: [const FontFeature.tabularFigures()],
-                            letterSpacing: -1.0,
-                            height: 1.0,
+                          decoration: BoxDecoration(
+                            color: _getSessionColor(provider.currentType).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Session info with icon
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceLight,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _getSessionIcon(provider.currentType),
-                            size: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Session ${provider.sessionCount + 1}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
+                          child: Text(
+                            '${(provider.progress * 100).toInt()}%',
+                            style: TextStyle(
+                              fontSize: isMobile ? 10 : 12,
+                              fontWeight: FontWeight.w600,
+                              color: _getSessionColor(provider.currentType),
+                              letterSpacing: 0.5,
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                      
+                      SizedBox(height: isMobile ? 12 : 16),
+
+                      // Main time display with accessibility - responsive
+                      Semantics(
+                        label: 'Timer: ${provider.formattedTime.replaceAll(':', ' minutes, ')} seconds remaining',
+                        hint: 'Current ${_getSessionText(provider.currentType).toLowerCase()} session time',
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: isMobile ? 4 : 8),
+                            child: Text(
+                              provider.formattedTime,
+                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                fontSize: isMobile ? 42 : 52,
+                                fontWeight: FontWeight.w300,
+                                color: AppColors.textPrimary,
+                                fontFeatures: [const FontFeature.tabularFigures()],
+                                letterSpacing: -1.0,
+                                height: 1.0,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: isMobile ? 8 : 12),
+
+                      // Session info with icon - more compact on mobile
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 12 : 16,
+                          vertical: isMobile ? 4 : 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceLight,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _getSessionIcon(provider.currentType),
+                              size: isMobile ? 12 : 14,
+                              color: AppColors.textSecondary,
+                            ),
+                            SizedBox(width: isMobile ? 4 : 6),
+                            Text(
+                              'Session ${provider.sessionCount + 1}',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w500,
+                                fontSize: isMobile ? 10 : 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -358,9 +379,12 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
       return const SizedBox.shrink();
     }
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
@@ -368,73 +392,95 @@ class _EnhancedTimerWidgetState extends State<EnhancedTimerWidget>
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildMetricItem(
-            'Rounds',
-            '${provider.sessionCount + 1}',
-            Icons.refresh,
-            _getSessionColor(provider.currentType),
-          ),
-          Container(
-            width: 1,
-            height: 40,
-            color: AppColors.progressTrack,
-          ),
-          _buildMetricItem(
-            'Mode',
-            _getShortSessionText(provider.currentType),
-            _getSessionIcon(provider.currentType),
-            AppColors.textSecondary,
-          ),
-          Container(
-            width: 1,
-            height: 40,
-            color: AppColors.progressTrack,
-          ),
-          _buildMetricItem(
-            'Status',
-            _getStateText(provider.state),
-            _getStateIcon(provider.state),
-            _getStateColor(provider.state),
-          ),
-        ],
+      child: IntrinsicHeight(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Expanded(
+              child: _buildMetricItem(
+                'Rounds',
+                '${provider.sessionCount + 1}',
+                Icons.refresh,
+                _getSessionColor(provider.currentType),
+                isMobile,
+              ),
+            ),
+            Container(
+              width: 1,
+              color: AppColors.progressTrack,
+              margin: EdgeInsets.symmetric(vertical: isMobile ? 8 : 12),
+            ),
+            Expanded(
+              child: _buildMetricItem(
+                'Mode',
+                _getShortSessionText(provider.currentType),
+                _getSessionIcon(provider.currentType),
+                AppColors.textSecondary,
+                isMobile,
+              ),
+            ),
+            Container(
+              width: 1,
+              color: AppColors.progressTrack,
+              margin: EdgeInsets.symmetric(vertical: isMobile ? 8 : 12),
+            ),
+            Expanded(
+              child: _buildMetricItem(
+                'Status',
+                _getStateText(provider.state),
+                _getStateIcon(provider.state),
+                _getStateColor(provider.state),
+                isMobile,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildMetricItem(String label, String value, IconData icon, Color color) {
-    return Expanded(
-      child: Column(
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(height: 6),
-          Text(
+  Widget _buildMetricItem(String label, String value, IconData icon, Color color, bool isMobile) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: isMobile ? 16 : 18,
+          color: color,
+        ),
+        SizedBox(height: isMobile ? 4 : 6),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
             value,
             style: TextStyle(
               fontWeight: FontWeight.w700,
-              fontSize: 14,
+              fontSize: isMobile ? 12 : 14,
               color: AppColors.textPrimary,
             ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 2),
-          Text(
+        ),
+        SizedBox(height: isMobile ? 1 : 2),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
             label,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: isMobile ? 9 : 11,
               color: AppColors.textTertiary,
               fontWeight: FontWeight.w500,
               letterSpacing: 0.2,
             ),
+            textAlign: TextAlign.center,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

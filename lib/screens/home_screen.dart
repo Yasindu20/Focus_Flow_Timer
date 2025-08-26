@@ -11,13 +11,27 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenHeight < 700;
+    final isMobile = screenWidth < 600;
+    
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 16 : 20,
+                vertical: isSmallScreen ? 8 : 16,
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
               // Enhanced Header
               Container(
                 padding: const EdgeInsets.only(bottom: 8),
@@ -63,7 +77,7 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 40),
+              SizedBox(height: isSmallScreen ? 20 : 32),
 
               // Enhanced task selection
               Consumer<TaskProvider>(
@@ -220,17 +234,23 @@ class HomeScreen extends StatelessWidget {
                 },
               ),
 
-              const SizedBox(height: 40),
+              SizedBox(height: isSmallScreen ? 20 : 32),
 
               // Timer widget
               const EnhancedTimerWidget(),
 
-              const SizedBox(height: 32),
+              SizedBox(height: isSmallScreen ? 16 : 24),
 
               // Sound selector
               const SoundSelector(),
-            ],
-          ),
+              
+              // Add bottom padding for mobile
+              SizedBox(height: isMobile ? 20 : 0),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ),
     );

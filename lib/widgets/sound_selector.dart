@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/enhanced_timer_provider.dart';
 import '../services/optimized_storage_service.dart';
+import '../core/constants/colors.dart';
 
 class SoundSelector extends StatefulWidget {
   const SoundSelector({super.key});
@@ -15,12 +16,37 @@ class _SoundSelectorState extends State<SoundSelector> {
   double _volume = 0.5;
   final OptimizedStorageService _storage = OptimizedStorageService();
 
-  final List<String> _availableSounds = [
-    'None',
-    'Rain',
-    'Forest',
-    'Ocean',
-    'White Noise',
+  final List<Map<String, dynamic>> _availableSounds = [
+    {
+      'name': 'None',
+      'icon': Icons.volume_off_rounded,
+      'description': 'Silent focus',
+      'color': AppColors.textTertiary,
+    },
+    {
+      'name': 'Rain',
+      'icon': Icons.water_drop_rounded,
+      'description': 'Gentle raindrops',
+      'color': AppColors.accentMint,
+    },
+    {
+      'name': 'Forest',
+      'icon': Icons.forest_rounded,
+      'description': 'Nature sounds',
+      'color': AppColors.restfulGreen,
+    },
+    {
+      'name': 'Ocean',
+      'icon': Icons.waves_rounded,
+      'description': 'Ocean waves',
+      'color': AppColors.primaryBlue,
+    },
+    {
+      'name': 'White Noise',
+      'icon': Icons.graphic_eq_rounded,
+      'description': 'Pure focus',
+      'color': AppColors.textSecondary,
+    },
   ];
 
   @override
@@ -32,7 +58,7 @@ class _SoundSelectorState extends State<SoundSelector> {
   Future<void> _loadSettings() async {
     try {
       final settings = await _storage.getCachedData('sound_settings');
-      if (settings != null) {
+      if (settings != null && mounted) {
         setState(() {
           _selectedSound = settings['selectedSound'] ?? 'None';
           _volume = (settings['volume'] ?? 0.5).toDouble();
@@ -57,78 +83,301 @@ class _SoundSelectorState extends State<SoundSelector> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isMobile = screenWidth < 600;
+    final isSmallScreen = screenHeight < 700;
+    
     return Consumer<EnhancedTimerProvider>(
       builder: (context, timerProvider, child) {
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Background Sound',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 16),
-                
-                // Sound Dropdown
-                DropdownButtonFormField<String>(
-                  value: _selectedSound,
-                  decoration: const InputDecoration(
-                    labelText: 'Select Sound',
-                    border: OutlineInputBorder(),
+        return Container(
+          margin: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20),
+          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with icon - more compact on mobile
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(isMobile ? 6 : 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentMint.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.music_note_rounded,
+                      color: AppColors.accentMint,
+                      size: isMobile ? 16 : 18,
+                    ),
                   ),
-                  items: _availableSounds.map((sound) {
-                    return DropdownMenuItem(
-                      value: sound,
-                      child: Text(sound),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _selectedSound = value;
-                      });
-                      _saveSoundSettings();
-                    }
-                  },
-                ),
-                
-                if (_selectedSound != 'None') ...[
-                  const SizedBox(height: 16),
-                  
-                  // Volume Slider
-                  Row(
-                    children: [
-                      const Icon(Icons.volume_down),
-                      Expanded(
-                        child: Slider(
-                          value: _volume,
-                          min: 0.0,
-                          max: 1.0,
-                          divisions: 10,
-                          label: '${(_volume * 100).round()}%',
-                          onChanged: (value) {
-                            setState(() {
-                              _volume = value;
-                            });
-                          },
-                          onChangeEnd: (value) {
-                            _saveSoundSettings();
-                          },
-                        ),
+                  SizedBox(width: isMobile ? 8 : 12),
+                  Flexible(
+                    child: Text(
+                      'Focus Sounds',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        fontSize: isMobile ? 16 : 18,
                       ),
-                      const Icon(Icons.volume_up),
-                    ],
+                    ),
                   ),
                 ],
+              ),
+              SizedBox(height: isMobile ? 12 : 16),
+              
+              // Sound selection grid
+              _buildSoundGrid(isMobile, isSmallScreen),
+              
+              // Volume control (only show when sound is selected)
+              if (_selectedSound != 'None') ...[
+                SizedBox(height: isMobile ? 12 : 16),
+                _buildVolumeControl(isMobile),
               ],
-            ),
+            ],
           ),
         );
       },
+    );
+  }
+  
+  Widget _buildSoundGrid(bool isMobile, bool isSmallScreen) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: isMobile ? 3 : 3,
+        crossAxisSpacing: isMobile ? 8 : 12,
+        mainAxisSpacing: isMobile ? 8 : 12,
+        childAspectRatio: isMobile ? 0.95 : 1.1,
+      ),
+      itemCount: _availableSounds.length,
+      itemBuilder: (context, index) {
+        final sound = _availableSounds[index];
+        final isSelected = _selectedSound == sound['name'];
+        
+        return _buildSoundCard(
+          name: sound['name'],
+          icon: sound['icon'],
+          description: sound['description'],
+          color: sound['color'],
+          isSelected: isSelected,
+          onTap: () {
+            setState(() {
+              _selectedSound = sound['name'];
+            });
+            _saveSoundSettings();
+          },
+        );
+      },
+    );
+  }
+  
+  Widget _buildSoundCard({
+    required String name,
+    required IconData icon,
+    required String description,
+    required Color color,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Semantics(
+      button: true,
+      label: '$name sound',
+      hint: isSelected ? 'Currently selected' : 'Tap to select $description',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? color.withValues(alpha: 0.1)
+                  : AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected
+                    ? color.withValues(alpha: 0.3)
+                    : Colors.transparent,
+                width: 2,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  flex: 2,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? color.withValues(alpha: 0.15)
+                          : color.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      icon,
+                      color: isSelected ? color : color.withValues(alpha: 0.7),
+                      size: 18,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Flexible(
+                  flex: 1,
+                  child: Text(
+                    name,
+                    style: TextStyle(
+                      color: isSelected ? color : AppColors.textSecondary,
+                      fontSize: 10,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Flexible(
+                  flex: 1,
+                  child: Text(
+                    description,
+                    style: TextStyle(
+                      color: AppColors.textTertiary,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildVolumeControl(bool isMobile) {
+    return Container(
+      padding: EdgeInsets.all(isMobile ? 12 : 16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.volume_up_rounded,
+                size: isMobile ? 14 : 16,
+                color: AppColors.textSecondary,
+              ),
+              SizedBox(width: isMobile ? 6 : 8),
+              Flexible(
+                child: Text(
+                  'Volume',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: isMobile ? 12 : 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 6 : 8,
+                  vertical: isMobile ? 2 : 4,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.accentMint.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '${(_volume * 100).round()}%',
+                  style: TextStyle(
+                    color: AppColors.accentMint,
+                    fontSize: isMobile ? 10 : 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: isMobile ? 8 : 12),
+          Row(
+            children: [
+              Icon(
+                Icons.volume_down_rounded,
+                size: isMobile ? 14 : 16,
+                color: AppColors.textTertiary,
+              ),
+              Expanded(
+                child: SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: AppColors.accentMint,
+                    inactiveTrackColor: AppColors.progressTrack,
+                    thumbColor: AppColors.accentMint,
+                    overlayColor: AppColors.accentMint.withValues(alpha: 0.1),
+                    trackHeight: isMobile ? 3 : 4,
+                    thumbShape: RoundSliderThumbShape(
+                      enabledThumbRadius: isMobile ? 6 : 8,
+                    ),
+                  ),
+                  child: Slider(
+                    value: _volume,
+                    min: 0.0,
+                    max: 1.0,
+                    divisions: 20,
+                    onChanged: (value) {
+                      setState(() {
+                        _volume = value;
+                      });
+                    },
+                    onChangeEnd: (value) {
+                      _saveSoundSettings();
+                    },
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.volume_up_rounded,
+                size: isMobile ? 14 : 16,
+                color: AppColors.textTertiary,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Map<String, dynamic> _getSoundByName(String name) {
+    return _availableSounds.firstWhere(
+      (sound) => sound['name'] == name,
+      orElse: () => _availableSounds.first,
     );
   }
 }

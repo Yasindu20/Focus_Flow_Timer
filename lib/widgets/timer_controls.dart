@@ -126,50 +126,68 @@ class _TimerControlsState extends State<TimerControls>
     }
 
     return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: [
-            color,
-            color.withValues(alpha: 0.8),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          // Primary shadow
-          BoxShadow(
-            color: color.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-            spreadRadius: -4,
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      child: Material(
+        elevation: 8,
+        borderRadius: BorderRadius.circular(30),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            gradient: LinearGradient(
+              colors: [
+                color,
+                color.withValues(alpha: 0.8),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 6),
+                spreadRadius: -2,
+              ),
+            ],
           ),
-          // Soft glow
-          BoxShadow(
-            color: color.withValues(alpha: 0.2),
-            blurRadius: 30,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Semantics(
-        button: true,
-        label: '$label timer',
-        hint: 'Double tap to $label the pomodoro session',
-        child: FloatingActionButton.extended(
-          heroTag: "timer_controls_fab",
-          onPressed: onPressed,
-          backgroundColor: Colors.transparent,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          extendedPadding: const EdgeInsets.symmetric(horizontal: 24),
-          icon: Icon(icon, size: 26),
-          label: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
+          child: Semantics(
+            button: true,
+            label: '$label timer',
+            hint: 'Tap to $label the focus session',
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(30),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(30),
+                onTap: onPressed,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        icon,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -178,44 +196,57 @@ class _TimerControlsState extends State<TimerControls>
   }
 
   Widget _buildSecondaryControls() {
-    return AnimatedBuilder(
-      animation: _secondaryButtonScale,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _secondaryButtonScale.value,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              // Reset/Stop button
-              _buildSecondaryButton(
-                icon: Icons.stop_rounded,
-                label: 'Stop',
-                color: AppColors.error,
-                onPressed: widget.state != TimerState.idle ? _handleStop : null,
-              ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      child: AnimatedBuilder(
+        animation: _secondaryButtonScale,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _secondaryButtonScale.value,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // Reset/Stop button
+                Expanded(
+                  child: _buildSecondaryButton(
+                    icon: Icons.stop_rounded,
+                    label: 'Stop',
+                    color: AppColors.error,
+                    onPressed: widget.state != TimerState.idle ? _handleStop : null,
+                  ),
+                ),
 
-              // Skip button
-              _buildSecondaryButton(
-                icon: Icons.skip_next_rounded,
-                label: 'Skip',
-                color: AppColors.textSecondary,
-                onPressed: (widget.state == TimerState.running ||
-                        widget.state == TimerState.paused)
-                    ? _handleSkip
-                    : null,
-              ),
+                const SizedBox(width: 12),
 
-              // Settings button
-              _buildSecondaryButton(
-                icon: Icons.tune_rounded,
-                label: 'Settings',
-                color: AppColors.textSecondary,
-                onPressed: _handleSettings,
-              ),
-            ],
-          ),
-        );
-      },
+                // Skip button
+                Expanded(
+                  child: _buildSecondaryButton(
+                    icon: Icons.skip_next_rounded,
+                    label: 'Skip',
+                    color: AppColors.textSecondary,
+                    onPressed: (widget.state == TimerState.running ||
+                            widget.state == TimerState.paused)
+                        ? _handleSkip
+                        : null,
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // Settings button
+                Expanded(
+                  child: _buildSecondaryButton(
+                    icon: Icons.tune_rounded,
+                    label: 'Settings',
+                    color: AppColors.textSecondary,
+                    onPressed: _handleSettings,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -232,57 +263,57 @@ class _TimerControlsState extends State<TimerControls>
       enabled: isEnabled,
       label: '$label button',
       hint: isEnabled ? 'Tap to $label' : '$label is not available right now',
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isEnabled ? onPressed : null,
-          onTapDown: isEnabled ? (_) => _animateSecondaryButton() : null,
-          borderRadius: BorderRadius.circular(20),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: BoxDecoration(
-              color: isEnabled
-                  ? color.withValues(alpha: 0.08)
-                  : AppColors.progressTrack,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isEnabled
-                    ? color.withValues(alpha: 0.2)
-                    : AppColors.progressTrack,
-                width: 1.5,
+      child: Container(
+        height: 60,
+        decoration: BoxDecoration(
+          color: isEnabled
+              ? color.withValues(alpha: 0.08)
+              : AppColors.progressTrack,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isEnabled
+                ? color.withValues(alpha: 0.15)
+                : AppColors.progressTrack,
+            width: 1,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            onTap: isEnabled ? onPressed : null,
+            onTapDown: isEnabled ? (_) => _animateSecondaryButton() : null,
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      icon,
+                      key: ValueKey(icon),
+                      color: isEnabled ? color : AppColors.textTertiary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        color: isEnabled ? color : AppColors.textTertiary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              boxShadow: isEnabled ? [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ] : null,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: Icon(
-                    icon,
-                    key: ValueKey(icon),
-                    color: isEnabled ? color : AppColors.textTertiary,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: isEnabled ? color : AppColors.textTertiary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ],
             ),
           ),
         ),
