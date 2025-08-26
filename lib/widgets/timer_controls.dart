@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/enums/timer_enums.dart';
+import '../core/constants/colors.dart';
 
 class TimerControls extends StatefulWidget {
   final VoidCallback onStart;
@@ -104,22 +105,22 @@ class _TimerControlsState extends State<TimerControls>
     switch (widget.state) {
       case TimerState.idle:
       case TimerState.completed:
-        icon = Icons.play_arrow;
+        icon = Icons.play_arrow_rounded;
         label = 'Start';
-        color = Colors.green;
+        color = AppColors.success;
         onPressed = _handleMainAction;
         break;
       case TimerState.running:
-        icon = Icons.pause;
+        icon = Icons.pause_rounded;
         label = 'Pause';
-        color = Colors.orange;
+        color = AppColors.warning;
         onPressed = _handleMainAction;
         break;
       case TimerState.paused:
       case TimerState.cancelled:
-        icon = Icons.play_arrow;
+        icon = Icons.play_arrow_rounded;
         label = 'Resume';
-        color = Colors.blue;
+        color = AppColors.primaryBlue;
         onPressed = _handleMainAction;
         break;
     }
@@ -127,26 +128,49 @@ class _TimerControlsState extends State<TimerControls>
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [
+            color,
+            color.withValues(alpha: 0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         boxShadow: [
+          // Primary shadow
           BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: -4,
+          ),
+          // Soft glow
+          BoxShadow(
+            color: color.withValues(alpha: 0.2),
+            blurRadius: 30,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: FloatingActionButton.extended(
-        heroTag: "timer_controls_fab",
-        onPressed: onPressed,
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        icon: Icon(icon, size: 28),
-        label: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+      child: Semantics(
+        button: true,
+        label: '$label timer',
+        hint: 'Double tap to $label the pomodoro session',
+        child: FloatingActionButton.extended(
+          heroTag: "timer_controls_fab",
+          onPressed: onPressed,
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          extendedPadding: const EdgeInsets.symmetric(horizontal: 24),
+          icon: Icon(icon, size: 26),
+          label: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
       ),
@@ -164,17 +188,17 @@ class _TimerControlsState extends State<TimerControls>
             children: [
               // Reset/Stop button
               _buildSecondaryButton(
-                icon: Icons.stop,
+                icon: Icons.stop_rounded,
                 label: 'Stop',
-                color: Colors.red,
+                color: AppColors.error,
                 onPressed: widget.state != TimerState.idle ? _handleStop : null,
               ),
 
               // Skip button
               _buildSecondaryButton(
-                icon: Icons.skip_next,
+                icon: Icons.skip_next_rounded,
                 label: 'Skip',
-                color: Colors.grey[600]!,
+                color: AppColors.textSecondary,
                 onPressed: (widget.state == TimerState.running ||
                         widget.state == TimerState.paused)
                     ? _handleSkip
@@ -183,9 +207,9 @@ class _TimerControlsState extends State<TimerControls>
 
               // Settings button
               _buildSecondaryButton(
-                icon: Icons.settings,
+                icon: Icons.tune_rounded,
                 label: 'Settings',
-                color: Colors.grey[600]!,
+                color: AppColors.textSecondary,
                 onPressed: _handleSettings,
               ),
             ],
@@ -203,39 +227,64 @@ class _TimerControlsState extends State<TimerControls>
   }) {
     final isEnabled = onPressed != null;
 
-    return GestureDetector(
-      onTapDown: isEnabled ? (_) => _animateSecondaryButton() : null,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isEnabled
-              ? color.withValues(alpha: 0.1)
-              : Colors.grey.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(25),
-          border: Border.all(
-            color: isEnabled
-                ? color.withValues(alpha: 0.3)
-                : Colors.grey.withValues(alpha: 0.2),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isEnabled ? color : Colors.grey.withValues(alpha: 0.5),
-              size: 24,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isEnabled ? color : Colors.grey.withValues(alpha: 0.5),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+    return Semantics(
+      button: true,
+      enabled: isEnabled,
+      label: '$label button',
+      hint: isEnabled ? 'Tap to $label' : '$label is not available right now',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isEnabled ? onPressed : null,
+          onTapDown: isEnabled ? (_) => _animateSecondaryButton() : null,
+          borderRadius: BorderRadius.circular(20),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: isEnabled
+                  ? color.withValues(alpha: 0.08)
+                  : AppColors.progressTrack,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isEnabled
+                    ? color.withValues(alpha: 0.2)
+                    : AppColors.progressTrack,
+                width: 1.5,
               ),
+              boxShadow: isEnabled ? [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ] : null,
             ),
-          ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    icon,
+                    key: ValueKey(icon),
+                    color: isEnabled ? color : AppColors.textTertiary,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isEnabled ? color : AppColors.textTertiary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
