@@ -131,19 +131,27 @@ class _TimerConfigPanelState extends State<TimerConfigPanel>
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        Text(
-                          timerProvider.currentType.displayName,
-                          style: TextStyle(
-                            fontSize: isMobile ? 13 : 14,
-                            color: _getTimerTypeColor(timerProvider.currentType),
-                            fontWeight: FontWeight.w500,
+                        Flexible(
+                          child: Text(
+                            timerProvider.currentType.displayName,
+                            style: TextStyle(
+                              fontSize: isMobile ? 13 : 14,
+                              color: _getTimerTypeColor(timerProvider.currentType),
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Text(
-                          ' • ${timerProvider.getCurrentCustomDuration()} minutes',
-                          style: TextStyle(
-                            fontSize: isMobile ? 12 : 13,
-                            color: AppColors.textTertiary,
+                        Flexible(
+                          child: Text(
+                            ' • ${timerProvider.getCurrentCustomDuration()} min',
+                            style: TextStyle(
+                              fontSize: isMobile ? 12 : 13,
+                              color: AppColors.textTertiary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
