@@ -14,7 +14,8 @@ class AnalyticsScreen extends StatefulWidget {
   State<AnalyticsScreen> createState() => _AnalyticsScreenState();
 }
 
-class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderStateMixin {
+class _AnalyticsScreenState extends State<AnalyticsScreen>
+    with TickerProviderStateMixin {
   late TabController _tabController;
   late AnimationController _fadeAnimationController;
   late AnimationController _slideAnimationController;
@@ -25,17 +26,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    
+
     _fadeAnimationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     _slideAnimationController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -43,7 +44,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
       parent: _fadeAnimationController,
       curve: Curves.easeOutCubic,
     ));
-    
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
@@ -67,7 +68,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -93,10 +94,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
             children: [
               // Custom Header with Glassmorphism effect
               _buildGlassMorphicHeader(),
-              
+
               // Enhanced Tab Bar with floating effect
               _buildFloatingTabBar(),
-              
+
               // Animated Content
               Expanded(
                 child: FadeTransition(
@@ -124,7 +125,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
 
   Widget _buildGlassMorphicHeader() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       margin: const EdgeInsets.all(16),
@@ -144,15 +145,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                 ],
         ),
         border: Border.all(
-          color: isDark 
-              ? Colors.white.withValues(alpha: 0.2) 
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.2)
               : Colors.white.withValues(alpha: 0.5),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark 
-                ? Colors.black.withValues(alpha: 0.3) 
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.3)
                 : Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             spreadRadius: 0,
@@ -176,17 +177,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                   child: Text(
                     'Analytics',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Track your productivity journey',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: isDark ? Colors.white70 : Colors.black54,
-                  ),
+                        color: isDark ? Colors.white70 : Colors.black54,
+                      ),
                 ),
               ],
             ),
@@ -211,9 +212,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
             ),
             child: GestureDetector(
               onTap: () {
-                Provider.of<AnalyticsProvider>(context, listen: false).refreshStats();
-                Provider.of<AnalyticsDashboardProvider>(context, listen: false).loadDashboardData();
-                
+                Provider.of<AnalyticsProvider>(context, listen: false)
+                    .refreshStats();
+                Provider.of<AnalyticsDashboardProvider>(context, listen: false)
+                    .loadDashboardData();
+
                 // Add a subtle bounce animation to the refresh button
                 _slideAnimationController.reset();
                 _slideAnimationController.forward();
@@ -232,7 +235,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
 
   Widget _buildFloatingTabBar() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(6),
@@ -250,15 +253,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                 ],
         ),
         border: Border.all(
-          color: isDark 
-              ? Colors.white.withValues(alpha: 0.2) 
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.2)
               : Colors.white.withValues(alpha: 0.5),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark 
-                ? Colors.black.withValues(alpha: 0.4) 
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.4)
                 : Colors.black.withValues(alpha: 0.08),
             blurRadius: 16,
             spreadRadius: 0,
@@ -285,23 +288,25 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
             ),
           ],
         ),
-        indicatorSize: TabBarIndicatorSize.tab,
+        indicatorSize: TabBarIndicatorSize.label,
+        indicatorPadding: const EdgeInsets.symmetric(horizontal: -12, vertical: 4),
         dividerColor: Colors.transparent,
         labelColor: Colors.white,
         unselectedLabelColor: isDark ? Colors.white60 : Colors.black54,
         labelStyle: const TextStyle(
           fontWeight: FontWeight.w600,
-          fontSize: 12,
+          fontSize: 11,
         ),
         unselectedLabelStyle: const TextStyle(
           fontWeight: FontWeight.w500,
-          fontSize: 11,
+          fontSize: 10,
         ),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         tabs: const [
-          Tab(icon: Icon(Icons.speed_rounded, size: 20), text: 'Quick Stats'),
-          Tab(icon: Icon(Icons.dashboard_rounded, size: 20), text: 'Dashboard'),
-          Tab(icon: Icon(Icons.emoji_events_rounded, size: 20), text: 'Score'),
-          Tab(icon: Icon(Icons.leaderboard_rounded, size: 20), text: 'Rankings'),
+          Tab(icon: Icon(Icons.speed_rounded, size: 18), text: 'Quick Stats'),
+          Tab(icon: Icon(Icons.dashboard_rounded, size: 18), text: 'Dashboard'),
+          Tab(icon: Icon(Icons.emoji_events_rounded, size: 18), text: 'Score'),
+          Tab(icon: Icon(Icons.leaderboard_rounded, size: 18), text: 'Rankings'),
         ],
       ),
     );
@@ -311,7 +316,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
     return Consumer<AnalyticsProvider>(
       builder: (context, analyticsProvider, child) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        
+
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -335,7 +340,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                             ),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.today_rounded, color: Colors.white, size: 20),
+                          child: const Icon(Icons.today_rounded,
+                              color: Colors.white, size: 20),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -344,15 +350,23 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                             children: [
                               Text(
                                 'Today\'s Progress',
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
                               Text(
                                 'Your productivity at a glance',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: isDark ? Colors.white60 : Colors.black54,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: isDark
+                                          ? Colors.white60
+                                          : Colors.black54,
+                                    ),
                               ),
                             ],
                           ),
@@ -400,9 +414,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                           child: _buildModernStatCard(
                             context,
                             'Focus Score',
-                            analyticsProvider.todayFocusScore.round().toString(),
+                            analyticsProvider.todayFocusScore
+                                .round()
+                                .toString(),
                             Icons.psychology_rounded,
-                            [analyticsProvider.focusScoreColor, analyticsProvider.focusScoreColor.withValues(alpha: 0.8)],
+                            [
+                              analyticsProvider.focusScoreColor,
+                              analyticsProvider.focusScoreColor
+                                  .withValues(alpha: 0.8)
+                            ],
                           ),
                         ),
                       ],
@@ -426,12 +446,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                             gradient: LinearGradient(
                               colors: [
                                 analyticsProvider.focusScoreColor,
-                                analyticsProvider.focusScoreColor.withValues(alpha: 0.8),
+                                analyticsProvider.focusScoreColor
+                                    .withValues(alpha: 0.8),
                               ],
                             ),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.psychology_rounded, color: Colors.white, size: 20),
+                          child: const Icon(Icons.psychology_rounded,
+                              color: Colors.white, size: 20),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -440,16 +462,22 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                             children: [
                               Text(
                                 'Focus Quality',
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
                               Text(
                                 analyticsProvider.focusScoreText,
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: analyticsProvider.focusScoreColor,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: analyticsProvider.focusScoreColor,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                               ),
                             ],
                           ),
@@ -467,9 +495,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                             children: [
                               SizedBox.expand(
                                 child: CircularProgressIndicator(
-                                  value: analyticsProvider.todayFocusScore / 100,
+                                  value:
+                                      analyticsProvider.todayFocusScore / 100,
                                   strokeWidth: 6,
-                                  backgroundColor: isDark 
+                                  backgroundColor: isDark
                                       ? Colors.white.withValues(alpha: 0.1)
                                       : Colors.grey[300],
                                   valueColor: AlwaysStoppedAnimation<Color>(
@@ -483,16 +512,25 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                                   children: [
                                     Text(
                                       '${analyticsProvider.todayFocusScore.round()}',
-                                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: analyticsProvider.focusScoreColor,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: analyticsProvider
+                                                .focusScoreColor,
+                                          ),
                                     ),
                                     Text(
                                       '/100',
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: isDark ? Colors.white60 : Colors.black54,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: isDark
+                                                ? Colors.white60
+                                                : Colors.black54,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -505,11 +543,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildFocusMetric('Completion Rate', '${((analyticsProvider.todayTasks / (analyticsProvider.todayTasks + 2)) * 100).round()}%'),
+                              _buildFocusMetric('Completion Rate',
+                                  '${((analyticsProvider.todayTasks / (analyticsProvider.todayTasks + 2)) * 100).round()}%'),
                               const SizedBox(height: 8),
-                              _buildFocusMetric('Session Streak', '${analyticsProvider.todaySessions} days'),
+                              _buildFocusMetric('Session Streak',
+                                  '${analyticsProvider.todaySessions} days'),
                               const SizedBox(height: 8),
-                              _buildFocusMetric('Avg. Session', '${(analyticsProvider.todayMinutes / math.max(analyticsProvider.todaySessions, 1)).round()} min'),
+                              _buildFocusMetric('Avg. Session',
+                                  '${(analyticsProvider.todayMinutes / math.max(analyticsProvider.todaySessions, 1)).round()} min'),
                             ],
                           ),
                         ),
@@ -539,14 +580,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                             ),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 20),
+                          child: const Icon(Icons.calendar_month_rounded,
+                              color: Colors.white, size: 20),
                         ),
                         const SizedBox(width: 12),
                         Text(
                           'This Week\'s Performance',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ],
                     ),
@@ -583,7 +626,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                             ),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.trending_up_rounded, color: Colors.white, size: 20),
+                          child: const Icon(Icons.trending_up_rounded,
+                              color: Colors.white, size: 20),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -592,15 +636,23 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                             children: [
                               Text(
                                 'Weekly Trend',
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
                               Text(
                                 'Your consistency over time',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: isDark ? Colors.white60 : Colors.black54,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: isDark
+                                          ? Colors.white60
+                                          : Colors.black54,
+                                    ),
                               ),
                             ],
                           ),
@@ -628,8 +680,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                         ),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isDark 
-                              ? Colors.white.withValues(alpha: 0.1) 
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.1)
                               : Colors.white.withValues(alpha: 0.5),
                         ),
                       ),
@@ -639,22 +691,31 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                           Icon(
                             Icons.bar_chart_rounded,
                             size: 48,
-                            color: Theme.of(context).primaryColor.withValues(alpha: 0.6),
+                            color: Theme.of(context)
+                                .primaryColor
+                                .withValues(alpha: 0.6),
                           ),
                           const SizedBox(height: 12),
                           Text(
                             'Interactive Chart',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: Theme.of(context).primaryColor,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: Theme.of(context).primaryColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             'Coming Soon',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: isDark ? Colors.white60 : Colors.black54,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color:
+                                      isDark ? Colors.white60 : Colors.black54,
+                                ),
                           ),
                         ],
                       ),
@@ -671,7 +732,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
 
   Widget _buildGlassCard({required Widget child}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
@@ -691,15 +752,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                 ],
         ),
         border: Border.all(
-          color: isDark 
-              ? Colors.white.withValues(alpha: 0.2) 
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.2)
               : Colors.white.withValues(alpha: 0.5),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark 
-                ? Colors.black.withValues(alpha: 0.3) 
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.3)
                 : Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             spreadRadius: 0,
@@ -719,7 +780,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
     List<Color> gradientColors,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -772,17 +833,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
           Text(
             value,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: gradientColors.first,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: gradientColors.first,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 4),
           Text(
             title,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: isDark ? Colors.white70 : Colors.black54,
-              fontWeight: FontWeight.w500,
-            ),
+                  color: isDark ? Colors.white70 : Colors.black54,
+                  fontWeight: FontWeight.w500,
+                ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -792,30 +853,31 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
 
   Widget _buildFocusMetric(String label, String value) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: isDark ? Colors.white70 : Colors.black54,
-          ),
+                color: isDark ? Colors.white70 : Colors.black54,
+              ),
         ),
         Text(
           value,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black,
-          ),
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black,
+              ),
         ),
       ],
     );
   }
 
-  Widget _buildWeeklyStat(String title, String value, IconData icon, Color color) {
+  Widget _buildWeeklyStat(
+      String title, String value, IconData icon, Color color) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -852,16 +914,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
             child: Text(
               title,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+                    fontWeight: FontWeight.w500,
+                  ),
             ),
           ),
           Text(
             value,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
           ),
         ],
       ),
