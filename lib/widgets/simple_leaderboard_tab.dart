@@ -70,31 +70,50 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
                       ],
               ),
             ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return CustomScrollView(
-                  slivers: [
-                    // Responsive Tab Bar - using SliverPersistentHeader for proper sizing
-                    SliverPersistentHeader(
-                      pinned: true,
-                      delegate: LeaderboardTabBarDelegate(
-                        tabBar: _buildRankingTabBar(isDark, isSmallScreen, isNarrowScreen),
-                        height: _calculateTabBarHeight(isSmallScreen, isNarrowScreen),
-                      ),
-                    ),
-                    
-                    // Content area with proper constraints
-                    SliverFillRemaining(
-                      child: TabBarView(
-                        controller: _tabController,
-                        children: LeaderboardType.values.map((type) {
-                          return _buildEnhancedLeaderboardContent(leaderboardService, type);
-                        }).toList(),
-                      ),
-                    ),
-                  ],
-                );
-              },
+            child: Column(
+              children: [
+                // Responsive Tab Bar with proper constraints
+                Container(
+                  constraints: BoxConstraints(
+                    maxHeight: isSmallScreen ? 60 : 80,
+                    minHeight: 50,
+                  ),
+                  child: _buildRankingTabBar(isDark, isSmallScreen, isNarrowScreen),
+                ),
+                
+                // Content area that takes remaining space and handles overflow
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    physics: const BouncingScrollPhysics(), // Better mobile scroll physics
+                    children: LeaderboardType.values.map((type) {
+                      // Wrap each tab content in error boundary with proper scrolling
+                      return Builder(
+                        builder: (context) {
+                          try {
+                            return _buildEnhancedLeaderboardContent(leaderboardService, type);
+                          } catch (e) {
+                            debugPrint('Error building leaderboard content for $type: $e');
+                            return const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'Unable to load rankings',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -102,29 +121,18 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
     );
   }
 
-  double _calculateTabBarHeight(bool isSmallScreen, bool isNarrowScreen) {
-    // Calculate height based on actual components:
-    // - Container margin (top + bottom): 8 or 16px  
-    // - Container padding (top + bottom): 4 or 8px
-    // - Container border (top + bottom): 2px
-    // - TabBar intrinsic height: ~48px (Material Design standard)
-    // - Icon size: 12-16px + text height + internal padding
-    
-    final double marginVertical = isSmallScreen ? 8.0 : 16.0; // top + bottom margins
-    final double paddingVertical = isSmallScreen ? 4.0 : 8.0; // top + bottom padding
-    const double borderVertical = 2.0; // top + bottom borders
-    final double tabBarHeight = isSmallScreen ? 44.0 : 48.0; // Estimated TabBar height
-    
-    final double totalHeight = marginVertical + paddingVertical + borderVertical + tabBarHeight;
-    
-    // Round up to ensure we have enough space and avoid fractional pixel issues
-    return totalHeight.ceilToDouble();
-  }
   
   Widget _buildRankingTabBar(bool isDark, bool isSmallScreen, bool isNarrowScreen) {
-    return Container(
-      margin: EdgeInsets.fromLTRB(16, isSmallScreen ? 4 : 8, 16, isSmallScreen ? 4 : 8),
-      padding: EdgeInsets.all(isSmallScreen ? 2 : 4),
+    return SingleChildScrollView(
+      child: Container(
+        // Responsive margins for mobile optimization
+        margin: EdgeInsets.fromLTRB(
+          isSmallScreen ? 8 : 12,
+          isSmallScreen ? 4 : 8,
+          isSmallScreen ? 8 : 12,
+          isSmallScreen ? 4 : 8,
+        ),
+        padding: EdgeInsets.all(isSmallScreen ? 2 : 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         gradient: LinearGradient(
@@ -157,8 +165,9 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
       ),
       child: TabBar(
         controller: _tabController,
+        // Mobile-optimized TabBar properties
         indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           gradient: LinearGradient(
             colors: [
               Colors.amber.shade400,
@@ -167,10 +176,10 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.amber.withValues(alpha: 0.4),
-              blurRadius: 8,
+              color: Colors.amber.withValues(alpha: 0.3),
+              blurRadius: 6,
               spreadRadius: 0,
-              offset: const Offset(0, 2),
+              offset: const Offset(0, 1),
             ),
           ],
         ),
@@ -180,20 +189,29 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
         unselectedLabelColor: isDark ? Colors.white60 : Colors.black54,
         labelStyle: TextStyle(
           fontWeight: FontWeight.w600,
-          fontSize: isNarrowScreen ? 7 : (isSmallScreen ? 8 : 9),
+          fontSize: isNarrowScreen ? 10 : (isSmallScreen ? 11 : 12),
+          height: 1.2,
         ),
         unselectedLabelStyle: TextStyle(
           fontWeight: FontWeight.w500,
-          fontSize: isNarrowScreen ? 6 : (isSmallScreen ? 7 : 8),
+          fontSize: isNarrowScreen ? 9 : (isSmallScreen ? 10 : 11),
+          height: 1.2,
         ),
+        labelPadding: EdgeInsets.symmetric(
+          horizontal: isSmallScreen ? 4 : 6,
+          vertical: isSmallScreen ? 0 : 2,
+        ),
+        // Optimize for mobile scrolling
         isScrollable: true,
         tabAlignment: TabAlignment.start,
         tabs: LeaderboardType.values.map((type) {
           return Tab(
             text: isNarrowScreen ? _getLeaderboardTypeShortLabel(type) : _getLeaderboardTypeLabel(type),
-            icon: Icon(_getLeaderboardTypeIcon(type), size: isSmallScreen ? 12 : 16),
+            icon: Icon(_getLeaderboardTypeIcon(type), size: isNarrowScreen ? 14 : (isSmallScreen ? 16 : 18)),
+            iconMargin: EdgeInsets.only(bottom: isSmallScreen ? 2 : 4),
           );
         }).toList(),
+        ),
       ),
     );
   }
@@ -221,7 +239,14 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
         }
       },
       child: ListView.builder(
-        padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+        // Ultra-compact padding for mobile devices
+        padding: EdgeInsets.only(
+          left: isSmallScreen ? 6 : 8,
+          right: isSmallScreen ? 6 : 8,
+          top: isSmallScreen ? 2 : 4,
+          bottom: isSmallScreen ? 4 : 8,
+        ),
+        physics: const BouncingScrollPhysics(), // Better mobile scroll physics
         itemCount: leaderboard.entries.length,
         itemBuilder: (context, index) {
           try {
@@ -239,11 +264,20 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
 
   Widget _buildEnhancedEmptyState(LeaderboardType type, bool isSmallScreen) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isVeryNarrow = screenWidth < 360;
     
-    return Center(
-      child: Container(
-        margin: EdgeInsets.all(isSmallScreen ? 24 : 32),
-        padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(
+        horizontal: isVeryNarrow ? 16 : (isSmallScreen ? 20 : 24),
+        vertical: isSmallScreen ? 20 : 32,
+      ),
+      child: Center(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: isVeryNarrow ? screenWidth - 32 : 400,
+          ),
+          padding: EdgeInsets.all(isVeryNarrow ? 16 : (isSmallScreen ? 20 : 24)),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
@@ -306,6 +340,7 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
               'No ${_getLeaderboardTypeLabel(type)} Rankings Yet',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
+                fontSize: isVeryNarrow ? 18 : (isSmallScreen ? 20 : 24),
               ),
               textAlign: TextAlign.center,
             ),
@@ -314,12 +349,16 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
               'Complete focus sessions and climb the leaderboard!',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: isDark ? Colors.white70 : Colors.black54,
+                fontSize: isVeryNarrow ? 13 : (isSmallScreen ? 14 : 16),
               ),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: isSmallScreen ? 16 : 20),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: EdgeInsets.symmetric(
+                horizontal: isVeryNarrow ? 12 : 16,
+                vertical: isSmallScreen ? 6 : 8,
+              ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -337,18 +376,22 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Colors.blue.shade600,
                   fontWeight: FontWeight.w600,
+                  fontSize: isVeryNarrow ? 12 : (isSmallScreen ? 13 : 14),
                 ),
               ),
             ),
           ],
         ),
       ),
+    ),
     );
   }
 
   Widget _buildEnhancedLeaderboardCard(dynamic entry, LeaderboardType type, int index, bool isSmallScreen) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isTopThree = index < 3;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isVeryNarrow = screenWidth < 360;
     final rankColors = [
       Colors.amber.shade500, // 1st place - Gold
       Colors.grey.shade400,  // 2nd place - Silver  
@@ -356,8 +399,11 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
     ];
     
     return Container(
-      margin: EdgeInsets.only(bottom: isSmallScreen ? 8 : 12),
-      padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+      margin: EdgeInsets.only(bottom: isSmallScreen ? 4 : 6),
+      padding: EdgeInsets.symmetric(
+        horizontal: isVeryNarrow ? 8 : (isSmallScreen ? 10 : 12),
+        vertical: isSmallScreen ? 8 : 10,
+      ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
@@ -394,8 +440,8 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
         children: [
           // Rank Badge - responsive size
           Container(
-            width: isSmallScreen ? 32 : 40,
-            height: isSmallScreen ? 32 : 40,
+            width: isVeryNarrow ? 28 : (isSmallScreen ? 32 : 36),
+            height: isVeryNarrow ? 28 : (isSmallScreen ? 32 : 36),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isTopThree 
@@ -417,24 +463,24 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
                       index == 0 ? Icons.emoji_events : 
                       index == 1 ? Icons.military_tech : Icons.workspace_premium,
                       color: Colors.white,
-                      size: isSmallScreen ? 16 : 20,
+                      size: isVeryNarrow ? 14 : (isSmallScreen ? 16 : 18),
                     )
                   : Text(
                       '${index + 1}',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: isSmallScreen ? 12 : 14,
+                        fontSize: isVeryNarrow ? 10 : (isSmallScreen ? 12 : 14),
                       ),
                     ),
             ),
           ),
-          SizedBox(width: isSmallScreen ? 12 : 16),
+          SizedBox(width: isVeryNarrow ? 8 : (isSmallScreen ? 10 : 12)),
           
           // User Avatar (placeholder) - responsive
           Container(
-            width: isSmallScreen ? 36 : 48,
-            height: isSmallScreen ? 36 : 48,
+            width: isVeryNarrow ? 32 : (isSmallScreen ? 36 : 40),
+            height: isVeryNarrow ? 32 : (isSmallScreen ? 36 : 40),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -447,10 +493,10 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
             child: Icon(
               Icons.person,
               color: Colors.white,
-              size: isSmallScreen ? 18 : 24,
+              size: isVeryNarrow ? 16 : (isSmallScreen ? 18 : 20),
             ),
           ),
-          SizedBox(width: isSmallScreen ? 12 : 16),
+          SizedBox(width: isVeryNarrow ? 8 : (isSmallScreen ? 10 : 12)),
           
           // User Info
           Expanded(
@@ -461,14 +507,20 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
                   'User ${index + 1}', // Placeholder user name
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
+                    fontSize: isVeryNarrow ? 13 : (isSmallScreen ? 14 : 16),
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: isSmallScreen ? 2 : 4),
+                SizedBox(height: isSmallScreen ? 1 : 2),
                 Text(
                   _getTypeDescription(type),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: isDark ? Colors.white60 : Colors.black54,
+                    fontSize: isVeryNarrow ? 10 : (isSmallScreen ? 11 : 12),
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -476,7 +528,10 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
           
           // Score/Value
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: EdgeInsets.symmetric(
+              horizontal: isVeryNarrow ? 8 : (isSmallScreen ? 10 : 12),
+              vertical: isSmallScreen ? 4 : 6,
+            ),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isTopThree 
@@ -490,6 +545,7 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isTopThree ? rankColors[index] : Colors.grey.shade600,
+                fontSize: isVeryNarrow ? 12 : (isSmallScreen ? 14 : 16),
               ),
             ),
           ),
@@ -568,36 +624,3 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
   }
 }
 
-class LeaderboardTabBarDelegate extends SliverPersistentHeaderDelegate {
-  final Widget tabBar;
-  final double height;
-
-  LeaderboardTabBarDelegate({required this.tabBar, required this.height});
-
-  @override
-  double get minExtent => height;
-
-  @override
-  double get maxExtent => height;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    // Constrain the child to exactly match the reported height
-    // This ensures layoutExtent equals paintExtent
-    return SizedBox(
-      height: maxExtent,
-      child: ClipRect(
-        child: OverflowBox(
-          minHeight: maxExtent,
-          maxHeight: maxExtent,
-          child: tabBar,
-        ),
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(LeaderboardTabBarDelegate oldDelegate) {
-    return tabBar != oldDelegate.tabBar || height != oldDelegate.height;
-  }
-}
