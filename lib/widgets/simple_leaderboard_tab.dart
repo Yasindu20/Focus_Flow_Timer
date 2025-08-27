@@ -123,7 +123,8 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
 
   
   Widget _buildRankingTabBar(bool isDark, bool isSmallScreen, bool isNarrowScreen) {
-    return SingleChildScrollView(
+    return SizedBox(
+      width: double.infinity,
       child: Container(
         // Responsive margins for mobile optimization
         margin: EdgeInsets.fromLTRB(
@@ -183,7 +184,8 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
             ),
           ],
         ),
-        indicatorSize: TabBarIndicatorSize.tab,
+        indicatorSize: TabBarIndicatorSize.label,
+        indicatorPadding: const EdgeInsets.symmetric(horizontal: -8, vertical: 2),
         dividerColor: Colors.transparent,
         labelColor: Colors.white,
         unselectedLabelColor: isDark ? Colors.white60 : Colors.black54,
@@ -198,12 +200,12 @@ class _SimpleLeaderboardTabState extends State<SimpleLeaderboardTab>
           height: 1.2,
         ),
         labelPadding: EdgeInsets.symmetric(
-          horizontal: isSmallScreen ? 4 : 6,
+          horizontal: isSmallScreen ? 2 : 4,
           vertical: isSmallScreen ? 0 : 2,
         ),
-        // Optimize for mobile scrolling
-        isScrollable: true,
-        tabAlignment: TabAlignment.start,
+        // Optimize for mobile - evenly distribute tabs
+        isScrollable: false,
+        tabAlignment: TabAlignment.fill,
         tabs: LeaderboardType.values.map((type) {
           return Tab(
             text: isNarrowScreen ? _getLeaderboardTypeShortLabel(type) : _getLeaderboardTypeLabel(type),
