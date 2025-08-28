@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/account_deletion_service.dart';
 
 class AuthProvider with ChangeNotifier {
   User? _user;
@@ -178,7 +179,8 @@ class AuthProvider with ChangeNotifier {
       _setLoading(true);
       _clearError();
 
-      await _user!.delete();
+      final accountDeletionService = AccountDeletionService();
+      await accountDeletionService.deleteUserAccount(_user!.uid);
       return true;
     } on FirebaseAuthException catch (e) {
       _handleAuthError(e);
@@ -188,6 +190,19 @@ class AuthProvider with ChangeNotifier {
       return false;
     } finally {
       _setLoading(false);
+    }
+  }
+
+  // Get preview of data to be deleted
+  Future<List<String>> getAccountDeletionPreview() async {
+    if (_user == null) return [];
+    
+    try {
+      final accountDeletionService = AccountDeletionService();
+      return await accountDeletionService.getDataToBeDeleted(_user!.uid);
+    } catch (e) {
+      debugPrint('Error getting deletion preview: $e');
+      return ['Error loading data preview'];
     }
   }
 

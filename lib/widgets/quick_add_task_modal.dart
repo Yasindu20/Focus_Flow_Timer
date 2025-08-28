@@ -141,14 +141,13 @@ class _QuickAddTaskModalState extends State<QuickAddTaskModal>
 
   Widget _buildModalContent(bool isDark) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isCompact = screenWidth < 400;
     final isVeryCompact = screenWidth < 360;
     
     return GestureDetector(
       onTap: () {}, // Prevent dismiss when tapping modal content
       child: Container(
-        width: screenWidth - (isVeryCompact ? 16 : isCompact ? 24 : 48),
-        margin: EdgeInsets.symmetric(horizontal: isVeryCompact ? 8 : isCompact ? 12 : 24),
+        width: screenWidth - (isVeryCompact ? 16 : 48),
+        margin: EdgeInsets.symmetric(horizontal: isVeryCompact ? 8 : 24),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -165,13 +164,13 @@ class _QuickAddTaskModalState extends State<QuickAddTaskModal>
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildModalHeader(isDark),
-            _buildInputSection(isDark, isCompact),
+            _buildInputSection(isDark, isVeryCompact),
             if (_textController.text.isNotEmpty) ...[
-              _buildParsedPreview(isDark, isCompact),
+              _buildParsedPreview(isDark, isVeryCompact),
               _buildAdvancedToggle(isDark),
             ],
-            if (_showAdvanced) _buildAdvancedOptions(isDark, isCompact),
-            _buildActionButtons(isDark, isCompact),
+            if (_showAdvanced) _buildAdvancedOptions(isDark, isVeryCompact),
+            _buildActionButtons(isDark, isVeryCompact),
           ],
         ),
       ),
@@ -181,10 +180,9 @@ class _QuickAddTaskModalState extends State<QuickAddTaskModal>
   Widget _buildModalHeader(bool isDark) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isVeryCompact = screenWidth < 360;
-    final isCompact = screenWidth < 400;
     
     return Container(
-      padding: EdgeInsets.all(isVeryCompact ? 16 : isCompact ? 18 : 20),
+      padding: EdgeInsets.all(isVeryCompact ? 16 : 20),
       child: Row(
         children: [
           Container(
@@ -224,7 +222,7 @@ class _QuickAddTaskModalState extends State<QuickAddTaskModal>
                     'Type naturally and I\'ll parse it for you',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      fontSize: isCompact ? 13 : null,
+                      fontSize: isVeryCompact ? 13 : null,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -256,9 +254,7 @@ class _QuickAddTaskModalState extends State<QuickAddTaskModal>
     );
   }
 
-  Widget _buildInputSection(bool isDark, bool isCompact) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isVeryCompact = screenWidth < 360;
+  Widget _buildInputSection(bool isDark, bool isVeryCompact) {
     
     return Container(
       margin: EdgeInsets.symmetric(horizontal: isVeryCompact ? 16 : 20),
@@ -280,7 +276,7 @@ class _QuickAddTaskModalState extends State<QuickAddTaskModal>
         maxLines: 3,
         minLines: 1,
         style: TextStyle(
-          fontSize: isVeryCompact ? 14 : isCompact ? 15 : 16,
+          fontSize: isVeryCompact ? 14 : 16,
           color: isDark ? Colors.white : Colors.black87,
           height: 1.4,
         ),
@@ -290,10 +286,10 @@ class _QuickAddTaskModalState extends State<QuickAddTaskModal>
               : 'e.g., "Review pull request urgent 1h" or "Meeting with team tomorrow"',
           hintStyle: TextStyle(
             color: isDark ? Colors.grey[500] : Colors.grey[600],
-            fontSize: isVeryCompact ? 12 : isCompact ? 14 : 15,
+            fontSize: isVeryCompact ? 12 : 15,
           ),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.all(isVeryCompact ? 12 : isCompact ? 16 : 20),
+          contentPadding: EdgeInsets.all(isVeryCompact ? 12 : 20),
         ),
         textCapitalization: TextCapitalization.sentences,
         keyboardType: TextInputType.multiline,
@@ -303,7 +299,7 @@ class _QuickAddTaskModalState extends State<QuickAddTaskModal>
     );
   }
 
-  Widget _buildParsedPreview(bool isDark, bool isCompact) {
+  Widget _buildParsedPreview(bool isDark, bool isVeryCompact) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isVeryCompact = screenWidth < 360;
     
@@ -505,7 +501,7 @@ class _QuickAddTaskModalState extends State<QuickAddTaskModal>
     );
   }
 
-  Widget _buildAdvancedOptions(bool isDark, bool isCompact) {
+  Widget _buildAdvancedOptions(bool isDark, bool isVeryCompact) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isVeryCompact = screenWidth < 360;
     
@@ -566,7 +562,6 @@ class _QuickAddTaskModalState extends State<QuickAddTaskModal>
   ) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isVeryCompact = screenWidth < 360;
-    final isCompact = screenWidth < 400;
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -687,12 +682,12 @@ class _QuickAddTaskModalState extends State<QuickAddTaskModal>
     );
   }
 
-  Widget _buildActionButtons(bool isDark, bool isCompact) {
+  Widget _buildActionButtons(bool isDark, bool isVeryCompact) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isVeryCompact = screenWidth < 360;
     
     return Container(
-      padding: EdgeInsets.all(isVeryCompact ? 12 : isCompact ? 16 : 20),
+      padding: EdgeInsets.all(isVeryCompact ? 12 : 20),
       child: Row(
         children: [
           Expanded(
@@ -707,7 +702,7 @@ class _QuickAddTaskModalState extends State<QuickAddTaskModal>
               child: Text(
                 'Cancel',
                 style: TextStyle(
-                  fontSize: isVeryCompact ? 14 : isCompact ? 15 : 16,
+                  fontSize: isVeryCompact ? 14 : 16,
                   fontWeight: FontWeight.w600,
                 ),
                 maxLines: 1,
@@ -743,7 +738,7 @@ class _QuickAddTaskModalState extends State<QuickAddTaskModal>
                   : Text(
                       isVeryCompact ? 'Create' : 'Create Task',
                       style: TextStyle(
-                        fontSize: isVeryCompact ? 14 : isCompact ? 15 : 16,
+                        fontSize: isVeryCompact ? 14 : 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
                       ),
