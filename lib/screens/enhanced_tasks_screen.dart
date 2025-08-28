@@ -29,6 +29,7 @@ class _EnhancedTasksScreenState extends State<EnhancedTasksScreen>
   bool _showFilters = false;
   TaskPriority? _filterPriority;
   TaskCategory? _filterCategory;
+  bool _isDueTodayFilterActive = false;
   final Set<String> _selectedTaskIds = {};
   bool _isMultiSelectMode = false;
 
@@ -463,10 +464,10 @@ class _EnhancedTasksScreenState extends State<EnhancedTasksScreen>
                     _buildFilterChip(
                       label: 'Due Today',
                       onTap: () {
-                setState(() {
-                  // TODO: Implement due today filter logic
-                });
-              },
+                        setState(() {
+                          _filterDueToday();
+                        });
+                      },
                       isDark: isDark,
                     ),
                   ],
@@ -828,6 +829,19 @@ class _EnhancedTasksScreenState extends State<EnhancedTasksScreen>
     if (_filterCategory != null) {
       tasks = tasks.where((task) => task.category == _filterCategory).toList();
     }
+    
+    // Apply due today filter
+    if (_isDueTodayFilterActive) {
+      final today = DateTime.now();
+      final todayStart = DateTime(today.year, today.month, today.day);
+      final todayEnd = todayStart.add(const Duration(days: 1));
+      
+      tasks = tasks.where((task) {
+        if (task.dueDate == null) return false;
+        return task.dueDate!.isAfter(todayStart.subtract(const Duration(milliseconds: 1))) &&
+               task.dueDate!.isBefore(todayEnd);
+      }).toList();
+    }
 
     // Sort tasks
     tasks.sort((a, b) {
@@ -871,6 +885,14 @@ class _EnhancedTasksScreenState extends State<EnhancedTasksScreen>
     setState(() {
       _filterPriority = null;
       _filterCategory = null;
+      _isDueTodayFilterActive = false;
+    });
+  }
+
+  void _filterDueToday() {
+    // This filter will be applied in the _getFilteredTasks method
+    setState(() {
+      _isDueTodayFilterActive = !_isDueTodayFilterActive;
     });
   }
 

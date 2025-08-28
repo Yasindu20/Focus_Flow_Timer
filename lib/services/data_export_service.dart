@@ -1,13 +1,145 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:csv/csv.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/analytics_data.dart';
 import '../models/session_analytics.dart';
 
 class DataExportService {
+  static const List<String> firestoreCollections = [
+    'users',
+    'sessions', 
+    'tasks',
+    'achievements',
+    'analytics',
+    'goals',
+    'productivity_scores',
+    'leaderboard', 
+    'daily_stats',
+    'task_analytics',
+    'timer_sessions',
+    'pomodoro_sessions'
+  ];
+
+  Future<Map<String, dynamic>> exportAllUserData(String userId) async {
+    final Map<String, dynamic> userData = {};
+    
+    userData['export_info'] = {
+      'export_date': DateTime.now().toIso8601String(),
+      'user_id': userId,
+      'app_name': 'Focus Flow Timer',
+      'data_format_version': '1.0'
+    };
+
+    userData['account_info'] = await _getAccountInfo();
+    userData['firestore_data'] = await _getFirestoreData(userId);
+    userData['local_preferences'] = await _getLocalPreferences();
+    
+    return userData;
+  }
+
+  Future<String> exportAllUserDataAsJson(String userId) async {
+    final userData = await exportAllUserData(userId);
+    return const JsonEncoder.withIndent('  ').convert(userData);
+  }
+
+  Future<String?> exportUserDataToFile(String userId) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+      final filePath = '${directory.path}/user_data_export_$timestamp.json';
+
+      final jsonData = await exportAllUserDataAsJson(userId);
+      
+      final file = File(filePath);
+      await file.writeAsString(jsonData);
+
+      return filePath;
+    } catch (e) {
+      throw Exception('Failed to export user data: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> _getAccountInfo() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return {};
+
+    return {
+      'uid': user.uid,
+      'email': user.email,
+      'display_name': user.displayName,
+      'email_verified': user.emailVerified,
+      'phone_number': user.phoneNumber,
+      'photo_url': user.photoURL,
+      'creation_time': user.metadata.creationTime?.toIso8601String(),
+      'last_sign_in_time': user.metadata.lastSignInTime?.toIso8601String(),
+    };
+  }
+
+  Future<Map<String, dynamic>> _getFirestoreData(String userId) async {
+    final Map<String, dynamic> firestoreData = {};
+    final firestore = FirebaseFirestore.instance;
+
+    for (final collection in firestoreCollections) {
+      try {
+        final List<Map<String, dynamic>> collectionData = [];
+        
+        final querySnapshot = await firestore
+            .collection(collection)
+            .where('userId', isEqualTo: userId)
+            .get();
+
+        for (final doc in querySnapshot.docs) {
+          final data = doc.data();
+          data['document_id'] = doc.id;
+          data['created_at'] = doc.get('createdAt')?.toString() ?? '';
+          data['updated_at'] = doc.get('updatedAt')?.toString() ?? '';
+          collectionData.add(data);
+        }
+
+        final userDocRef = firestore.collection(collection).doc(userId);
+        final userDocSnapshot = await userDocRef.get();
+        if (userDocSnapshot.exists) {
+          final userData = userDocSnapshot.data() as Map<String, dynamic>;
+          userData['document_id'] = userDocSnapshot.id;
+          userData['created_at'] = userData['createdAt']?.toString() ?? '';
+          userData['updated_at'] = userData['updatedAt']?.toString() ?? '';
+          collectionData.add(userData);
+        }
+
+        if (collectionData.isNotEmpty) {
+          firestoreData[collection] = collectionData;
+        }
+      } catch (e) {
+        firestoreData['${collection}_error'] = 'Failed to export: $e';
+      }
+    }
+
+    return firestoreData;
+  }
+
+  Future<Map<String, dynamic>> _getLocalPreferences() async {
+    final Map<String, dynamic> preferences = {};
+    final prefs = await SharedPreferences.getInstance();
+
+    final keys = prefs.getKeys();
+    for (final key in keys) {
+      try {
+        final value = prefs.get(key);
+        preferences[key] = value;
+      } catch (e) {
+        preferences['${key}_error'] = 'Failed to export: $e';
+      }
+    }
+
+    return preferences;
+  }
   Future<String?> exportToCSV(DashboardData data) async {
     try {
       final directory = await getApplicationDocumentsDirectory();
