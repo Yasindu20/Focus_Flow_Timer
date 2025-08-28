@@ -9,6 +9,8 @@ import '../widgets/enhanced_sound_selector.dart';
 import '../core/utils/responsive_utils.dart';
 import '../core/constants/app_constants.dart';
 import '../services/data_export_service.dart';
+import 'privacy_policy_screen.dart';
+import 'terms_of_service_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -111,13 +113,13 @@ class SettingsScreen extends StatelessWidget {
                             leading: const Icon(Icons.privacy_tip),
                             title: const Text('Privacy Policy'),
                             subtitle: const Text('View our privacy policy'),
-                            onTap: () => _launchUrl(AppConstants.privacyPolicyUrl),
+                            onTap: () => _navigateToPrivacyPolicy(context),
                           ),
                           ListTile(
                             leading: const Icon(Icons.description),
                             title: const Text('Terms of Service'),
                             subtitle: const Text('View terms and conditions'),
-                            onTap: () => _launchUrl(AppConstants.termsOfServiceUrl),
+                            onTap: () => _navigateToTermsOfService(context),
                           ),
                           Consumer<AuthProvider>(
                             builder: (context, authProvider, child) {
@@ -192,6 +194,22 @@ class SettingsScreen extends StatelessWidget {
             );
           },
         ),
+      ),
+    );
+  }
+
+  void _navigateToPrivacyPolicy(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const PrivacyPolicyScreen(),
+      ),
+    );
+  }
+
+  void _navigateToTermsOfService(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const TermsOfServiceScreen(),
       ),
     );
   }
