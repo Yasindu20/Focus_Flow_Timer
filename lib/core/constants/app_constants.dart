@@ -20,7 +20,8 @@ class AppConstants {
 
   // Legal and Privacy URLs
   static const String privacyPolicyUrl = 'https://focusflow.app/privacy-policy';
-  static const String termsOfServiceUrl = 'https://focusflow.app/terms-of-service';
+  static const String termsOfServiceUrl =
+      'https://focusflow.app/terms-of-service';
   static const String supportEmail = 'support@focusflow.app';
   static const String appWebsiteUrl = 'https://focusflow.app';
 
@@ -45,8 +46,10 @@ United States
 
   // Data Collection Categories for Privacy Policy
   static const Map<String, String> dataCollectionPurposes = {
-    'Account Management': 'Email address for account creation and authentication',
-    'App Functionality': 'Timer sessions, task data, and productivity analytics',
+    'Account Management':
+        'Email address for account creation and authentication',
+    'App Functionality':
+        'Timer sessions, task data, and productivity analytics',
     'Performance Analytics': 'App usage statistics and crash reports',
     'User Preferences': 'Settings and customization preferences',
   };
