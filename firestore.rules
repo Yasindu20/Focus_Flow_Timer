@@ -1,66 +1,381 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Tasks collection - accessible by authenticated users (user-based filtering in queries)
+    
+    // Helper functions for security validation
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function hasRole(role) {
+      return isAuthenticated() && 
+             request.auth.token != null && 
+             request.auth.token.get(role, false) == true;
+    }
+    
+    function hasPremiumAccess() {
+      return hasRole('premium') || hasRole('enterprise') || hasRole('admin');
+    }
+    
+    function isValidTaskData() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['title', 'createdAt', 'userId']) &&
+             data.title is string && 
+             data.title.size() > 0 &&
+             data.userId == request.auth.uid;
+    }
+    
+    function isValidSessionData() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['userId', 'startTime']) &&
+             data.userId == request.auth.uid &&
+             data.startTime is timestamp;
+    }
+    
+    // Core Collections
+    
+    // Tasks Collection - Enhanced security with user isolation
     match /tasks/{taskId} {
-      allow read, write: if request.auth != null;
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || hasRole('admin'));
+      allow create: if isAuthenticated() && 
+                       isValidTaskData();
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
     }
     
-    // Sessions collection - grouped by date, accessible by authenticated users
-    match /sessions/{sessionDate} {
-      allow read, write: if request.auth != null;
+    // Enhanced Tasks Collection - Main task storage
+    match /enhanced_tasks/{taskId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || hasRole('admin'));
+      allow create: if isAuthenticated() && isValidTaskData();
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
     }
     
-    // Daily stats collection - accessible by authenticated users
+    // Sessions Collection - Timer and Pomodoro sessions
+    match /sessions/{sessionId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || hasRole('admin'));
+      allow create: if isAuthenticated() && isValidSessionData();
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+    }
+    
+    // Timer Sessions Collection
+    match /timer_sessions/{sessionId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || hasRole('admin'));
+      allow create: if isAuthenticated() && isValidSessionData();
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+    }
+    
+    // Pomodoro Sessions Collection
+    match /pomodoro_sessions/{sessionId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || hasRole('admin'));
+      allow create: if isAuthenticated() && isValidSessionData();
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+    }
+    
+    // Daily Stats Collection
+    match /daily_stats/{statsId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || hasRole('admin'));
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+    }
+    
+    // Stats Collection - General statistics
     match /stats/{statsId} {
-      allow read, write: if request.auth != null;
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || hasRole('admin'));
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
     }
     
-    // User profiles and settings
+    // Task Analytics Collection
+    match /task_analytics/{analyticsId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || hasRole('admin'));
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+    }
+    
+    // User Management Collections
+    
+    // Users Collection - User profiles and settings
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isOwner(userId) || hasRole('admin');
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId) || hasRole('admin');
+      
+      // Nested user collections
+      match /tasks/{taskId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /sessions/{sessionId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /analytics/{analyticsId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /goals/{goalId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /achievements/{achievementId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /productivity_scores/{scoreId} {
+        allow read, write: if isOwner(userId);
+      }
     }
     
-    // Global configuration data (read-only for authenticated users)
+    // Goals Collection - User productivity goals
+    match /goals/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // User Goals Collection
+    match /user_goals/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Achievement Collections
+    
+    // User Achievements Collection
+    match /user_achievements/{userId} {
+      allow read: if isOwner(userId) || hasRole('admin');
+      allow write: if isOwner(userId);
+    }
+    
+    // Global achievements (read-only for users)
+    match /achievements/{achievementId} {
+      allow read: if isAuthenticated();
+      allow write: if hasRole('admin');
+    }
+    
+    // Productivity Score Collections
+    
+    // User Productivity Scores with subcollections
+    match /user_productivity_scores/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      match /scores/{scoreId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // Leaderboard Collections
+    
+    // Leaderboard entries (read for authenticated users)
+    match /leaderboards/{type} {
+      allow read: if isAuthenticated();
+      allow write: if hasRole('admin') || hasRole('system');
+      
+      match /entries/{entryId} {
+        allow read: if isAuthenticated();
+        allow write: if hasRole('admin') || hasRole('system');
+      }
+    }
+    
+    // Leaderboard user data
+    match /leaderboard_users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || hasRole('admin');
+    }
+    
+    // Analytics Collections
+    
+    // Analytics data with enhanced security
+    match /analytics/{analyticsId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || hasRole('admin'));
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+    }
+    
+    // Session Analytics
+    match /session_analytics/{analyticsId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || hasRole('admin'));
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+    }
+    
+    // System Collections
+    
+    // Global configuration data (read-only for users)
     match /global/{document=**} {
-      allow read: if request.auth != null;
-      allow write: if false; // Only admin functions can write
+      allow read: if isAuthenticated();
+      allow write: if hasRole('admin');
     }
     
-    // ML models and AI data (read-only for authenticated users)
+    // ML models and AI data (read-only for users)
     match /ml_models/{document=**} {
-      allow read: if request.auth != null;
-      allow write: if false; // Only admin functions can write
+      allow read: if isAuthenticated();
+      allow write: if hasRole('admin');
     }
     
     // Integration configurations (user-specific)
     match /integrations/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isOwner(userId);
+      
+      match /configs/{configId} {
+        allow read, write: if isOwner(userId);
+      }
     }
     
-    // System metrics and monitoring (read-only for authenticated users)
+    // System metrics and monitoring (read-only for premium users)
     match /system/{document=**} {
-      allow read: if request.auth != null;
-      allow write: if false; // Only functions can write
+      allow read: if hasPremiumAccess();
+      allow write: if hasRole('admin') || hasRole('system');
     }
     
-    // Analytics sessions collection - user must own the document
-    match /sessions/{sessionId} {
-      allow read, write: if request.auth != null 
-        && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null 
-        && request.auth.uid == request.resource.data.userId;
+    // Notification Collections
+    
+    // User notifications
+    match /notifications/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      match /messages/{messageId} {
+        allow read, write: if isOwner(userId);
+      }
     }
     
-    // User goals collection - user must own the document
-    match /goals/{userId} {
-      allow read, write: if request.auth != null 
-        && request.auth.uid == userId;
+    // Premium Features Collections
+    
+    // AI insights (premium feature)
+    match /ai_insights/{userId} {
+      allow read: if isOwner(userId) && hasPremiumAccess();
+      allow write: if hasRole('admin') || hasRole('system');
     }
     
-    // Analytics data (accessible by authenticated users)
-    match /analytics/{analyticsId} {
-      allow read, write: if request.auth != null;
+    // Advanced analytics (premium feature)
+    match /advanced_analytics/{userId} {
+      allow read: if isOwner(userId) && hasPremiumAccess();
+      allow write: if hasRole('admin') || hasRole('system');
+    }
+    
+    // Team/Enterprise Collections
+    
+    // Organizations (enterprise feature)
+    match /organizations/{orgId} {
+      allow read: if isAuthenticated() && 
+                     (request.auth.uid in resource.data.members || hasRole('admin'));
+      allow write: if hasRole('admin') || 
+                      (isAuthenticated() && request.auth.uid in resource.data.admins);
+    }
+    
+    // Team workspaces (enterprise feature)
+    match /workspaces/{workspaceId} {
+      allow read: if isAuthenticated() && 
+                     (request.auth.uid in resource.data.members || hasRole('admin'));
+      allow write: if hasRole('admin') || 
+                      (isAuthenticated() && request.auth.uid in resource.data.admins);
+      
+      match /shared_tasks/{taskId} {
+        allow read: if isAuthenticated() && 
+                       request.auth.uid in get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.members;
+        allow write: if isAuthenticated() && 
+                        request.auth.uid in get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.members;
+      }
+    }
+    
+    // Audit Collections
+    
+    // Audit logs (admin only)
+    match /audit_logs/{logId} {
+      allow read: if hasRole('admin');
+      allow write: if hasRole('admin') || hasRole('system');
+    }
+    
+    // Security events (admin only)
+    match /security_events/{eventId} {
+      allow read: if hasRole('admin');
+      allow write: if hasRole('admin') || hasRole('system');
+    }
+    
+    // Export Collections
+    
+    // Data export requests
+    match /export_requests/{requestId} {
+      allow read: if isAuthenticated() && 
+                     resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid;
+      allow update: if hasRole('admin') || hasRole('system');
+      allow delete: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+    }
+    
+    // Backup Collections (admin only)
+    match /backups/{backupId} {
+      allow read, write: if hasRole('admin');
+    }
+    
+    // Rate Limiting and Security
+    
+    // User rate limits and quota tracking
+    match /user_quotas/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if hasRole('admin') || hasRole('system');
+    }
+    
+    // API usage tracking
+    match /api_usage/{userId} {
+      allow read: if isOwner(userId) || hasRole('admin');
+      allow write: if hasRole('admin') || hasRole('system');
+    }
+    
+    // Default deny rule for any unmatched paths
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
