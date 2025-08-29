@@ -1,27 +1,372 @@
 rules_version = '2';
+
+// Firebase Storage Security Rules for Focus Flow Timer
+// Enterprise-grade security with role-based access control
+// Last Updated: 2025-08-29
+// Version: 2.0.0
+
 service firebase.storage {
   match /b/{bucket}/o {
-    // User-specific uploads (profile pictures, attachments, exports)
-    match /users/{userId}/{allPaths=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    
+    // =============================================
+    // HELPER FUNCTIONS FOR SECURITY VALIDATION
+    // =============================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
     }
     
-    // Analytics exports
-    match /exports/{userId}/{exportId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if false; // Only functions can create exports
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
     }
     
-    // Shared assets (sounds, icons, etc.)
-    match /assets/{allPaths=**} {
-      allow read: if request.auth != null;
-      allow write: if false; // Only admin can upload shared assets
+    function hasRole(role) {
+      return isAuthenticated() && 
+             request.auth.token != null && 
+             request.auth.token.get(role, false) == true;
     }
     
-    // ML model files
-    match /models/{allPaths=**} {
-      allow read: if request.auth != null;
-      allow write: if false; // Only functions can update models
+    function isAdmin() {
+      return hasRole('admin');
+    }
+    
+    function isPremium() {
+      return hasRole('premium') || hasRole('enterprise') || hasRole('admin');
+    }
+    
+    function isSystem() {
+      return hasRole('system');
+    }
+    
+    // File size validation helpers (in bytes)
+    function isWithinSizeLimit(maxSizeBytes) {
+      return request.resource.size <= maxSizeBytes;
+    }
+    
+    // Image file validation
+    function isValidImage() {
+      return request.resource.contentType.matches('image/(jpeg|jpg|png|gif|webp|bmp)');
+    }
+    
+    // Document file validation
+    function isValidDocument() {
+      return request.resource.contentType.matches('application/(pdf|msword|vnd\\.openxmlformats-officedocument\\.wordprocessingml\\.document|vnd\\.oasis\\.opendocument\\.text)') ||
+             request.resource.contentType.matches('text/(plain|csv|markdown|rtf)');
+    }
+    
+    // Audio file validation
+    function isValidAudio() {
+      return request.resource.contentType.matches('audio/(mpeg|mp4|wav|ogg|webm|m4a|aac|flac)');
+    }
+    
+    // Archive file validation
+    function isValidArchive() {
+      return request.resource.contentType.matches('application/(zip|x-rar-compressed|x-7z-compressed|gzip|x-tar)');
+    }
+    
+    // Video file validation (for screen recordings, tutorials)
+    function isValidVideo() {
+      return request.resource.contentType.matches('video/(mp4|webm|ogg|avi|mov|wmv|flv)');
+    }
+    
+    // Data export file validation
+    function isValidExportFile() {
+      return request.resource.contentType.matches('application/(json|csv)') ||
+             request.resource.contentType.matches('text/(plain|csv)') ||
+             request.resource.contentType == 'application/pdf';
+    }
+    
+    // File name validation (alphanumeric, hyphens, underscores, periods only)
+    function isValidFileName(fileName) {
+      return fileName.matches('[a-zA-Z0-9._-]+');
+    }
+    
+    // =============================================
+    // USER PROFILE STORAGE
+    // =============================================
+    
+    // User profile pictures
+    match /users/{userId}/profile/avatar.{extension} {
+      allow read: if isAuthenticated() && 
+                     (isOwner(userId) || isPremium() || isAdmin());
+      allow write: if isOwner(userId) && 
+                      isValidImage() &&
+                      isWithinSizeLimit(5 * 1024 * 1024) && // 5MB limit
+                      extension.matches('(jpg|jpeg|png|webp)');
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+    
+    // User profile backgrounds (premium feature)
+    match /users/{userId}/profile/background.{extension} {
+      allow read: if isAuthenticated() && 
+                     (isOwner(userId) || isAdmin());
+      allow write: if isOwner(userId) && 
+                      isPremium() &&
+                      isValidImage() &&
+                      isWithinSizeLimit(10 * 1024 * 1024) && // 10MB limit
+                      extension.matches('(jpg|jpeg|png|webp)');
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+    
+    // User custom sounds (premium feature)
+    match /users/{userId}/profile/sounds/{soundId}.{extension} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) && 
+                      isPremium() &&
+                      isValidAudio() &&
+                      isWithinSizeLimit(50 * 1024 * 1024) && // 50MB limit
+                      extension.matches('(mp3|m4a|wav|ogg)');
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+    
+    // =============================================
+    // TASK ATTACHMENTS
+    // =============================================
+    
+    // Task document attachments
+    match /users/{userId}/tasks/{taskId}/attachments/{fileName} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) && 
+                      (isValidDocument() || isValidImage() || isValidArchive()) &&
+                      isWithinSizeLimit(25 * 1024 * 1024) && // 25MB limit
+                      isValidFileName(fileName);
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+    
+    // Task image attachments (screenshots, diagrams, etc.)
+    match /users/{userId}/tasks/{taskId}/images/{fileName} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) && 
+                      isValidImage() &&
+                      isWithinSizeLimit(15 * 1024 * 1024) && // 15MB limit
+                      isValidFileName(fileName);
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+    
+    // Task voice notes (premium feature)
+    match /users/{userId}/tasks/{taskId}/voice/{fileName} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) && 
+                      isPremium() &&
+                      isValidAudio() &&
+                      isWithinSizeLimit(100 * 1024 * 1024) && // 100MB limit
+                      isValidFileName(fileName);
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+    
+    // =============================================
+    // DATA EXPORTS AND BACKUPS
+    // =============================================
+    
+    // User data exports (generated by Cloud Functions)
+    match /users/{userId}/exports/{exportId}.{extension} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isSystem() || isAdmin(); // Only backend can create exports
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+    
+    // Analytics reports (premium feature)
+    match /users/{userId}/reports/{reportId}.{extension} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if (isSystem() || isAdmin()) && 
+                      isPremium() &&
+                      isValidExportFile();
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+    
+    // User backup files (enterprise feature)
+    match /users/{userId}/backups/{backupId}.{extension} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if (isSystem() || isAdmin()) && 
+                      hasRole('enterprise') &&
+                      extension.matches('(json|zip)');
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+    
+    // =============================================
+    // COLLABORATION AND TEAM FEATURES
+    // =============================================
+    
+    // Workspace shared files (enterprise feature)
+    match /workspaces/{workspaceId}/shared/{fileName} {
+      allow read: if isAuthenticated() && 
+                     hasRole('enterprise');
+      allow write: if isAuthenticated() && 
+                      hasRole('enterprise') &&
+                      (isValidDocument() || isValidImage()) &&
+                      isWithinSizeLimit(50 * 1024 * 1024) && // 50MB limit
+                      isValidFileName(fileName);
+      allow delete: if hasRole('enterprise') || isAdmin();
+    }
+    
+    // Organization assets (logos, branding, etc.)
+    match /organizations/{orgId}/assets/{fileName} {
+      allow read: if isAuthenticated() && hasRole('enterprise');
+      allow write: if hasRole('enterprise') && 
+                      isValidImage() &&
+                      isWithinSizeLimit(10 * 1024 * 1024) && // 10MB limit
+                      isValidFileName(fileName);
+      allow delete: if hasRole('enterprise') || isAdmin();
+    }
+    
+    // Team collaboration files
+    match /teams/{teamId}/files/{fileName} {
+      allow read: if isAuthenticated() && hasRole('enterprise');
+      allow write: if hasRole('enterprise') && 
+                      (isValidDocument() || isValidImage() || isValidArchive()) &&
+                      isWithinSizeLimit(100 * 1024 * 1024) && // 100MB limit
+                      isValidFileName(fileName);
+      allow delete: if hasRole('enterprise') || isAdmin();
+    }
+    
+    // =============================================
+    // SHARED SYSTEM ASSETS
+    // =============================================
+    
+    // Default focus sounds and ambient tracks
+    match /assets/sounds/focus/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin(); // Only admin can upload system sounds
+      allow delete: if isAdmin();
+    }
+    
+    // Notification sounds
+    match /assets/sounds/notifications/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Default app icons and UI assets
+    match /assets/images/ui/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Achievement badges and reward images
+    match /assets/images/achievements/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Category icons and app themes
+    match /assets/images/categories/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Onboarding and tutorial content
+    match /assets/content/tutorials/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // =============================================
+    // AI AND ML MODELS
+    // =============================================
+    
+    // Machine learning model files
+    match /models/ai/{modelId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isSystem();
+      allow delete: if isAdmin();
+    }
+    
+    // AI training data (anonymized user patterns)
+    match /models/training/{datasetId}/{fileName} {
+      allow read: if isAdmin();
+      allow write: if isSystem() || isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // =============================================
+    // TEMPORARY AND CACHE FILES
+    // =============================================
+    
+    // Temporary upload files (24 hour TTL)
+    match /temp/{userId}/{uploadId}/{fileName} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) && 
+                      isWithinSizeLimit(500 * 1024 * 1024) && // 500MB limit for temp files
+                      isValidFileName(fileName);
+      allow delete: if isOwner(userId) || isSystem() || isAdmin();
+    }
+    
+    // Processing queue files (for async operations)
+    match /processing/{jobId}/{fileName} {
+      allow read: if isSystem() || isAdmin();
+      allow write: if isSystem() || isAdmin();
+      allow delete: if isSystem() || isAdmin();
+    }
+    
+    // =============================================
+    // ANALYTICS AND MONITORING
+    // =============================================
+    
+    // Usage analytics files (system generated)
+    match /analytics/usage/{date}/{fileName} {
+      allow read: if isAdmin();
+      allow write: if isSystem() || isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Performance monitoring data
+    match /monitoring/performance/{fileName} {
+      allow read: if isAdmin();
+      allow write: if isSystem() || isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Security audit logs
+    match /security/logs/{date}/{fileName} {
+      allow read: if isAdmin();
+      allow write: if isSystem() || isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // =============================================
+    // DEVELOPMENT AND TESTING
+    // =============================================
+    
+    // Development assets (non-production only)
+    match /dev/{path=**} {
+      allow read, write, delete: if isAdmin();
+    }
+    
+    // Test data and fixtures
+    match /test/{path=**} {
+      allow read, write, delete: if isAdmin();
+    }
+    
+    // =============================================
+    // COMPLIANCE AND LEGAL
+    // =============================================
+    
+    // GDPR data deletion confirmations
+    match /compliance/gdpr/{userId}/{fileName} {
+      allow read: if isAdmin();
+      allow write: if isSystem() || isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Legal documents and terms of service
+    match /legal/documents/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // =============================================
+    // DEFAULT DENY RULE
+    // =============================================
+    
+    // Deny all other access by default
+    match /{allPaths=**} {
+      allow read, write, delete: if false;
     }
   }
 }
