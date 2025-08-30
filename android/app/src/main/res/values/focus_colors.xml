@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Focus Mode Color Palette -->
+    <color name="focus_primary">#4A90E2</color>
+    <color name="focus_primary_dark">#357ABD</color>
+    <color name="focus_accent">#FF6B6B</color>
+    <color name="focus_accent_light">#FF8E8E</color>
+    
+    <!-- Text Colors -->
+    <color name="focus_text_primary">#FFFFFF</color>
+    <color name="focus_text_secondary">#E0E0E0</color>
+    <color name="focus_text_hint">#AAAAAA</color>
+    
+    <!-- Background Colors -->
+    <color name="focus_info_bg">#1A1A1A</color>
+    <color name="focus_overlay_bg">#CC000000</color>
+    
+    <!-- Utility Colors -->
+    <color name="transparent">#00000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>

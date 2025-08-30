@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/focus_overlay_background"
+    android:gravity="center"
+    android:padding="32dp">
+
+    <!-- Focus Mode Logo/Icon -->
+    <ImageView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@drawable/ic_focus_mode"
+        android:layout_marginBottom="24dp"
+        android:tint="@color/focus_primary" />
+
+    <!-- Main Message -->
+    <TextView
+        android:id="@+id/blockingMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🎯 Stay focused! You're in a focus session."
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@color/focus_text_primary"
+        android:textAlignment="center"
+        android:layout_marginBottom="16dp" />
+
+    <!-- App Name -->
+    <TextView
+        android:id="@+id/appName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Distracting App"
+        android:textSize="18sp"
+        android:textColor="@color/focus_text_secondary"
+        android:textAlignment="center"
+        android:layout_marginBottom="32dp" />
+
+    <!-- Focus Session Info -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/focus_info_background"
+        android:padding="16dp"
+        android:layout_marginBottom="32dp">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_timer"
+            android:tint="@color/focus_accent"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Focus session in progress"
+            android:textColor="@color/focus_text_secondary"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+    <!-- Action Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <!-- Back to Focus Button -->
+        <Button
+            android:id="@+id/backToFocusButton"
+            android:layout_width="280dp"
+            android:layout_height="56dp"
+            android:text="🎯 Back to Focus"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:background="@drawable/focus_primary_button"
+            android:layout_marginBottom="16dp"
+            android:elevation="4dp" />
+
+        <!-- Override Button -->
+        <Button
+            android:id="@+id/overrideButton"
+            android:layout_width="280dp"
+            android:layout_height="48dp"
+            android:text="Continue anyway"
+            android:textSize="16sp"
+            android:textColor="@color/focus_text_secondary"
+            android:background="@drawable/focus_secondary_button"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Focus Tips -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💡 Deep focus leads to better productivity"
+            android:textSize="14sp"
+            android:textColor="@color/focus_text_hint"
+            android:textAlignment="center"
+            android:layout_marginTop="16dp" />
+
+    </LinearLayout>
+
+</LinearLayout>

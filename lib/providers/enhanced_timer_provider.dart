@@ -4,12 +4,20 @@ import '../core/enums/timer_enums.dart';
 import '../services/optimized_storage_service.dart';
 import '../services/notification_manager.dart';
 import '../services/session_integration_service.dart';
+import '../services/focus_mode_manager.dart';
+import '../services/focus_analytics_service.dart';
+import '../services/focus_gamification_service.dart';
+import '../services/enhanced_audio_service.dart';
 import '../models/timer_session.dart';
 import 'timer_settings_provider.dart';
 
 class EnhancedTimerProvider extends ChangeNotifier {
   final OptimizedStorageService _storage = OptimizedStorageService();
   final NotificationManager _notifications = NotificationManager();
+  final FocusModeManager _focusMode = FocusModeManager();
+  final FocusAnalyticsService _analytics = FocusAnalyticsService();
+  final FocusGamificationService _gamification = FocusGamificationService();
+  final EnhancedAudioService _audioService = EnhancedAudioService();
   TimerSettingsProvider? _settingsProvider;
   
   // Timer state
@@ -28,11 +36,18 @@ class EnhancedTimerProvider extends ChangeNotifier {
   // Error handling
   String? _lastError;
   DateTime? _lastErrorTime;
+  
+  // Focus mode state
+  bool _focusModeEnabled = false;
+  FocusSoundProfile? _selectedSoundProfile;
+  StreamSubscription? _distractionSubscription;
 
   // Getters
   String? get currentTaskId => _currentTaskId;
   bool get isInitialized => _isInitialized;
   String? get lastError => _lastError;
+  bool get focusModeEnabled => _focusModeEnabled;
+  FocusSoundProfile? get selectedSoundProfile => _selectedSoundProfile;
   
   // Timer state getters
   TimerState get state => _state;
@@ -73,6 +88,18 @@ class EnhancedTimerProvider extends ChangeNotifier {
           rethrow;
         }
       }
+      
+      // Initialize focus services
+      await _focusMode.initialize();
+      await _analytics.initialize();
+      await _gamification.initialize();
+      await _audioService.initialize();
+      
+      // Setup distraction monitoring
+      _distractionSubscription = _focusMode.distractionStream.listen((distraction) {
+        _analytics.recordDistraction(distraction);
+        _gamification.handleDistraction(distraction);
+      });
       
       await _loadSettings();
       
@@ -115,10 +142,28 @@ class EnhancedTimerProvider extends ChangeNotifier {
     _timer = null;
   }
   
-  void _completeSession() {
+  void _completeSession() async {
     _stopTimer();
     _state = TimerState.completed;
     _sessionCount++;
+    
+    // Handle focus session completion
+    if (_currentType == TimerType.pomodoro) {
+      await _analytics.endSession(wasCompleted: true);
+      final session = _analytics.currentSession;
+      if (session != null) {
+        await _gamification.completeSession(session);
+      }
+      
+      // Stop focus mode
+      if (_focusModeEnabled) {
+        await _focusMode.stopFocusMode();
+      }
+      
+      // Stop audio
+      await _audioService.stopPlayback();
+    }
+    
     _showNotification();
     _saveSession();
     _recordCompletedSessionAnalytics();
@@ -224,6 +269,29 @@ class EnhancedTimerProvider extends ChangeNotifier {
       _remainingTime = _totalTime;
       _state = TimerState.running;
       _startTime = DateTime.now();
+      
+      // Start focus session analytics
+      if (_currentType == TimerType.pomodoro) {
+        await _analytics.startSession(
+          plannedDuration: _totalTime,
+          sessionType: 'pomodoro',
+          metadata: {'taskId': taskId},
+        );
+        
+        // Enable focus mode if enabled
+        if (_focusModeEnabled) {
+          await _focusMode.startFocusMode(duration: _totalTime);
+        }
+        
+        // Start ambient audio if profile selected
+        if (_selectedSoundProfile != null) {
+          await _audioService.playProfile(_selectedSoundProfile!);
+        }
+        
+        // Award XP for starting session
+        await _gamification.awardExperience(FocusAction.startSession);
+      }
+      
       _startTimer();
       _clearError();
       
@@ -262,6 +330,19 @@ class EnhancedTimerProvider extends ChangeNotifier {
       // Record as interrupted session if timer was running
       if (_state.isRunning && _startTime != null) {
         await _recordInterruptedSessionAnalytics();
+        
+        // Handle focus session interruption
+        if (_currentType == TimerType.pomodoro) {
+          await _analytics.endSession(wasCompleted: false);
+          
+          // Stop focus mode
+          if (_focusModeEnabled) {
+            await _focusMode.stopFocusMode();
+          }
+          
+          // Stop audio
+          await _audioService.stopPlayback();
+        }
       }
       
       _stopTimer();
@@ -407,6 +488,49 @@ class EnhancedTimerProvider extends ChangeNotifier {
     _settingsProvider = provider;
   }
 
+  // Focus mode controls
+  Future<void> enableFocusMode(bool enabled) async {
+    _focusModeEnabled = enabled;
+    await _saveSettings();
+    notifyListeners();
+  }
+
+  Future<void> setAmbientSoundProfile(FocusSoundProfile? profile) async {
+    _selectedSoundProfile = profile;
+    await _saveSettings();
+    notifyListeners();
+  }
+
+  Future<void> configureFocusSettings({
+    bool? autoDoNotDisturb,
+    FocusBlockingLevel? blockingLevel,
+    bool? allowEmergencyCalls,
+  }) async {
+    await _focusMode.updateSettings(
+      autoDoNotDisturb: autoDoNotDisturb,
+      blockingLevel: blockingLevel,
+      allowEmergencyCalls: allowEmergencyCalls,
+    );
+  }
+
+  // Get focus analytics
+  Future<FocusInsights> getFocusInsights({Duration? period}) async {
+    return await _analytics.getInsights(period: period);
+  }
+
+  // Get available sound profiles
+  List<FocusSoundProfile> getAvailableSoundProfiles() {
+    return _audioService.getAvailableProfiles();
+  }
+
+  // Get gamification progress
+  int get currentLevel => _gamification.level;
+  int get currentXP => _gamification.experience;
+  int get xpToNextLevel => _gamification.experienceToNextLevel;
+  double get levelProgress => _gamification.levelProgress;
+  List<FocusBadge> get earnedBadges => _gamification.earnedBadges;
+  List<FocusChallenge> get activeChallenges => _gamification.activeChallenges;
+
   // Check if should show long break based on session count
   bool shouldShowLongBreak() {
     if (_settingsProvider != null) {
@@ -427,6 +551,11 @@ class EnhancedTimerProvider extends ChangeNotifier {
   @override
   void dispose() {
     _timer?.cancel();
+    _distractionSubscription?.cancel();
+    _focusMode.dispose();
+    _analytics.dispose();
+    _gamification.dispose();
+    _audioService.dispose();
     super.dispose();
   }
 }
