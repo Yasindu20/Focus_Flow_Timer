@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/enhanced_timer_provider.dart';
 import '../services/optimized_storage_service.dart';
+import '../services/focus_sound_service.dart';
 
 class EnhancedSoundSelector extends StatefulWidget {
   const EnhancedSoundSelector({super.key});
@@ -12,22 +13,38 @@ class EnhancedSoundSelector extends StatefulWidget {
 
 class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
   String _selectedSound = 'None';
-  double _volume = 0.5;
+  double _volume = 0.7;
   final OptimizedStorageService _storage = OptimizedStorageService();
+  final FocusSoundService _soundService = FocusSoundService();
 
-  // Basic sound options for free version
+  // Available white noise sounds
   final List<Map<String, dynamic>> _availableSounds = [
     {'id': 'none', 'name': 'None', 'icon': Icons.volume_off, 'description': 'No background sound'},
-    {'id': 'rain', 'name': 'Rain', 'icon': Icons.water_drop, 'description': 'Gentle rain sounds'},
-    {'id': 'forest', 'name': 'Forest', 'icon': Icons.forest, 'description': 'Nature forest ambiance'},
-    {'id': 'ocean', 'name': 'Ocean', 'icon': Icons.waves, 'description': 'Ocean waves'},
-    {'id': 'cafe', 'name': 'Café', 'icon': Icons.local_cafe, 'description': 'Coffee shop ambiance'},
+    {'id': 'ambient', 'name': 'Ambient Noise', 'icon': Icons.blur_on, 'description': 'Ambient white noise'},
+    {'id': 'brown', 'name': 'Brown Noise', 'icon': Icons.waves, 'description': 'Deep brown noise'},
+    {'id': 'coffee', 'name': 'Coffee Shop', 'icon': Icons.local_cafe, 'description': 'Coffee shop ambiance'},
+    {'id': 'fireplace', 'name': 'Fireplace', 'icon': Icons.local_fire_department, 'description': 'Crackling fireplace'},
+    {'id': 'forest', 'name': 'Forest Birds', 'icon': Icons.forest, 'description': 'Forest birds chirping'},
+    {'id': 'rain', 'name': 'Light Rain', 'icon': Icons.water_drop, 'description': 'Gentle rain sounds'},
+    {'id': 'ocean', 'name': 'Ocean Waves', 'icon': Icons.waves, 'description': 'Ocean waves'},
+    {'id': 'city_rain', 'name': 'Rain in the City', 'icon': Icons.location_city, 'description': 'Urban rain sounds'},
   ];
 
   @override
   void initState() {
     super.initState();
+    _initializeService();
     _loadSettings();
+  }
+  
+  Future<void> _initializeService() async {
+    await _soundService.initialize();
+  }
+
+  @override
+  void dispose() {
+    _soundService.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSettings() async {
@@ -51,6 +68,14 @@ class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
         'volume': _volume,
         'updatedAt': DateTime.now().toIso8601String(),
       });
+      
+      // Apply audio changes
+      await _soundService.setVolume(_volume);
+      if (_selectedSound != 'None') {
+        await _soundService.play(_selectedSound);
+      } else {
+        await _soundService.stop();
+      }
     } catch (e) {
       debugPrint('Error saving sound settings: $e');
     }
@@ -119,11 +144,11 @@ class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
                         final isSelected = _selectedSound == sound['name'];
                         
                         return GestureDetector(
-                      onTap: () {
+                      onTap: () async {
                         setState(() {
                           _selectedSound = sound['name'];
                         });
-                        _saveSoundSettings();
+                        await _saveSoundSettings();
                       },
                       child: Container(
                         padding: const EdgeInsets.all(12),
@@ -218,8 +243,8 @@ class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
                               _volume = value;
                             });
                           },
-                          onChangeEnd: (value) {
-                            _saveSoundSettings();
+                          onChangeEnd: (value) async {
+                            await _saveSoundSettings();
                           },
                         ),
                       ),
