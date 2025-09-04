@@ -20,20 +20,15 @@ import 'providers/theme_provider.dart';
 import 'providers/analytics_provider.dart';
 import 'providers/analytics_dashboard_provider.dart';
 import 'providers/auth_provider.dart';
-import 'providers/achievement_provider.dart';
 import 'providers/productivity_score_provider.dart';
-import 'providers/leaderboard_provider.dart';
 import 'services/productivity_score_service.dart';
-import 'services/leaderboard_service.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/tasks_screen.dart';
 import 'screens/analytics_screen.dart';
 import 'screens/settings_screen.dart';
-import 'screens/achievements_screen.dart';
 import 'screens/productivity_score_screen.dart';
-import 'screens/leaderboard_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -141,18 +136,8 @@ class FocusFlowApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
         ChangeNotifierProvider(create: (_) => AnalyticsDashboardProvider()),
-        ChangeNotifierProvider(create: (context) {
-          final provider = AchievementProvider();
-          // Initialize provider after widget tree is built
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            provider.initialize();
-          });
-          return provider;
-        }),
         ChangeNotifierProvider(create: (_) => ProductivityScoreProvider()),
-        ChangeNotifierProvider(create: (_) => LeaderboardProvider()),
         ChangeNotifierProvider(create: (_) => ProductivityScoreService()),
-        ChangeNotifierProvider(create: (_) => LeaderboardService()),
       ],
       child: Consumer2<ThemeProvider, AuthProvider>(
         builder: (context, themeProvider, authProvider, child) {
@@ -175,12 +160,8 @@ class FocusFlowApp extends StatelessWidget {
                   const ErrorBoundary(child: AnalyticsScreen()),
               '/settings': (context) =>
                   const ErrorBoundary(child: SettingsScreen()),
-              '/achievements': (context) =>
-                  const ErrorBoundary(child: AchievementsScreen()),
               '/productivity': (context) =>
                   const ErrorBoundary(child: ProductivityScoreScreen()),
-              '/leaderboard': (context) =>
-                  const ErrorBoundary(child: LeaderboardScreen()),
             },
           );
         },
@@ -328,7 +309,6 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const TasksScreen(),
     const AnalyticsScreen(),
-    const AchievementsScreen(),
     const SettingsScreen(),
   ];
 
@@ -374,10 +354,6 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.analytics),
             label: 'Analytics',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.emoji_events),
-            label: 'Awards',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),

@@ -194,7 +194,7 @@ class _SimpleProductivityScoreTabState extends State<SimpleProductivityScoreTab>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Today\'s Achievement Score',
+                            'Today\'s Productivity Score',
                             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               fontSize: isSmallScreen ? 16 : null,
@@ -555,7 +555,7 @@ class _SimpleProductivityScoreTabState extends State<SimpleProductivityScoreTab>
                 _buildEnhancedBreakdownItem('Focus Time Quality', 40, Colors.blue.shade600),
                 _buildEnhancedBreakdownItem('Task Completion Rate', 30, Colors.green.shade600),
                 _buildEnhancedBreakdownItem('Session Consistency', 20, Colors.orange.shade600),
-                _buildEnhancedBreakdownItem('Achievement Bonus', 10, Colors.purple.shade600),
+                _buildEnhancedBreakdownItem('Daily Bonus', 10, Colors.purple.shade600),
               ],
             ),
           ),

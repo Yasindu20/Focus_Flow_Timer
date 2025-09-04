@@ -99,12 +99,10 @@ class TermsOfServiceScreen extends StatelessWidget {
                   '• Customizable Pomodoro timers with focus and break sessions',
                   '• Task management and organization features',
                   '• Analytics and productivity tracking',
-                  '• Achievement system and progress monitoring',
                   '• Cloud synchronization across devices',
                   '• Offline functionality for core features',
                   '• Notification services for timer alerts',
                   '• Data export capabilities',
-                  '• Optional leaderboard and social features',
                 ],
               ),
 

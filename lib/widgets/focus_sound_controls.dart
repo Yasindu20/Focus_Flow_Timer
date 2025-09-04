@@ -56,7 +56,7 @@ class _FocusSoundControlsState extends State<FocusSoundControls> {
             
             // Sound selector
             DropdownButtonFormField<String>(
-              initialValue: _selectedSound,
+              value: _selectedSound,
               decoration: const InputDecoration(
                 labelText: 'Background Sound',
                 border: OutlineInputBorder(),

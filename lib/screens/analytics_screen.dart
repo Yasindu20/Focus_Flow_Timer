@@ -5,7 +5,6 @@ import '../providers/analytics_provider.dart';
 import '../providers/analytics_dashboard_provider.dart';
 import 'analytics_dashboard_screen.dart';
 import '../widgets/simple_productivity_score_tab.dart';
-import '../widgets/simple_leaderboard_tab.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -25,7 +24,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
 
     _fadeAnimationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -110,7 +109,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                         _buildQuickStatsTab(),
                         const AnalyticsDashboardContent(),
                         const SimpleProductivityScoreTab(),
-                        const SimpleLeaderboardTab(),
                       ],
                     ),
                   ),
@@ -306,7 +304,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
           Tab(icon: Icon(Icons.speed_rounded, size: 18), text: 'Quick Stats'),
           Tab(icon: Icon(Icons.dashboard_rounded, size: 18), text: 'Dashboard'),
           Tab(icon: Icon(Icons.emoji_events_rounded, size: 18), text: 'Score'),
-          Tab(icon: Icon(Icons.leaderboard_rounded, size: 18), text: 'Rankings'),
         ],
       ),
     );

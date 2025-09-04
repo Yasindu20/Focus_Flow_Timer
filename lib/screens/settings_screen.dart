@@ -338,7 +338,7 @@ class SettingsScreen extends StatelessWidget {
                 const Text('This file contains all your personal data including:'),
                 const Text('• Account information'),
                 const Text('• Timer sessions and analytics'),
-                const Text('• Tasks and achievements'),
+                const Text('• Tasks and analytics'),
                 const Text('• App preferences'),
               ],
             ),
