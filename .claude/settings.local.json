@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(flutter run:*)"
+      "Bash(flutter run:*)",
+      "Bash(flutter build:*)",
+      "Bash(sdkmanager:*)",
+      "Read(/home/odin/Android/**)",
+      "Bash(/home/odin/Android/Sdk/cmdline-tools/latest/bin/sdkmanager:*)",
+      "Bash(flutter pub:*)"
     ],
     "deny": [],
     "ask": []

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/enhanced_timer_provider.dart';
 import '../services/optimized_storage_service.dart';
+import '../services/focus_sound_service.dart';
 import '../core/constants/colors.dart';
 
 class SoundSelector extends StatefulWidget {
@@ -13,8 +14,9 @@ class SoundSelector extends StatefulWidget {
 
 class _SoundSelectorState extends State<SoundSelector> {
   String _selectedSound = 'None';
-  double _volume = 0.5;
+  double _volume = 0.7;
   final OptimizedStorageService _storage = OptimizedStorageService();
+  final FocusSoundService _soundService = FocusSoundService();
 
   final List<Map<String, dynamic>> _availableSounds = [
     {
@@ -24,35 +26,46 @@ class _SoundSelectorState extends State<SoundSelector> {
       'color': AppColors.textTertiary,
     },
     {
-      'name': 'Rain',
+      'name': 'Light Rain',
       'icon': Icons.water_drop_rounded,
       'description': 'Gentle raindrops',
       'color': AppColors.accentMint,
     },
     {
-      'name': 'Forest',
+      'name': 'Forest Birds',
       'icon': Icons.forest_rounded,
       'description': 'Nature sounds',
       'color': AppColors.restfulGreen,
     },
     {
-      'name': 'Ocean',
+      'name': 'Ocean Waves',
       'icon': Icons.waves_rounded,
       'description': 'Ocean waves',
       'color': AppColors.primaryBlue,
     },
     {
-      'name': 'White Noise',
+      'name': 'Brown Noise',
       'icon': Icons.graphic_eq_rounded,
-      'description': 'Pure focus',
+      'description': 'Deep focus',
       'color': AppColors.textSecondary,
+    },
+    {
+      'name': 'Coffee Shop',
+      'icon': Icons.local_cafe_rounded,
+      'description': 'Cafe ambiance',
+      'color': const Color(0xFF8B4513),
     },
   ];
 
   @override
   void initState() {
     super.initState();
+    _initializeService();
     _loadSettings();
+  }
+
+  Future<void> _initializeService() async {
+    await _soundService.initialize();
   }
 
   Future<void> _loadSettings() async {
@@ -76,6 +89,14 @@ class _SoundSelectorState extends State<SoundSelector> {
         'volume': _volume,
         'updatedAt': DateTime.now().toIso8601String(),
       });
+      
+      // Apply audio changes
+      await _soundService.setVolume(_volume);
+      if (_selectedSound != 'None') {
+        await _soundService.play(_selectedSound);
+      } else {
+        await _soundService.stop();
+      }
     } catch (e) {
       debugPrint('Error saving sound settings: $e');
     }
@@ -379,5 +400,11 @@ class _SoundSelectorState extends State<SoundSelector> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _soundService.dispose();
+    super.dispose();
   }
 }

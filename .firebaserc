@@ -1,6 +1,7 @@
 {
   "projects": {
-    "pomodoro": "focus-flow-timer"
+    "pomodoro": "focus-flow-timer",
+    "default": "focus-flow-timer"
   },
   "targets": {},
   "etags": {}
