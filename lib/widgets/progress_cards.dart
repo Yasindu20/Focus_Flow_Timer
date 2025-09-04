@@ -8,60 +8,66 @@ class ProgressCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildProgressCard(
-                context: context,
-                title: 'Today',
-                subtitle: '${data.dailySessions.where((s) => s.isCompleted).length} / ${data.goals?.dailySessions ?? 4} sessions',
-                progress: data.dailyProgress,
-                icon: Icons.today,
-                color: Colors.blue,
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 400;
+    final spacing = isSmallScreen ? 8.0 : 16.0;
+    
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildProgressCard(
+                  context: context,
+                  title: 'Today',
+                  subtitle: '${data.dailySessions.where((s) => s.isCompleted).length} / ${data.goals?.dailySessions ?? 4} sessions',
+                  progress: data.dailyProgress,
+                  icon: Icons.today,
+                  color: Colors.blue,
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildProgressCard(
-                context: context,
-                title: 'This Week',
-                subtitle: '${(data.weeklyFocusMinutes / 60).toStringAsFixed(1)} / ${data.goals?.weeklyHours ?? 20} hours',
-                progress: data.weeklyProgress,
-                icon: Icons.calendar_view_week,
-                color: Colors.green,
+              SizedBox(width: spacing),
+              Expanded(
+                child: _buildProgressCard(
+                  context: context,
+                  title: 'This Week',
+                  subtitle: '${(data.weeklyFocusMinutes / 60).toStringAsFixed(1)} / ${data.goals?.weeklyHours ?? 20} hours',
+                  progress: data.weeklyProgress,
+                  icon: Icons.calendar_view_week,
+                  color: Colors.green,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatsCard(
-                context: context,
-                title: 'Focus Time Today',
-                value: '${(data.todayFocusMinutes / 60).toStringAsFixed(1)}h',
-                subtitle: '${data.todayFocusMinutes} minutes',
-                icon: Icons.timer,
-                color: Colors.orange,
+            ],
+          ),
+          SizedBox(height: spacing),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatsCard(
+                  context: context,
+                  title: 'Focus Time Today',
+                  value: '${(data.todayFocusMinutes / 60).toStringAsFixed(1)}h',
+                  subtitle: '${data.todayFocusMinutes} minutes',
+                  icon: Icons.timer,
+                  color: Colors.orange,
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildStatsCard(
-                context: context,
-                title: 'Peak Hour',
-                value: _formatHour(data.peakFocusHour),
-                subtitle: 'Most productive',
-                icon: Icons.trending_up,
-                color: Colors.purple,
+              SizedBox(width: spacing),
+              Expanded(
+                child: _buildStatsCard(
+                  context: context,
+                  title: 'Peak Hour',
+                  value: _formatHour(data.peakFocusHour),
+                  subtitle: 'Most productive',
+                  icon: Icons.trending_up,
+                  color: Colors.purple,
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -73,8 +79,13 @@ class ProgressCards extends StatelessWidget {
     required IconData icon,
     required Color color,
   }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 400;
+    final padding = isSmallScreen ? 12.0 : 16.0;
+    final iconSize = isSmallScreen ? 20.0 : 24.0;
+    
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
@@ -88,29 +99,40 @@ class ProgressCards extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Icon(icon, color: color, size: 24),
+              Icon(icon, color: color, size: iconSize),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: isSmallScreen ? 14 : null,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isSmallScreen ? 8 : 12),
           Text(
             subtitle,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Colors.grey[600],
+              fontSize: isSmallScreen ? 12 : null,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isSmallScreen ? 8 : 12),
           LinearProgressIndicator(
             value: progress.clamp(0.0, 1.0),
             backgroundColor: color.withValues(alpha: 0.2),
@@ -124,6 +146,7 @@ class ProgressCards extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: color,
+                fontSize: isSmallScreen ? 12 : 14,
               ),
             ),
           ),
@@ -140,8 +163,13 @@ class ProgressCards extends StatelessWidget {
     required IconData icon,
     required Color color,
   }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 400;
+    final padding = isSmallScreen ? 12.0 : 16.0;
+    final iconSize = isSmallScreen ? 20.0 : 24.0;
+    
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
@@ -155,25 +183,39 @@ class ProgressCards extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Icon(icon, color: color, size: 24),
+              Icon(icon, color: color, size: iconSize),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleSmall,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontSize: isSmallScreen ? 12 : null,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
+          SizedBox(height: isSmallScreen ? 8 : 12),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+                fontSize: isSmallScreen ? 20 : null,
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -181,7 +223,10 @@ class ProgressCards extends StatelessWidget {
             subtitle,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Colors.grey[600],
+              fontSize: isSmallScreen ? 11 : null,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

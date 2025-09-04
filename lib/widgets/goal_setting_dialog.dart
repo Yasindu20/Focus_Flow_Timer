@@ -44,11 +44,17 @@ class _GoalSettingDialogState extends State<GoalSettingDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Set Your Goals'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+          maxWidth: MediaQuery.of(context).size.width * 0.9,
+        ),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
             const Text(
               'Set personalized targets to track your progress and stay motivated.',
               style: TextStyle(fontSize: 14, color: Colors.grey),
@@ -99,8 +105,10 @@ class _GoalSettingDialogState extends State<GoalSettingDialog> {
             ),
             const SizedBox(height: 20),
             _buildRecommendations(),
-          ],
+            ],
+          ),
         ),
+      ),
       ),
       actions: [
         TextButton(

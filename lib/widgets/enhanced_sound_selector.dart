@@ -83,16 +83,27 @@ class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final isSmallMobile = screenWidth < 400;
+    final padding = isSmallMobile ? 12.0 : (isMobile ? 16.0 : 20.0);
+    
     return Consumer<EnhancedTimerProvider>(
       builder: (context, timerProvider, child) {
         return Card(
           elevation: 4,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: isSmallMobile ? 320 : (isMobile ? 380 : 420),
+            ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.all(padding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                 // Header
                 Row(
                   children: [
@@ -101,17 +112,26 @@ class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
                       color: Theme.of(context).primaryColor,
                       size: 24,
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Background Sounds',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                    SizedBox(width: isSmallMobile ? 8 : 12),
+                    Expanded(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Background Sounds',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                fontSize: isSmallMobile ? 18 : null,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 
-                const SizedBox(height: 20),
+                SizedBox(height: isSmallMobile ? 12 : 16),
                 
                 // Sound Options
                 Text(
@@ -121,24 +141,27 @@ class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
                       ),
                 ),
                 
-                const SizedBox(height: 16),
+                SizedBox(height: isSmallMobile ? 10 : 12),
                 
                 // Sound Grid
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    final isMobile = MediaQuery.of(context).size.width < 600;
                     final isSmallMobile = MediaQuery.of(context).size.width < 400;
                     
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: isSmallMobile ? 1 : 2,
-                        childAspectRatio: isSmallMobile ? 3.0 : (isMobile ? 2.2 : 2.5),
-                        crossAxisSpacing: isSmallMobile ? 6 : 12,
-                        mainAxisSpacing: isSmallMobile ? 6 : 12,
+                    return ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: isSmallMobile ? 180 : 220, // Reduced max height 
                       ),
-                      itemCount: _availableSounds.length,
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const BouncingScrollPhysics(), // Allow scrolling if needed
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: isSmallMobile ? 1 : 2,
+                          childAspectRatio: isSmallMobile ? 4.0 : 3.5, // Better ratios
+                          crossAxisSpacing: isSmallMobile ? 8 : 12,
+                          mainAxisSpacing: isSmallMobile ? 8 : 12,
+                        ),
+                        itemCount: _availableSounds.length,
                       itemBuilder: (context, index) {
                         final sound = _availableSounds[index];
                         final isSelected = _selectedSound == sound['name'];
@@ -151,7 +174,7 @@ class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
                         await _saveSoundSettings();
                       },
                       child: Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: EdgeInsets.all(isSmallMobile ? 8 : 12),
                         decoration: BoxDecoration(
                           color: isSelected 
                               ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
@@ -182,6 +205,7 @@ class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
                                   Text(
                                     sound['name'],
                                     style: TextStyle(
+                                      fontSize: isSmallMobile ? 12 : 14,
                                       fontWeight: isSelected 
                                           ? FontWeight.bold 
                                           : FontWeight.normal,
@@ -189,11 +213,13 @@ class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
                                           ? Theme.of(context).primaryColor
                                           : null,
                                     ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   Text(
                                     sound['description'],
                                     style: TextStyle(
-                                      fontSize: 10,
+                                      fontSize: isSmallMobile ? 9 : 10,
                                       color: Colors.grey[600],
                                     ),
                                     maxLines: 1,
@@ -207,12 +233,13 @@ class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
                       ),
                         );
                       },
+                      ),
                     );
                   },
                 ),
                 
                 if (_selectedSound != 'None') ...[
-                  const SizedBox(height: 24),
+                  SizedBox(height: isSmallMobile ? 16 : 20),
                   
                   // Volume Control
                   Text(
@@ -222,7 +249,7 @@ class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
                         ),
                   ),
                   
-                  const SizedBox(height: 8),
+                  SizedBox(height: isSmallMobile ? 6 : 8),
                   
                   Row(
                     children: [
@@ -257,11 +284,11 @@ class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
                   ),
                 ],
                 
-                const SizedBox(height: 16),
+                SizedBox(height: isSmallMobile ? 12 : 16),
                 
                 // Info Note
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(isSmallMobile ? 8 : 12),
                   decoration: BoxDecoration(
                     color: Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -278,15 +305,19 @@ class _EnhancedSoundSelectorState extends State<EnhancedSoundSelector> {
                         child: Text(
                           'Background sounds help maintain focus during timer sessions.',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: isSmallMobile ? 11 : 12,
                             color: Colors.blue[700],
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
                 ),
               ],
+                ),
+              ),
             ),
           ),
         );

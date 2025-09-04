@@ -160,18 +160,32 @@ class _QuickAddTaskModalState extends State<QuickAddTaskModal>
             ),
           ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildModalHeader(isDark),
-            _buildInputSection(isDark, isVeryCompact),
-            if (_textController.text.isNotEmpty) ...[
-              _buildParsedPreview(isDark, isVeryCompact),
-              _buildAdvancedToggle(isDark),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.9,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildModalHeader(isDark),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildInputSection(isDark, isVeryCompact),
+                      if (_textController.text.isNotEmpty) ...[
+                        _buildParsedPreview(isDark, isVeryCompact),
+                        _buildAdvancedToggle(isDark),
+                      ],
+                      if (_showAdvanced) _buildAdvancedOptions(isDark, isVeryCompact),
+                    ],
+                  ),
+                ),
+              ),
+              _buildActionButtons(isDark, isVeryCompact),
             ],
-            if (_showAdvanced) _buildAdvancedOptions(isDark, isVeryCompact),
-            _buildActionButtons(isDark, isVeryCompact),
-          ],
+          ),
         ),
       ),
     );

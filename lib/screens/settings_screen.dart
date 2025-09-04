@@ -27,8 +27,14 @@ class SettingsScreen extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
-              padding: EdgeInsets.all(isMobile ? (isSmallMobile ? 12 : 16) : 20),
+              padding: EdgeInsets.only(
+                left: isMobile ? (isSmallMobile ? 12 : 16) : 20,
+                right: isMobile ? (isSmallMobile ? 12 : 16) : 20,
+                top: isMobile ? (isSmallMobile ? 12 : 16) : 20,
+                bottom: isMobile ? (isSmallMobile ? 24 : 32) : 40,
+              ),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Appearance section
                   Card(
@@ -187,8 +193,6 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
 
-                  // Add bottom padding to prevent overflow
-                  SizedBox(height: isMobile ? 20 : 0),
                 ],
               ),
             );
@@ -327,10 +331,16 @@ class SettingsScreen extends StatelessWidget {
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Data Export Complete'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+            content: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.6,
+                maxWidth: MediaQuery.of(context).size.width * 0.85,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                 const Text('Your data has been exported successfully.'),
                 const SizedBox(height: 16),
                 Text('File saved to: $filePath'),
@@ -340,7 +350,9 @@ class SettingsScreen extends StatelessWidget {
                 const Text('• Timer sessions and analytics'),
                 const Text('• Tasks and analytics'),
                 const Text('• App preferences'),
-              ],
+                ],
+              ),
+            ),
             ),
             actions: [
               TextButton(
@@ -390,11 +402,16 @@ class SettingsScreen extends StatelessWidget {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Delete Account'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.7,
+              maxWidth: MediaQuery.of(context).size.width * 0.9,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 const Text(
                   '⚠️ This action cannot be undone!',
                   style: TextStyle(
@@ -424,6 +441,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ],
             ),
+          ),
           ),
           actions: [
             TextButton(

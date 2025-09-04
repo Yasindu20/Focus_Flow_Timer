@@ -192,10 +192,15 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Add New Task'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.9,
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             TextField(
               controller: _titleController,
               decoration: const InputDecoration(
@@ -216,55 +221,64 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
             const SizedBox(height: 16),
             Row(
               children: [
-                const Text('Estimated Pomodoros:'),
+                const Expanded(
+                  child: Text('Estimated Pomodoros:'),
+                ),
                 const SizedBox(width: 16),
-                DropdownButton<int>(
-                  value: _estimatedPomodoros,
-                  items: List.generate(10, (index) => index + 1)
-                      .map(
-                        (value) => DropdownMenuItem(
-                          value: value,
-                          child: Text(value.toString()),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _estimatedPomodoros = value;
-                      });
-                    }
-                  },
+                Flexible(
+                  child: DropdownButton<int>(
+                    value: _estimatedPomodoros,
+                    items: List.generate(10, (index) => index + 1)
+                        .map(
+                          (value) => DropdownMenuItem(
+                            value: value,
+                            child: Text(value.toString()),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _estimatedPomodoros = value;
+                        });
+                      }
+                    },
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               children: [
-                const Text('Priority:'),
+                const Expanded(
+                  child: Text('Priority:'),
+                ),
                 const SizedBox(width: 16),
-                DropdownButton<TaskPriority>(
-                  value: _priority,
-                  items: TaskPriority.values
-                      .map(
-                        (priority) => DropdownMenuItem(
-                          value: priority,
-                          child: Text(priority.name.toUpperCase()),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _priority = value;
-                      });
-                    }
-                  },
+                Flexible(
+                  child: DropdownButton<TaskPriority>(
+                    value: _priority,
+                    items: TaskPriority.values
+                        .map(
+                          (priority) => DropdownMenuItem(
+                            value: priority,
+                            child: Text(priority.name.toUpperCase()),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _priority = value;
+                        });
+                      }
+                    },
+                  ),
                 ),
               ],
             ),
           ],
         ),
+      ),
       ),
       actions: [
         TextButton(
@@ -309,11 +323,21 @@ class TaskDetailsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(task.title),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      title: Text(
+        task.title,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.8,
+          maxHeight: MediaQuery.of(context).size.height * 0.6,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
           if (task.description.isNotEmpty) ...[
             const Text(
               'Description:',
@@ -352,7 +376,9 @@ class TaskDetailsDialog extends StatelessWidget {
             ),
             Text(task.completedAt.toString().substring(0, 16)),
           ],
-        ],
+            ],
+          ),
+        ),
       ),
       actions: [
         TextButton(
